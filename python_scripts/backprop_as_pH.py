@@ -2,7 +2,7 @@
 from sklearn.preprocessing import StandardScaler
 import numpy as np
 import matplotlib.pyplot as plt
-import ipdb
+# import ipdb
 from sklearn.metrics import f1_score
 from rasterio.plot import show
 

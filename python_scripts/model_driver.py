@@ -35,7 +35,7 @@ train_csv, validation_csv, test_csv, train_obsv, validation_obsv, test_obsv = \
                                test_fraction=test_frac, output_dir='../Data_csv',
                                drop_columns=drop_data, train_val_test_exists=train_val_test_exists)
 
-# Model training
+## Model training
 # hidden_layers = [100, 30, 10]  # #
 # activation = 'tanh'  # #
 # optim_method = 'adam'  # #

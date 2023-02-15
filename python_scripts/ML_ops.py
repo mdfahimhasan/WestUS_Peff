@@ -3,13 +3,15 @@ import pickle
 import numpy as np
 import pandas as pd
 from glob import glob
-import dask.dataframe as dd
+import dask.dataframe as ddf
+from sklearn.preprocessing import OneHotEncoder
+
 from system_process import makedirs, copy_file
 from raster_process import read_raster_arr_object, write_array_to_raster, clip_resample_reproject_raster
 import NeuralNetwork_model as NN
 
 no_data_value = -9999
-WestUS_raster = '../Data/shapefiles/Western_US/Western_US_refraster_2km.tif'
+WestUS_raster = '../Data_main/shapefiles/Western_US/Western_US_refraster_2km.tif'
 model_res = 0.02000000000000000389  # in deg, 2 km
 
 
@@ -27,18 +29,29 @@ def reindex_df(df):
     return df
 
 
+def apply_OneHotEncoding(input_df):
+    one_hot = OneHotEncoder()
+    input_df_enc = one_hot.fit_transform(input_df)
+    return input_df_enc
+
+
 def create_dataframe_csv(input_data_dir, output_csv, search_by='*.tif', years=(2010, 2015),
                          drop_datasets=('MODIS_ET', 'MODIS_Terra_EVI', 'MODIS_Terra_NDVI'),
+                         encode_cols = ('USDA_cropland', 'USDA_developed'),
                          skip_dataframe_creation=False):
     """
-    Create dataframe from predictor rasters.
+    Create dataframe from predictor variables (raster).
+
+    ** All variable names should start with capital letter. This is needed for keeping fips to the last during
+       reindex().
 
     :param input_data_dir: Input rasters' directory.
     :param output_csv: Output csv file path.
     :param search_by: Input raster search criteria. Defaults to '*.tif'.
     :param years: Tuple/List of years to be included in predictor dataset. Default set to (2010, 2015). If only 1 year
                   use a list like [2015].
-    :param drop_datasets: Tuple/List of dataset names to drop while creating dataframe/csv.
+    :param drop_datasets: Tuple/List of variable names to drop while creating dataframe/csv.
+    :param encode_cols: Tuple/List of variable names that need one hot encoding.
     :param skip_dataframe_creation: Set to True if want to skip processing.
 
     :return: A dataframe created where columns represent individual predictors.
@@ -46,7 +59,7 @@ def create_dataframe_csv(input_data_dir, output_csv, search_by='*.tif', years=(2
     makedirs([os.path.dirname(output_csv)])
 
     # Code block will be modified here for static predictors (we might/might not need timeframe at all)
-    county_id_raster = '../Data/shapefiles/Western_US/Western_US_countyID.tif'
+    county_id_raster = '../Data_main/shapefiles/Western_US/Western_US_countyID.tif'
     county_id_raster = copy_file(county_id_raster, input_data_dir, rename=None)
 
     if not skip_dataframe_creation:
@@ -101,22 +114,29 @@ def create_dataframe_csv(input_data_dir, output_csv, search_by='*.tif', years=(2
 
         predictor_df = pd.DataFrame(predictor_dict)
         predictor_df = predictor_df.dropna(axis='index')
+
+        # One-hot encoding
+        for col in encode_cols:
+            df_enc = pd.get_dummies(predictor_df[col], prefix=col)
+            for i in df_enc.columns:    # adding encoded columns to the main dataframe
+                predictor_df[i] = df_enc[i]
+
         predictor_df = predictor_df.rename(columns={'Western_US_countyID': 'fips'})
         predictor_df = reindex_df(predictor_df)
         predictor_df = predictor_df.astype({'fips': 'int'})
         predictor_df = predictor_df.sort_values(by=['fips', 'Year'], ascending=True, axis=0)
         predictor_df.to_csv(output_csv, index=False)
 
-        print('Predictors csv created')
+        print('Predictors csv created\n')
 
     else:
-        print('Loading Predictors csv...')
+        print('Loading Predictors csv...\n')
 
     return output_csv
 
 
 def create_train_val_test_data(predictor_csv, observed_data_csv, data_fraction, train_fraction, val_fraction,
-                               test_fraction, output_dir='../Data/Compiled_data/predictor_csv',
+                               test_fraction, output_dir='../Data_main/Compiled_data/predictor_csv',
                                drop_columns=None, train_val_test_exists=False):
     """
     Create Train, Validation, and Test dataset (csv) from the predictor csv.
@@ -138,6 +158,14 @@ def create_train_val_test_data(predictor_csv, observed_data_csv, data_fraction, 
         print('Creating Train, Validation, Test dataset...')
         # # Processing observed dataset
         observed_df = pd.read_csv(observed_data_csv)
+
+        ###################
+        # Keeping year 2010 as 2010. Replacing year 2015 as 3020, otherwise tensor faces trouble differentiating between
+        # 2010 and 2015
+        observed_df['Year'] = observed_df['Year'].apply(lambda x: 3020 if x == 2015 else 2010)
+        ###################
+
+        # Creating 'fips_years' attribute to use in train, val, test split
         observed_df = observed_df[['fips', 'Year', 'total_gw_observed']]
         observed_df['fips_years'] = observed_df['fips'].astype(str) + observed_df['Year'].astype(str)
         observed_df['fips_years'] = observed_df['fips_years'].astype(int)  # for sorting the data
@@ -193,12 +221,21 @@ def create_train_val_test_data(predictor_csv, observed_data_csv, data_fraction, 
         validation_observed.to_csv(os.path.join(output_dir, 'validation_obsv.csv'), index=False)
         test_observed.to_csv(os.path.join(output_dir, 'test_obsv.csv'), index=False)
 
-        print('Observed dataset created')
+        print('Train, Validation, Test observed data created')
 
         # # Processing predictor dataset
-        predictor_df = dd.read_csv(predictor_csv)
+        predictor_df = ddf.read_csv(predictor_csv)
         if drop_columns is not None:
-            predictor_df = predictor_df.drop(columns=drop_columns, axis=1)
+                try:  # added try-except because dask uses 'labels' while pandas uses 'columns' keyword.
+                    predictor_df = predictor_df.drop(columns=drop_columns, axis=1)
+                except:
+                    predictor_df = predictor_df.drop(labels=drop_columns, axis=1)
+
+        ###################
+        # Keeping year 2010 as 2010. Replacing year 2015 as 3020, otherwise tensor faces trouble differentiating between
+        # 2010 and 2015
+        predictor_df['Year'] = predictor_df['Year'].apply(lambda x: 3020 if x == 2015 else 2010, meta=('Year', 'int64'))
+        ###################
 
         # Creating 'fips_years' attribute to use in train, val, test split
         predictor_df['fips_years'] = predictor_df['fips'].astype(str) + predictor_df['Year'].astype(str)
@@ -225,10 +262,10 @@ def create_train_val_test_data(predictor_csv, observed_data_csv, data_fraction, 
         val_obsv = os.path.join(output_dir, 'validation_obsv.csv')
         test_obsv = os.path.join(output_dir, 'test_obsv.csv')
 
-        print('Train, Validation, Test dataset created')
+        print('Train, Validation, Test predictor dataset created \n')
 
     else:
-        print('Loading Train/val/test data...')
+        print('Loading Train/val/test data... \n')
         train_csv = os.path.join(output_dir, 'train_data.csv')
         val_csv = os.path.join(output_dir, 'validation_data.csv')
         test_csv = os.path.join(output_dir, 'test_data.csv')

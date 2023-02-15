@@ -24,7 +24,7 @@ from raster_process import read_raster_arr_object, write_array_to_raster, mosaic
 
 no_data_value = -9999
 model_res = 0.02000000000000000389  # in deg, 2 km
-WestUS_raster = '../Data/shapefiles/Western_US/Western_US_refraster_2km.tif'
+WestUS_raster = '../Data_main/shapefiles/Western_US/Western_US_refraster_2km.tif'
 
 
 def download_from_url(download_dir, url_list):
@@ -222,7 +222,7 @@ def cloud_cover_filter(data_name, start_date, end_date, from_bit, to_bit):
 
 
 def download_gee_data(data_name, download_dir, year_list, month_range, merge_keyword, refraster=WestUS_raster,
-                      grid_shape='../Data/shapefiles/Western_US/WestUS_gee_grid.shp'):
+                      grid_shape='../Data_main/shapefiles/Western_US/WestUS_gee_grid.shp'):
     """
     process and download data from GEE.
 
@@ -299,7 +299,7 @@ def download_gee_data(data_name, download_dir, year_list, month_range, merge_key
 
 def download_all_gee_data(data_list, download_dir, year_list, month_range, merge_keyword, refraster=WestUS_raster,
                           skip_download=False, copy_dir=None,
-                          grid_shape='../Data/shapefiles/Western_US/WestUS_gee_grid.shp'):
+                          grid_shape='../Data_main/shapefiles/Western_US/WestUS_gee_grid.shp'):
     """
     Used to download all gee data together.
 
@@ -339,7 +339,7 @@ def download_all_gee_data(data_list, download_dir, year_list, month_range, merge
         pass
 
 
-def download_ssebop_et(years_list, month_range_list, download_dir='../Data/GEE_data/Ssebop_monthly_ETa',
+def download_ssebop_et(years_list, month_range_list, download_dir='../Data_main/GEE_data/Ssebop_monthly_ETa',
                        ssebop_link='https://edcintl.cr.usgs.gov/downloads/sciweb1/shared/uswem/web/conus/eta'
                                    '/modis_eta/monthly/downloads/', skip_download=False):
     """
@@ -387,17 +387,17 @@ def download_all_datasets(year_list, gee_data_list=None, skip_download_gee_data=
 
     :return: None.
     """
-    download_all_gee_data(gee_data_list, download_dir='../Data/GEE_data', year_list=year_list, month_range=[4, 9],
+    download_all_gee_data(gee_data_list, download_dir='../Data_main/GEE_data', year_list=year_list, month_range=[4, 9],
                           merge_keyword='WestUS', refraster=WestUS_raster, skip_download=skip_download_gee_data,
-                          copy_dir='../Data/Compiled_data',
-                          grid_shape='../Data/shapefiles/Western_US/WestUS_gee_grid.shp')
+                          copy_dir='../Data_main/Compiled_data',
+                          grid_shape='../Data_main/shapefiles/Western_US/WestUS_gee_grid.shp')
 
-    download_ssebop_et(year_list, month_range_list=[4, 9], download_dir='../Data/GEE_data/Ssebop_monthly_ETa',
+    download_ssebop_et(year_list, month_range_list=[4, 9], download_dir='../Data_main/GEE_data/Ssebop_monthly_ETa',
                        skip_download=skip_download_ssebop_data)
 
 
-def process_cdl_data(cdl_dir='../Data/GEE_data/USDA_CDL', processed_dir='../Data/GEE_data/USDA_CDL/WestUS',
-                     westUS_shape='../Data/shapefiles/Western_US/WestUS.shp', ref_raster=WestUS_raster,
+def process_cdl_data(cdl_dir='../Data_main/GEE_data/USDA_CDL', processed_dir='../Data_main/GEE_data/USDA_CDL/WestUS',
+                     westUS_shape='../Data_main/shapefiles/Western_US/WestUS.shp', ref_raster=WestUS_raster,
                      skip_processing=False):
     """
     Crops CDL data for Western US and reclassifies it to crop vs non-crop and developed vs non-developed datasets.
@@ -440,42 +440,42 @@ def process_cdl_data(cdl_dir='../Data/GEE_data/USDA_CDL', processed_dir='../Data
             cdl_arr = read_raster_arr_object(westus_cdl, get_file=False)
             ref_arr, ref_file = read_raster_arr_object(ref_raster)
 
-            # crop vs non-crop raster
+            # crop vs non-crop raster  # if array value in noncrop list assigns 0, otherwise assigns 1
             crop_arr = np.where(np.isin(cdl_arr, noncrop_classes), ref_arr, 1)
             crop_raster_path = os.path.join(processed_dir, f'USDA_cropland_{year}.tif')
             crop_output_file = write_array_to_raster(crop_arr, ref_file, ref_file.transform, crop_raster_path)
 
-            # developed vs non-developed
-            dev_arr = np.where(cdl_arr == 121, 1, ref_arr)
-            dev_arr = np.where(cdl_arr == 122, 2, dev_arr)
-            dev_arr = np.where(cdl_arr == 123, 3, dev_arr)
-            dev_arr = np.where(cdl_arr == 124, 4, dev_arr)
+            # developed vs non-developed  # if array value is not within 121, 122, 123, and 124 assigns 0
+            dev_arr = np.where(cdl_arr == 121, 1, ref_arr)  # 1: Developed/Open Space
+            dev_arr = np.where(cdl_arr == 122, 2, dev_arr)  # 2: Developed/Low Intensity
+            dev_arr = np.where(cdl_arr == 123, 3, dev_arr)  # 3: Developed/Medium Intensity
+            dev_arr = np.where(cdl_arr == 124, 4, dev_arr)  # 4: Developed/High Intensity
 
             dev_raster_path = os.path.join(processed_dir, f'USDA_developed_{year}.tif')
             dev_output_file = write_array_to_raster(dev_arr, ref_file, ref_file.transform, dev_raster_path)
 
-            crop_output_file = copy_file(crop_output_file, copy_dir='../Data/Compiled_data')
+            crop_output_file = copy_file(crop_output_file, copy_dir='../Data_main/Compiled_data')
             data_name = crop_output_file[crop_output_file.rfind(os.sep) + 1:crop_output_file.rfind('.')]
             crop_data_dict[data_name] = crop_output_file
 
-            dev_output_file = copy_file(dev_output_file, copy_dir='../Data/Compiled_data')
+            dev_output_file = copy_file(dev_output_file, copy_dir='../Data_main/Compiled_data')
             data_name = dev_output_file[dev_output_file.rfind(os.sep) + 1:dev_output_file.rfind('.')]
             developed_data_dict[data_name] = dev_output_file
 
-        pickle.dump(crop_data_dict, open('../Data/Compiled_data/crop_data_dict.pkl', mode='wb+'))
-        pickle.dump(developed_data_dict, open('../Data/Compiled_data/developed_land_data_dict.pkl', mode='wb+'))
+        pickle.dump(crop_data_dict, open('../Data_main/Compiled_data/crop_data_dict.pkl', mode='wb+'))
+        pickle.dump(developed_data_dict, open('../Data_main/Compiled_data/developed_land_data_dict.pkl', mode='wb+'))
 
     else:
-        crop_data_dict = pickle.load(open('../Data/Compiled_data/crop_data_dict.pkl', mode='rb'))
-        developed_data_dict = pickle.load(open('../Data/Compiled_data/developed_land_data_dict.pkl', mode='rb'))
+        crop_data_dict = pickle.load(open('../Data_main/Compiled_data/crop_data_dict.pkl', mode='rb'))
+        developed_data_dict = pickle.load(open('../Data_main/Compiled_data/developed_land_data_dict.pkl', mode='rb'))
 
     return crop_data_dict, developed_data_dict
 
 
-def process_ssebop_data(years=(2010, 2015), ssebop_dir='../Data/GEE_data/Ssebop_monthly_ETa',
-                        output_dir_conus='../Data/GEE_data/Ssebop_monthly_ETa/conus',
-                        output_dir_ssebop='../Data/GEE_data/Ssebop_monthly_ETa/WesternUS',
-                        westUS_shape='../Data/shapefiles/Western_US/WestUS.shp', skip_processing=False):
+def process_ssebop_data(years=(2010, 2015), ssebop_dir='../Data_main/GEE_data/Ssebop_monthly_ETa',
+                        output_dir_conus='../Data_main/GEE_data/Ssebop_monthly_ETa/conus',
+                        output_dir_ssebop='../Data_main/GEE_data/Ssebop_monthly_ETa/WesternUS',
+                        westUS_shape='../Data_main/shapefiles/Western_US/WestUS.shp', skip_processing=False):
     """
     Process (sum and clip to Western US extent) Ssebop ET.
 
@@ -498,6 +498,7 @@ def process_ssebop_data(years=(2010, 2015), ssebop_dir='../Data/GEE_data/Ssebop_
             ssebop_ref_arr = read_raster_arr_object(ssebop_datasets[0], get_file=False)
             et_sum_arr = np.zeros(ssebop_ref_arr.shape)
 
+            ssebop_file = None
             for data in ssebop_datasets:
                 ssebop_arr, ssebop_file = read_raster_arr_object(data)
                 et_sum_arr += ssebop_arr
@@ -515,12 +516,12 @@ def process_ssebop_data(years=(2010, 2015), ssebop_dir='../Data/GEE_data/Ssebop_
                                                          targetaligned=False, resolution=model_res,
                                                          output_raster_dir=output_dir_ssebop)
 
-            output_file = copy_file(output_file, copy_dir='../Data/Compiled_data')
+            output_file = copy_file(output_file, copy_dir='../Data_main/Compiled_data')
             ssebop_data_dict[output_name[:output_name.rfind('.')]] = output_file
 
-            pickle.dump(ssebop_data_dict, open('../Data/Compiled_data/ssebop_dict.pkl', mode='wb+'))
+            pickle.dump(ssebop_data_dict, open('../Data_main/Compiled_data/ssebop_dict.pkl', mode='wb+'))
     else:
-        ssebop_data_dict = pickle.load(open('../Data/Compiled_data/ssebop_dict.pkl', mode='rb'))
+        ssebop_data_dict = pickle.load(open('../Data_main/Compiled_data/ssebop_dict.pkl', mode='rb'))
 
     return ssebop_data_dict
 
@@ -540,9 +541,9 @@ def run_all_preprocessing(skip_cdl_processing=False, skip_ssebop_processing=Fals
     return crop_data_dict, developed_data_dict, ssebop_dict
 
 
-def compile_observed_pumping_data(data_dir='../Data/USGS_water_use_data', search_by='*201[0-5]*.xlsx',
-                                  county_shape='../Data/shapefiles/Western_US/WestUS_county.shp',
-                                  output_csv='../Data/USGS_water_use_data/WestUS_county_gw_use.csv',
+def compile_observed_pumping_data(data_dir='../Data_main/USGS_water_use_data', search_by='*201[0-5]*.xlsx',
+                                  county_shape='../Data_main/shapefiles/Western_US/WestUS_county.shp',
+                                  output_csv='../Data_main/USGS_water_use_data/WestUS_county_gw_use.csv',
                                   skip_compiling=True):
     """
     Compile county-wide groundwater use data for Western US.
@@ -554,15 +555,20 @@ def compile_observed_pumping_data(data_dir='../Data/USGS_water_use_data', search
     :param output_csv: File path to save output csv.
     :param skip_compiling: Set to False to compile pumping data. Default set to True (data already compiled).
 
-    :return: Saves compiled
+    :return: Compiled USGS pumping data csv.
     """
     if not skip_compiling:
+        import warnings
+        warnings.simplefilter('ignore')  # adding to remove warning from excel opening
+
+        print('Compiling USGS Pumping Data...')
+
         wateruse_data = glob(os.path.join(data_dir, search_by))
         county_df = gpd.read_file(county_shape)
 
         county_wateruse = pd.DataFrame()
         for data in wateruse_data:
-            wateruse_df = pd.read_excel(data, sheet_name='CountyData')
+            wateruse_df = pd.read_excel(data, sheet_name='CountyData', engine='openpyxl')
             wateruse_df = wateruse_df[['COUNTY', 'STATE', 'COUNTYFIPS', 'FIPS', 'YEAR', 'TO-WGWFr']]
 
             joined_df = county_df.merge(wateruse_df, left_on='fips', right_on='FIPS', how='inner')
@@ -575,7 +581,13 @@ def compile_observed_pumping_data(data_dir='../Data/USGS_water_use_data', search
         county_wateruse = county_wateruse[['NAME', 'fips', 'YEAR', 'gw_withdrawal']]
         county_wateruse_df = county_wateruse.rename(columns={'NAME': 'Name', 'fips': 'fips', 'YEAR': 'Year',
                                                              'gw_withdrawal': 'total_gw_observed'})
-        county_wateruse_df.to_csv(output_csv, index=False)
+        # Saving as csv
+        GW_use_usgs_csv = output_csv
+        county_wateruse_df.to_csv(GW_use_usgs_csv, index=False)
+        print('USGS GW Use Data Compiles\n')
 
     else:
-        pass
+        print('Loading USGS GW Use Data...\n')
+        GW_use_usgs_csv = output_csv
+
+    return GW_use_usgs_csv

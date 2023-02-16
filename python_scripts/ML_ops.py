@@ -4,11 +4,16 @@ import numpy as np
 import pandas as pd
 from glob import glob
 import dask.dataframe as ddf
+import matplotlib.pyplot as plt
+from sklearn.metrics import r2_score
 from sklearn.preprocessing import OneHotEncoder
+
+import torch
+from torch.nn.parallel import DistributedDataParallel as DDP
 
 from system_process import makedirs, copy_file
 from raster_process import read_raster_arr_object, write_array_to_raster, clip_resample_reproject_raster
-import NeuralNetwork_model as NN
+import NeuralNetwork_distributed as Neural_Net
 
 no_data_value = -9999
 WestUS_raster = '../Data_main/shapefiles/Western_US/Western_US_refraster_2km.tif'
@@ -136,7 +141,7 @@ def create_dataframe_csv(input_data_dir, output_csv, search_by='*.tif', years=(2
 
 
 def create_train_val_test_data(predictor_csv, observed_data_csv, data_fraction, train_fraction, val_fraction,
-                               test_fraction, output_dir='../Data_main/Compiled_data/predictor_csv',
+                               test_fraction, output_dir='../Data_main/Model_csv',
                                drop_columns=None, train_val_test_exists=False):
     """
     Create Train, Validation, and Test dataset (csv) from the predictor csv.
@@ -277,8 +282,7 @@ def create_train_val_test_data(predictor_csv, observed_data_csv, data_fraction, 
     return train_csv, val_csv, test_csv, train_obsv, val_obsv, test_obsv
 
 
-def create_model_input(predictor_csv, observed_csv=None, predictor_drop_columns=('fips', 'Year'),
-                       use_for_testing=False):
+def create_model_input(predictor_csv, observed_csv, drop_columns=('fips', 'Year')):
     """
     Generates numpy array of predictors and observed data, n_inputs number, and fips_years_array.
     Array of observed data and fip_years are only generated if use_for_testing is True.
@@ -287,40 +291,109 @@ def create_model_input(predictor_csv, observed_csv=None, predictor_drop_columns=
     :param predictor_csv: File path of predictor csv.
     :param observed_csv: Default set to None. File path of observed data csv used for model testing.
                          Set a file path and use_for_testing=True for enabling this option.
-    :param predictor_drop_columns: Tuple/List of data/columns to drop. Default set to ('fips', 'Year').
-                                   To drop additional data/columns add them with ('fips', 'Year').
+    :param drop_columns: Tuple/List of data/columns to drop. Default set to ('fips', 'Year'). To drop
+                                   additional data/columns add them with ('fips', 'Year').
     :param use_for_testing: Set to True if data will be used for model testing/predicting on new data.
 
     :return: if use_for_testing=False, returns -- predictor_arr, n_inputs
              if use_for_testing=True, returns -- predictor_arr, n_inputs, observed_arr, fips_years_arr
     """
     predictor_df = pd.read_csv(predictor_csv)
+    fips_years_arr = predictor_df[['fips_years']].to_numpy()
 
-    # if data is training, fips_years will be extracted in train_with_distributed_T() function of NeuralNetwork class
-    fips_years_arr = None
-
-    if use_for_testing:
-        fips_years_arr = predictor_df[['fips_years']].to_numpy()
-        predictor_drop_columns = list(predictor_drop_columns) + ['fips_years']
-
-    predictor_drop_columns = [i for i in predictor_drop_columns]
-    predictor_df = predictor_df.drop(columns=predictor_drop_columns)
+    predictor_df = predictor_df.drop(columns=list(drop_columns))
     columns = list(predictor_df.columns)
     print(f'Using predictors: {columns[:-1]}')
     predictor_arr = predictor_df[columns].to_numpy()
     n_inputs = len(columns) - 1
 
-    if observed_csv is None:
-        return predictor_arr, n_inputs
-    else:
-        observed_df = pd.read_csv(observed_csv)
-        observed_arr = observed_df[['total_gw_observed']].to_numpy()
+    observed_df = pd.read_csv(observed_csv)
+    observed_arr = observed_df[['total_gw_observed']].to_numpy()
 
-        return predictor_arr, n_inputs, observed_arr, fips_years_arr
+    return predictor_arr, n_inputs, observed_arr, fips_years_arr
+
+
+def rmse(Y_pred, Y_obsv):
+    """
+    Calculates RMSE value of model prediction vs observed data.
+
+    :param Y_pred: flattened prediction array.
+    :param Y_obsv: flattened observed array.
+
+    :return: RMSE value.
+    """
+    Y_pred = Y_pred.reshape(-1, 1)
+    Y_obsv = Y_obsv.reshape(-1, 1)
+    rmse_val = np.sqrt(np.mean((Y_obsv - Y_pred) ** 2))
+    return rmse_val
+
+
+def r2(Y_pred, Y_obsv):
+    """
+    Calculates R2 value of model prediction vs observed data.
+
+    :param Y_pred: flattened prediction array.
+    :param Y_obsv: flattened observed array.
+
+    :return: R2 value.
+    """
+    Y_pred = Y_pred.reshape(-1, 1)
+    Y_obsv = Y_obsv.reshape(-1, 1)
+    r2_val = r2_score(Y_obsv, Y_pred)
+    return r2_val
+
+
+def scatter_plot(Y_pred, Y_obsv, savedir='../Model_Run/Plots'):
+    """
+    Makes scatter plot of model prediction vs observed data.
+
+    :param Y_pred: flattened prediction array.
+    :param Y_obsv: flattened observed array.
+    :param savedir: filepath to save the plot.
+
+    :return: A scatter plot of model prediction vs observed data.
+    """
+    fig, ax = plt.subplots()
+    ax.plot(Y_obsv, Y_pred, 'o')
+    ax.plot([0, 1], [0, 1], '-r', transform=ax.transAxes)
+    ax.set_xlabel('GW Observed (mm)')
+    ax.set_ylabel('GW Predicted (mm)')
+
+    r2_val = round(r2(Y_pred, Y_obsv), 3)
+    ax.text(0.1, 0.9, s=f'R2={r2_val}', transform=ax.transAxes)
+
+    makedirs([savedir])
+    fig_loc = savedir + '/scatter_plot.jpeg'
+    fig.savefig(fig_loc, dpi=300)
+
+
+def plot_rmse_trace(rmse_torch, savedir='../Model_Run/Plots'):
+    """
+    Makes plot of standardized rmse for each epoch.
+
+    :param rmse_torch: A list of torch tensor holding rmse values.
+    :param savedir: filepath to save the plot.
+
+    :return: A plot of standardized rmse for each epoch.
+    """
+    rmse_trace = [i.cpu().detach().numpy().item() for i in rmse_torch]
+    final_rmse = round(rmse_trace[-1], 4)
+
+    fig, ax = plt.subplots(figsize=(10, 6))
+    ax.plot(rmse_trace, '--o', color='lightblue')
+    ax.set_xlabel('Epoch')
+    ax.set_ylabel('Standardized RMSE')
+    ax.text(0.7, 0.9, s=f'rmse={final_rmse}', transform=ax.transAxes)
+
+    makedirs([savedir])
+    fig_loc = savedir + '/rmse_trace.jpeg'
+    fig.savefig(fig_loc, dpi=300)
 
 
 def train_nn_model(predictor_csv, observed_csv, hidden_layers, activation='tanh', optimization='adam',
-                   epochs=3000, learning_rate=0.01, device='cpu', verbose=True, skip_training=False):
+                   epochs=100, learning_rate=0.05, device='cuda', rank=0, world_size=1, batch_size=64, num_workers=0,
+                   drop_columns=('fips', 'Year'), verbose=True, epochs_to_print=50,
+                   skip_training=False, setup_ddp=True):
     """
     Trains a feed forward Neural Network model for given hidden layers, optimization algorithm, epochs, and
     learning rate.
@@ -330,32 +403,108 @@ def train_nn_model(predictor_csv, observed_csv, hidden_layers, activation='tanh'
     :param hidden_layers: A list representing neural network hidden layers and units. For example, [15, 10, 5] means a
                           a neural network of 3 hidden layers with 15, 10, and 5 number of hidden units, respectively.
     :param activation: str. Name of the activation function. Can take 'tanh'/'relu'/'leakyrelu'.
-    :param optimization: str. Optimization algorithm. Can take 'adam'/'sgd'.
-    :param epochs: int. Number of passes to take through all samples. Default set to 3000.
+    :param optimization: str. optimization algorithm. Can take 'adam'/'sgd'.
+    :param epochs: int. Number of passes to take through all samples. Default set to 100.
     :param learning_rate: float. Controls the step size of each update in the optimization algorithm. Default set to
-                          0.01.
+                          0.05.
     :param device: str. Name of the device to run the model. Either 'cpu'/'cuda'. 'cuda' represents GPU.
-    :param verbose: boolean. If True, prints training progress statement.
-    :param skip_training: Set to True if want to skip training and use already trained model. Default set to False.
+    :param rank: int.
+                 Within the process group, each process is identified by its rank, from 0 to K-1.
+    :param world_size: int.
+                       The number of processes in the group i.e. gpu number——K.
+    :param batch_size: int.
+                       How many samples per batch to load. Default 1 means data will be loaded to one CPU/GPU.
+    :param num_workers: int.
+                        How many subprocesses to use for data loading. Default 0 means that the data will be loaded
+                        in the main process.
+    :param drop_columns: List/Tuple.
+                         A list/tuple of column/predictor names to drop before model training.
+    :param verbose: Boolean.
+                    If True, prints training progress statement.
+    :param epochs_to_print: int.
+                            After this number of epoch run, model progress will be printed.
+    :param skip_training: Boolean.
+                          Set to True if want to skip training and use already trained model. Default set to False.
+    :param setup_ddp: Boolean.
+                      For running the model first time (in one kernel initialization) set to True and set False
+                      rest of the times.
 
     :return: A trained feed forward Neural Network model.
     """
     if not skip_training:
-        train_arr, n_inputs = create_model_input(predictor_csv, observed_csv=None,
-                                                 predictor_drop_columns=('fips', 'Year'), use_for_testing=False)
+        train_arr, n_inputs, train_obsv_arr, fips_years_arr = \
+            create_model_input(predictor_csv=predictor_csv, observed_csv=observed_csv,
+                               drop_columns=drop_columns)
 
-        nn_model = NN.NeuralNetwork(n_inputs, hidden_layers, n_outputs=1, activation_func=activation, device=device)
-        nn_model.train_with_distributed_T(train_arr, observed_csv, n_epochs=epochs, method=optimization,
-                                          learning_rate=learning_rate, verbose=verbose)
+        # Training the model
+        trained_model, rmse_loss, train_means, train_stds, obsv_mean, obsv_std = \
+            Neural_Net.model_train_distributed_T(train_data=train_arr, observed_data_csv=observed_csv,  # try making the input of observed csv to an array
+                                                 n_epochs=epochs, n_inputs=n_inputs, n_hiddens_list=hidden_layers,
+                                                 n_outputs=1, rank=rank, world_size=world_size, batch_size=batch_size,
+                                                 num_workers=num_workers, activation_func=activation, device=device,
+                                                 optimization=optimization, learning_rate=learning_rate,
+                                                 verbose=verbose, fips_years_col=-1, epochs_to_print=epochs_to_print,
+                                                 setup_ddp=setup_ddp)
 
-        save_model_dir = '../Model_Run/Model'
+        # Plotting standardized rmse
+        plot_rmse_trace(rmse_loss, savedir='../Model_Run/Plots')
+
+        # Saving trained model and parameters
+        save_model_dir = '../Model_Run/Model_trained'
         makedirs([save_model_dir])
-        pickle.dump(nn_model, open('../Model_Run/Model/nn_trained.pkl', mode='wb+'))
+        torch.save(trained_model.state_dict(), '../Model_Run/Model_trained/nn_trained.pth')
 
-    else:
-        nn_model = pickle.load(open('../Model_Run/Model/nn_trained.pkl', mode='rb'))
+        nn_params = {'rmse_loss': rmse_loss, 'train_means': train_means, 'train_stds': train_stds,
+                     'obsv_mean': obsv_mean, 'obsv_std': obsv_std}
+        pickle.dump(nn_params, open('../Model_Run/Model_trained/nn_params.pkl', mode='wb+'))
 
-    return nn_model
+
+    else:  ##work on this
+        # Loading trained model and parameters
+        _, n_inputs, _, _ = \
+            create_model_input(predictor_csv=predictor_csv, observed_csv=observed_csv,
+                               drop_columns=drop_columns)
+
+        trained_model = Neural_Net.NeuralNetwork(n_inputs=n_inputs, n_hiddens_list=hidden_layers, n_outputs=1,
+                                                 activation_func=activation, device=device)
+
+        print(list(trained_model.parameters()))
+        trained_model.load_state_dict(torch.load('../Model_Run/Model_trained/nn_trained.pth'))
+        trained_model.eval()
+        print(trained_model.parameters())
+        # for param in trained_model.parameters():
+        #     print(param)
+        # trained_model = DDP(loaded_model, device_ids=[rank], output_device=rank, find_unused_parameters=True)
+
+        nn_params = pickle.load(open('../Model_Run/Model_trained/nn.params.pkl', mode='rb'))
+        rmse_loss = nn_params['rmse_loss']
+        train_means = nn_params['train_means']
+        train_stds = nn_params['train_stds']
+        obsv_mean = nn_params['obsv_mean']
+        obsv_std = nn_params['obsv_std']
+
+    return trained_model, rmse_loss, train_means, train_stds, obsv_mean, obsv_std
+
+
+def model_performance(trained_model, predictor_csv, observed_csv, train_means, train_stds, obsv_mean, obsv_std,
+                      drop_columns=('fips', 'Year')):
+
+    predictor_arr, n_inputs, obsv_arr, fips_years_arr = \
+        create_model_input(predictor_csv=predictor_csv, observed_csv=observed_csv,
+                           drop_columns=drop_columns)
+
+    predicted_arr = Neural_Net.predict(X=predictor_arr, fips_years_arr=fips_years_arr, trained_model=trained_model,
+                                       train_means=train_means, train_stds=train_stds, obsv_mean=obsv_mean,
+                                       obsv_std=obsv_std)
+
+    rmse_value = rmse(Y_pred=predicted_arr, Y_obsv=obsv_arr)
+    r2_value = r2(Y_pred=predicted_arr, Y_obsv=obsv_arr)
+
+    scatter_plot(Y_pred=predicted_arr, Y_obsv=obsv_arr, savedir='../Model_Run/Plots')
+
+    print(f'Unstandardized RMSE value= {rmse_value}')
+    print(f'R2 value= {r2_value}')
+
 #############################################################################
 # # keeping it for now. if needed shift this block to somewhere else
 # # the observed data has a data gap for a fips (county) for a single year (2010). filling that with the same data of

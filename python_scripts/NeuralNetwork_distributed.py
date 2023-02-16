@@ -1,8 +1,8 @@
-
 import os
-import torch
 import numpy as np
 import pandas as pd
+
+import torch
 import torch.distributed as dist
 from torch.utils.data import DataLoader
 from torch.utils.data.distributed import DistributedSampler
@@ -17,7 +17,7 @@ class NeuralNetwork(torch.nn.Module):
         initialize_weights(): Initializes weight for the Neural Network model.
         forward(): Calculates outputs of each layer given inputs in X.
     """
-    
+
     def __init__(self, n_inputs, n_hiddens_list, n_outputs, activation_func='tanh', device='cpu'):
         """
         Creates a neural network with the given structure.
@@ -57,37 +57,38 @@ class NeuralNetwork(torch.nn.Module):
             self.activation_func = torch.nn.LeakyReLU()
         else:
             raise Exception("Activation function should be 'tanh'/'relu'/'leakyrelu'")
-        
+
         # Building the neural network structure
-        for nh in n_hiddens_list:  
+        for nh in n_hiddens_list:
             # one hidden layer and one activation func added in each loop
             self.hidden_layers.append(torch.nn.Sequential(
-                torch.nn.Linear(n_inputs, nh), self.activation_func)) 
+                torch.nn.Linear(n_inputs, nh), self.activation_func))
 
             n_inputs = nh  # output of each hidden layer will be input of next hidden layer
 
-        self.output_layer = torch.nn.Linear(n_inputs, n_outputs) # output layer doesn't have activation func
-        
+        self.output_layer = torch.nn.Linear(n_inputs, n_outputs)  # output layer doesn't have activation func
+
         self.initialize_weights()
-        
+
         self.to(self.device)  # transfers the whole thing to 'cuda' if device='cuda'
-        
+
     def __repr__(self):
         return 'NeuralNetwork({}, {}, {}, activation func={})'.format(self.n_inputs, self.n_hidden_layers,
                                                                       self.n_outputs, self.activation_func)
+
     def __str__(self):
         s = self.__repr__()
         if self.n_epochs > 0:  # self.total_epochs
             s += '\n Trained for {} epochs.'.format(self.n_epochs)
         return s
-    
+
     def initialize_weights(self):
         """
-        Initializes weight for the Neural Network model. For 'tanh', initializing method is 'xavier_normal'. 
-        For 'relu' and 'leakyrelu', initialization method is 'kaiming_normal'.
+        Initializes weight for the Neural Network model. For 'tanh', initializing optimization is 'xavier_normal'.
+        For 'relu' and 'leakyrelu', initialization optimization is 'kaiming_normal'.
         """
         for m in self.modules():
-        # self.modules() returns an iterable to the many layers or "modules" defined in the model class
+            # self.modules() returns an iterable to the many layers or "modules" defined in the model class
             if isinstance(m, torch.nn.Linear):
                 if isinstance(self.activation_func, torch.nn.Tanh):
                     torch.nn.init.xavier_normal_(m.weight)
@@ -95,7 +96,7 @@ class NeuralNetwork(torch.nn.Module):
                     torch.nn.init.kaiming_normal_(m.weight, mode='fan_in', nonlinearity='relu')
                 elif isinstance(self.activation_func, torch.nn.LeakyReLU):
                     torch.nn.init.kaiming_normal_(m.weight, mode='fan_in', nonlinearity='leaky_relu')
-    
+
     def forward(self, X):
         """
         Calculates outputs of each layer given inputs in X.
@@ -114,12 +115,15 @@ class NeuralNetwork(torch.nn.Module):
         Y = self.output_layer(Y)
 
         return Y
+
+
 ##########################
-    
-def ddp_setup(rank, world_size):
+
+def ddp_setup(rank, world_size, backend='gloo'):
     os.environ['MASTER_ADDR'] = 'localhost'
-    os.environ['MASTER_PORT'] = '12355' 
-    dist.init_process_group("gloo", rank=rank, world_size=world_size)
+    os.environ['MASTER_PORT'] = '12355'
+    dist.init_process_group(backend, rank=rank, world_size=world_size)
+
 
 def to_torch(M, torch_type=torch.FloatTensor, device='cpu'):
     """
@@ -134,6 +138,7 @@ def to_torch(M, torch_type=torch.FloatTensor, device='cpu'):
         M = torch.from_numpy(M).type(torch_type).to(device)
     return M
 
+
 def standardize(M):
     """
     Standardizes an input torch Tensor/numpy array.
@@ -145,16 +150,16 @@ def standardize(M):
     if isinstance(M, torch.Tensor):
         M_means = torch.mean(M, dim=0, keepdim=False)
         M_stds = torch.std(M, dim=0, keepdim=False)
-    
+
     elif isinstance(M, np.ndarray):
         M_means = np.mean(M, axis=0, keepdims=False)
         M_stds = np.std(M, axis=0, keepdims=False)
-    
+
     Ms = (M - M_means) / M_stds
 
     return Ms, M_means, M_stds
 
-    
+
 def execute_dataloader(dataset, rank, world_size, num_workers=0, batch_size=None, pin_memory=False, shuffle=False):
     """
     Execute the Dataloader process to create batches of data for each subprocess (for multiple GPU/CPU).
@@ -182,10 +187,10 @@ def execute_dataloader(dataset, rank, world_size, num_workers=0, batch_size=None
     # Removing one-hot encoded columns before standardizing. 
     # data_num and data_cat represents numeric and categorical variables, respectively.
     ####### change it later based on need
-    categ_col_start_indx = 5 
+    categ_col_start_indx = 5
     fips_years_col = -1
     #######
-    
+
     # Separating fips_years column
     fips_years = dataset[:, fips_years_col:]
 
@@ -196,10 +201,10 @@ def execute_dataloader(dataset, rank, world_size, num_workers=0, batch_size=None
     Xs, X_means, X_stds = standardize(data_num)
 
     # Adding one-hot encoded columns with standardized variables
-    Xs = torch.hstack((Xs, data_cat, fips_years)) # Xs is standardized dataset (categoricals not stansardized)
-    
-    distributed_sampler = DistributedSampler(Xs, num_replicas=world_size, rank=rank, shuffle=shuffle, 
-                                             drop_last=True)  
+    Xs = torch.hstack((Xs, data_cat, fips_years))  # Xs is standardized dataset (categoricals not stansardized)
+
+    distributed_sampler = DistributedSampler(Xs, num_replicas=world_size, rank=rank, shuffle=shuffle,
+                                             drop_last=True)
 
     dataloader = None
     if batch_size is not None:
@@ -215,7 +220,7 @@ def execute_dataloader(dataset, rank, world_size, num_workers=0, batch_size=None
 
 def cleanup():
     dist.destroy_process_group()
-    
+
 
 def distribute_T_for_backprop(input_torch_stack, observedGW_data_csv):
     """
@@ -231,27 +236,27 @@ def distribute_T_for_backprop(input_torch_stack, observedGW_data_csv):
     """
     # input_torch_stack is a numpy array having Ys output from forward() and 'fips_years' records stacked
     predicted_df = pd.DataFrame(input_torch_stack, columns=['Ys', 'fips_years'])
-    
+
     # calculating total gw_withdrawal predicted (Ys_sum) using groupby on Ys
     predicted_grp_df = predicted_df.groupby(by=['fips_years'])['Ys'].sum().reset_index()
     predicted_grp_df = predicted_grp_df.rename(columns={'Ys': 'Ys_sum'})
-    
+
     # processing observed groundwater use data for counties
     observed_df = pd.read_csv(observedGW_data_csv)
     observed_df = to_torch(observed_df.values)
     observed_df = pd.DataFrame(observed_df, columns=['total_gw_observed', 'fips_years'])
-    
+
     # Standardizing observed GW data. Necessary because pixel-wise Ys value is standardized
     observed_gw_arr = observed_df['total_gw_observed'].values
-    observed_gw_stand, obsv_mean, obsv_std = standardize(observed_gw_arr)   #### Do I need to stand. observed data??
+    observed_gw_stand, obsv_mean, obsv_std = standardize(observed_gw_arr)  #### Do I need to stand. observed data??
     observed_df['total_gw_stand.'] = observed_gw_stand
-    
+
     # 1st Merge
     # merging predicted-summed (predicted at pixel, then grouped to county) groundwater pumping dataframe 
     # with observed pumping dataframe.
     merged_df = predicted_grp_df.merge(observed_df, on=['fips_years'], how='left').reset_index()
     merged_df = merged_df[['fips_years', 'Ys_sum', 'total_gw_stand.', 'total_gw_observed']]
-    
+
     # 2nd Merge
     # merging the merged dataframe with pixel-wise dataframe
     # needed for distributing observed data to each pixel based on percentage share on Ys_sum.
@@ -261,21 +266,21 @@ def distribute_T_for_backprop(input_torch_stack, observedGW_data_csv):
     distributed_df['share_of_totalgw'] = (distributed_df['Ys'] / distributed_df['Ys_sum']) \
                                          * distributed_df['total_gw_stand.']
 
-    gw_share = distributed_df[['share_of_totalgw']].to_numpy()  
-    
-    return gw_share, obsv_mean, obsv_std   # gw_share is standardized
+    gw_share = distributed_df[['share_of_totalgw']].to_numpy()
+
+    return gw_share, obsv_mean, obsv_std  # gw_share is standardized
 
 
 def model_train_distributed_T(train_data, observed_data_csv, n_epochs,
-                              n_inputs, n_hiddens_list, 
+                              n_inputs, n_hiddens_list,
                               rank, world_size, batch_size=None, num_workers=0,
                               n_outputs=1, activation_func='tanh', device='cpu',
-                              method='sgd', learning_rate=None, verbose=True, 
+                              optimization='adam', learning_rate=None, verbose=True,
                               fips_years_col=-1, epochs_to_print=100, setup_ddp=False):
     """
     Trains the model with given training and observed data in a distributed approach (Observed data is distributed
     to each pixel/sample in each epoch before initiating backpropagation).
-    
+
     :param train_data: numpy array.
                        Standardized input array representing attributes as columns and samples as row.
     :param observed_data_csv: csv.
@@ -302,8 +307,8 @@ def model_train_distributed_T(train_data, observed_data_csv, n_epochs,
                             Name of the activation function. Can take 'tanh'/'relu'/'leakyrelu'.
     :param device: str. 
                    Name of the device to run the model. Either 'cpu'/'cuda'.
-    :param method: str.
-                   Optimization algorithm. Can take 'adam'/'sgd'.
+    :param optimization: str.
+                         Optimization algorithm. Can take 'adam'/'sgd'.
     :param learning_rate: float.
                           Controls the step size of each update, only for sgd and adam.
     :param verbose: boolean.
@@ -313,28 +318,32 @@ def model_train_distributed_T(train_data, observed_data_csv, n_epochs,
                            This column is removed before standardizing and forward pass.
     :param epochs_to_print: int.
                             If verbose is True, training progress will be printed after this number of epochs.
+    :param setup_ddp: Boolean.
+                      For running the model first time (in one kernel initialization) set to True and set False
+                      rest of the times.
 
-    :return: self. A trained NN model using distributed observed data approach.
+    :return: A trained NN model along with rmse_trace, train_means, train_stds, obsv_mean, obsv_std.
     """
-    # Initialize the process groups. 
+    # Initialize the process groups
     if setup_ddp:
         ddp_setup(rank, world_size)
-        
+
     # If already not torch.Tensor converts X and T. If device=='cuda' will transfer to GPU.
     train_data = to_torch(train_data, device=device)  # is a torch tensor now
- 
+
     # Dataloader
     train_dataloader, train_means, train_stds = \
-    execute_dataloader(dataset=train_data, rank=rank, world_size=world_size, num_workers=num_workers,
-                       batch_size=batch_size, pin_memory=False, shuffle=False)
+        execute_dataloader(dataset=train_data, rank=rank, world_size=world_size, num_workers=num_workers,
+                           batch_size=batch_size, pin_memory=False, shuffle=False)
 
     ##############
+    nn_model = None
     # Instantiating model, wrapping it with DDP, and moving it to the right device (cuda/gpu)
     if device == 'cpu':
         nn_model = NeuralNetwork(n_inputs, n_hiddens_list, n_outputs, activation_func, device)
     elif device == 'cuda':
         nn_model = NeuralNetwork(n_inputs, n_hiddens_list, n_outputs, activation_func, device).to(rank)
-    
+
     # wrap the model with DDP
     # device_ids tell DDP where is the model
     # output_device tells DDP where to output, in this case, it is rank
@@ -345,18 +354,18 @@ def model_train_distributed_T(train_data, observed_data_csv, n_epochs,
     elif device == 'cuda':
         nn_model = DDP(nn_model, device_ids=[rank], output_device=rank, find_unused_parameters=True)
     ##############
-  
-    # Call the requested optimizer method to train the weights.
-    if method == 'sgd':
+
+    # Call the requested optimizer optimization to train the weights.
+    if optimization == 'sgd':
         optimizer = torch.optim.SGD(nn_model.parameters(), lr=learning_rate, momentum=0.9)
-    elif method == 'adam':
+    elif optimization == 'adam':
         optimizer = torch.optim.Adam(nn_model.parameters(), lr=learning_rate, weight_decay=0)
     else:
-        raise Exception("method must be 'sgd', 'adam'")
+        raise Exception("optimization must be 'sgd', 'adam'")
 
     # mse function
     mse_func = torch.nn.MSELoss()
-    rmse_trace = []    # records standardized rmse records per epoch  
+    rmse_trace = []  # records standardized rmse records per epoch
 
     for epoch in range(n_epochs):
         # if using DistributedSampler, have to tell it which epoch this is
@@ -365,13 +374,13 @@ def model_train_distributed_T(train_data, observed_data_csv, n_epochs,
         for step, Xs in enumerate(train_dataloader):  # Xs is already standardized in execute_dataloader()
             # Separating fips_years column
             fips_years = Xs[:, fips_years_col:]
-              
+
             # Removing fip_years columns from predictors
             Xs = Xs[:, :fips_years_col]
-            
+
             # gradients need to be computed for Tensor Xs (the standardized predictors)
-            Xs.requires_grad_(True)            
-            
+            Xs.requires_grad_(True)
+
             # Forward pass
             Ys = nn_model(Xs)
 
@@ -382,13 +391,13 @@ def model_train_distributed_T(train_data, observed_data_csv, n_epochs,
             # among each pixel.
             # This distribution will be performed in each epoch, based on prediction share of Ys in Ys_sum.
             Ts, obsv_mean, obsv_std = distribute_T_for_backprop(Ys_stack, observed_data_csv)
-  
+
             # converting to torch tensor
             Ts = to_torch(Ts, device=device)
-                       
+
             # backpropagation
             rmse_loss = torch.sqrt(mse_func(Ys, Ts))  # rmse of standardized obsv and predicted outputs, 
-                                                      # coverting mse to rmse loss
+            # coverting mse to rmse loss
             rmse_loss.backward()  # Backpropagates the loss function
 
             # using optimizer
@@ -397,13 +406,13 @@ def model_train_distributed_T(train_data, observed_data_csv, n_epochs,
 
         # printing standardized rmse loss in training
         if verbose & (((epoch + 1) % epochs_to_print) == 0):
-            print(f'{method}: Epoch={epoch + 1} RMSE={rmse_loss.item():.5f}')
-        
+            print(f'{optimization}: Epoch={epoch + 1} RMSE={rmse_loss.item():.5f}')
+
         rmse_trace.append(rmse_loss)
-        
+
     cleanup()
 
-    return nn_model, rmse_trace, train_means , train_stds, obsv_mean, obsv_std
+    return nn_model, rmse_trace, train_means, train_stds, obsv_mean, obsv_std
 
 
 def predict(X, fips_years_arr, trained_model, train_means, train_stds, obsv_mean, obsv_std):
@@ -419,30 +428,30 @@ def predict(X, fips_years_arr, trained_model, train_means, train_stds, obsv_mean
     """
     # Removing 1-dimensions from fips_years_arr
     fips_years = fips_years_arr.squeeze()
-    
+
     # Moving to torch (cpu)
     X = to_torch(X)
-    
+
     # Removing one-hot encoded columns before standardizing. 
     # data_num and data_cat represents numeric and categorical variables, respectively.
     ####### change it later based on need
-    categ_col_start_indx = 5 
+    categ_col_start_indx = 5
     fips_years_col = -1
     #######
 
     X_num = X[:, :categ_col_start_indx]  # getting rid of fips_years from predictors
     X_cat = X[:, categ_col_start_indx:fips_years_col]
-    
+
     # Standardization
     train_means = train_means.cpu().detach()  # moving it to cpu from cuda as X_num is in CPU.
     train_stds = train_stds.cpu().detach()
     Xs = (X_num - train_means) / train_stds
-    
+
     # Adding one-hot encoded columns with standardized variables
-    Xs = torch.hstack((Xs, X_cat)) # Xs is standardized dataset (categoricals not stansardized)
-    
+    Xs = torch.hstack((Xs, X_cat))  # Xs is standardized dataset (categoricals not stansardized)
+
     Ys = trained_model(Xs)  # standardized result
-    
+
     Y = Ys * obsv_mean + obsv_std  # Unstandardizing
     Y = Y.cpu().detach()  # prediction as numpy array for each pixel  
 
@@ -453,3 +462,5 @@ def predict(X, fips_years_arr, trained_model, train_means, train_stds, obsv_mean
     Y_predicted = df['GW_predicted'].to_numpy()
 
     return Y_predicted  # predicted result as numpy array
+
+

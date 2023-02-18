@@ -317,14 +317,17 @@ def rmse(Y_pred, Y_obsv):
     """
     Calculates RMSE value of model prediction vs observed data.
 
-    :param Y_pred: flattened prediction array.
-    :param Y_obsv: flattened observed array.
+    :param Y_pred: prediction array or panda series object.
+    :param Y_obsv: observed array or panda series object.
 
     :return: RMSE value.
     """
-    Y_pred = Y_pred.reshape(-1, 1)
-    Y_obsv = Y_obsv.reshape(-1, 1)
-    rmse_val = np.sqrt(np.mean((Y_obsv - Y_pred) ** 2))
+    if isinstance(Y_pred, np.ndarray):
+        Y_pred = Y_pred.reshape(-1, 1)
+        Y_obsv = Y_obsv.reshape(-1, 1)
+        rmse_val = np.sqrt(np.mean((Y_obsv - Y_pred) ** 2))
+    else:  # in case of pandas series
+        rmse_val = np.sqrt(np.mean((Y_obsv - Y_pred) ** 2))
     return rmse_val
 
 
@@ -332,14 +335,17 @@ def r2(Y_pred, Y_obsv):
     """
     Calculates R2 value of model prediction vs observed data.
 
-    :param Y_pred: flattened prediction array.
-    :param Y_obsv: flattened observed array.
+    :param Y_pred: prediction array or panda series object.
+    :param Y_obsv: observed array or panda series object.
 
     :return: R2 value.
     """
-    Y_pred = Y_pred.reshape(-1, 1)
-    Y_obsv = Y_obsv.reshape(-1, 1)
-    r2_val = r2_score(Y_obsv, Y_pred)
+    if isinstance(Y_pred, np.ndarray):
+        Y_pred = Y_pred.reshape(-1, 1)
+        Y_obsv = Y_obsv.reshape(-1, 1)
+        r2_val = r2_score(Y_obsv, Y_pred)
+    else:  # in case of pandas series
+        r2_val = r2_score(Y_obsv, Y_pred)
     return r2_val
 
 
@@ -437,7 +443,8 @@ def train_nn_model(predictor_csv, observed_csv, hidden_layers, activation='tanh'
                                drop_columns=drop_columns)
 
         # Training the model
-        trained_model, rmse_loss, train_means, train_stds, obsv_mean, obsv_std = \
+        # trained_model, rmse_loss, train_means, train_stds, obsv_mean, obsv_std = \
+        trained_model, rmse_loss, train_means, train_stds = \
             Neural_Net.model_train_distributed_T(train_data=train_arr, observed_data_csv=observed_csv,  # try making the input of observed csv to an array
                                                  n_epochs=epochs, n_inputs=n_inputs, n_hiddens_list=hidden_layers,
                                                  n_outputs=1, rank=rank, world_size=world_size, batch_size=batch_size,
@@ -454,8 +461,8 @@ def train_nn_model(predictor_csv, observed_csv, hidden_layers, activation='tanh'
         makedirs([save_model_dir])
         torch.save(trained_model.state_dict(), '../Model_Run/Model_trained/nn_trained.pth')
 
-        nn_params = {'rmse_loss': rmse_loss, 'train_means': train_means, 'train_stds': train_stds,
-                     'obsv_mean': obsv_mean, 'obsv_std': obsv_std}
+        nn_params = {'rmse_loss': rmse_loss, 'train_means': train_means, 'train_stds': train_stds}
+            # , 'obsv_mean': obsv_mean, 'obsv_std': obsv_std}
         pickle.dump(nn_params, open('../Model_Run/Model_trained/nn_params.pkl', mode='wb+'))
 
 
@@ -480,27 +487,46 @@ def train_nn_model(predictor_csv, observed_csv, hidden_layers, activation='tanh'
         rmse_loss = nn_params['rmse_loss']
         train_means = nn_params['train_means']
         train_stds = nn_params['train_stds']
-        obsv_mean = nn_params['obsv_mean']
-        obsv_std = nn_params['obsv_std']
+        # obsv_mean = nn_params['obsv_mean']
+        # obsv_std = nn_params['obsv_std']
 
-    return trained_model, rmse_loss, train_means, train_stds, obsv_mean, obsv_std
+    return trained_model, rmse_loss, train_means, train_stds
+        # , obsv_mean, obsv_std
 
 
-def model_performance(trained_model, predictor_csv, observed_csv, train_means, train_stds, obsv_mean, obsv_std,
+def model_performance(trained_model, predictor_csv, observed_csv, train_means, train_stds,
+    # , obsv_mean, obsv_std,
                       drop_columns=('fips', 'Year')):
 
     predictor_arr, n_inputs, obsv_arr, fips_years_arr = \
         create_model_input(predictor_csv=predictor_csv, observed_csv=observed_csv,
                            drop_columns=drop_columns)
 
-    predicted_arr = Neural_Net.predict(X=predictor_arr, fips_years_arr=fips_years_arr, trained_model=trained_model,
-                                       train_means=train_means, train_stds=train_stds, obsv_mean=obsv_mean,
-                                       obsv_std=obsv_std)
+    # predicted_arr = Neural_Net.predict(X=predictor_arr, fips_years_arr=fips_years_arr, trained_model=trained_model,
+    #                                    train_means=train_means, train_stds=train_stds)
+    #     # , obsv_mean=obsv_mean, obsv_std=obsv_std)
+    #
+    # rmse_value = rmse(Y_pred=predicted_arr, Y_obsv=obsv_arr)
+    # r2_value = r2(Y_pred=predicted_arr, Y_obsv=obsv_arr)
 
-    rmse_value = rmse(Y_pred=predicted_arr, Y_obsv=obsv_arr)
-    r2_value = r2(Y_pred=predicted_arr, Y_obsv=obsv_arr)
+    # scatter_plot(Y_pred=predicted_arr, Y_obsv=obsv_arr, savedir='../Model_Run/Plots')
 
-    scatter_plot(Y_pred=predicted_arr, Y_obsv=obsv_arr, savedir='../Model_Run/Plots')
+    prediction_df = Neural_Net.predict(X=predictor_arr, fips_years_arr=fips_years_arr, trained_model=trained_model,
+                                       train_means=train_means, train_stds=train_stds)
+    prediction_df = prediction_df[['fips_years', 'gw prediction (mm)']]
+
+    obsv_df = pd.read_csv(observed_csv)
+    prediction_df = prediction_df.merge(obsv_df, on=['fips_years'], how='left').reset_index()
+
+    prediction_dir = '../Model_Run/Prediction'
+    makedirs([prediction_dir])
+    prediction_df.to_csv(os.path.join(prediction_dir, 'prediction.csv'), index=False)
+
+    rmse_value = rmse(Y_pred=prediction_df['gw prediction (mm)'], Y_obsv=prediction_df['total_gw_observed'])
+    r2_value = r2(Y_pred=prediction_df['gw prediction (mm)'], Y_obsv=prediction_df['total_gw_observed'])
+
+    scatter_plot(Y_pred=prediction_df['gw prediction (mm)'], Y_obsv=prediction_df['total_gw_observed'],
+                 savedir='../Model_Run/Plots')
 
     print(f'Unstandardized RMSE value= {rmse_value}')
     print(f'R2 value= {r2_value}')

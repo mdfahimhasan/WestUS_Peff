@@ -45,21 +45,22 @@ train_csv, validation_csv, test_csv, train_obsv, validation_obsv, test_obsv = \
                                drop_columns=drop_predictor, train_val_test_exists=train_val_test_exists)
 
 # Model training
-hidden_layers = [30, 20, 10, 5]  # #
+hidden_layers = [50, 30, 20, 10, 5]  # #
 activation = 'tanh'  # #
 optimization = 'adam'  # #
-epochs = 300  # #
-learning_rate = 0.05  # #
+epochs = 400  # #
+learning_rate = 0.001  # #
 device = 'cuda'  # #
 rank = 0  # #
 world_size = 1  # #
-batch_size = int(len(pd.read_csv(train_csv))/20)  # batch_size optimization helps with CUDA memory error
+batch_size = int(len(pd.read_csv(train_csv))/30)  # batch_size optimization helps with CUDA memory error
 verbose = True  # #
-print_epoch = 25  # #
+print_epoch = 15  # #
 skip_train = False  # #
 setup_ddp = True  # #
 
-trained_model, rmse_loss, train_means, train_stds, obsv_mean, obsv_std = \
+# trained_model, rmse_loss, train_means, train_stds, obsv_mean, obsv_std = \
+trained_model, rmse_loss, train_means, train_stds = \
     train_nn_model(predictor_csv=train_csv, observed_csv=train_obsv, hidden_layers=hidden_layers,
                    activation=activation, optimization=optimization, epochs=epochs,
                    learning_rate=learning_rate, device=device, rank=rank, world_size=world_size,
@@ -67,6 +68,7 @@ trained_model, rmse_loss, train_means, train_stds, obsv_mean, obsv_std = \
                    verbose=True, epochs_to_print=print_epoch, skip_training=skip_train, setup_ddp=setup_ddp)
 
 model_performance(trained_model, predictor_csv=train_csv, observed_csv=train_obsv, train_means=train_means,
-                  train_stds=train_stds, obsv_mean=obsv_mean, obsv_std=obsv_std,
+                  train_stds=train_stds,
+                  # obsv_mean=obsv_mean, obsv_std=obsv_std,
                   drop_columns=('fips', 'Year'))
 

@@ -194,11 +194,11 @@ def execute_dataloader(dataset, rank, world_size, num_workers=0, batch_size=None
     # Separating fips_years column
     fips_years = dataset[:, fips_years_col:]
 
-    data_num = dataset[:, :categ_col_start_indx]  # getting rid of fips_years from predictors
+    data_numr = dataset[:, :categ_col_start_indx]  # getting rid of fips_years from predictors
     data_cat = dataset[:, categ_col_start_indx:fips_years_col]
 
     # Standardization of numeric variable
-    Xs, X_means, X_stds = standardize(data_num)
+    Xs, X_means, X_stds = standardize(data_numr)
 
     # Adding one-hot encoded columns with standardized variables
     Xs = torch.hstack((Xs, data_cat, fips_years))  # Xs is standardized dataset (categoricals not stansardized)
@@ -247,28 +247,31 @@ def distribute_T_for_backprop(input_torch_stack, observedGW_data_csv):
     observed_df = pd.DataFrame(observed_df, columns=['total_gw_observed', 'fips_years'])
 
     # Standardizing observed GW data. Necessary because pixel-wise Ys value is standardized
-    observed_gw_arr = observed_df['total_gw_observed'].values
-    observed_gw_stand, obsv_mean, obsv_std = standardize(observed_gw_arr)  #### Do I need to stand. observed data??
-    observed_df['total_gw_stand.'] = observed_gw_stand
+    # observed_gw_arr = observed_df['total_gw_observed'].values
+    # observed_gw_stand, obsv_mean, obsv_std = standardize(observed_gw_arr)  #### Do I need to stand. observed data??
+    # observed_df['total_gw_stand.'] = observed_gw_stand
 
     # 1st Merge
     # merging predicted-summed (predicted at pixel, then grouped to county) groundwater pumping dataframe 
     # with observed pumping dataframe.
     merged_df = predicted_grp_df.merge(observed_df, on=['fips_years'], how='left').reset_index()
-    merged_df = merged_df[['fips_years', 'Ys_sum', 'total_gw_stand.', 'total_gw_observed']]
+    merged_df = merged_df[['fips_years', 'Ys_sum',
+                           # 'total_gw_stand.',
+                           'total_gw_observed']]
 
     # 2nd Merge
     # merging the merged dataframe with pixel-wise dataframe
     # needed for distributing observed data to each pixel based on percentage share on Ys_sum.
     # required for backpropagation step.
     distributed_df = predicted_df.merge(merged_df, on=['fips_years'], how='left').reset_index()
-    distributed_fips_list = list(distributed_df['fips_years'])
     distributed_df['share_of_totalgw'] = (distributed_df['Ys'] / distributed_df['Ys_sum']) \
-                                         * distributed_df['total_gw_stand.']
+                                         * distributed_df['total_gw_observed']
+                                         # * distributed_df['total_gw_stand.']
 
     gw_share = distributed_df[['share_of_totalgw']].to_numpy()
 
-    return gw_share, obsv_mean, obsv_std  # gw_share is standardized
+    return gw_share
+           # obsv_mean, obsv_std  # gw_share is standardized
 
 
 def model_train_distributed_T(train_data, observed_data_csv, n_epochs,
@@ -359,7 +362,7 @@ def model_train_distributed_T(train_data, observed_data_csv, n_epochs,
     if optimization == 'sgd':
         optimizer = torch.optim.SGD(nn_model.parameters(), lr=learning_rate, momentum=0.9)
     elif optimization == 'adam':
-        optimizer = torch.optim.Adam(nn_model.parameters(), lr=learning_rate, weight_decay=0)
+        optimizer = torch.optim.Adam(nn_model.parameters(), lr=learning_rate, weight_decay=0.01)
     else:
         raise Exception("optimization must be 'sgd', 'adam'")
 
@@ -382,22 +385,22 @@ def model_train_distributed_T(train_data, observed_data_csv, n_epochs,
             Xs.requires_grad_(True)
 
             # Forward pass
-            Ys = nn_model(Xs)
-
+            # Ys = nn_model(Xs)
+            Y = nn_model(Xs)
             # grouping Ys by fips_years codes
-            Ys_stack = np.hstack((Ys.cpu().detach(), fips_years.cpu().detach()))  # is a numpy arrary
-
+            # Ys_stack = np.hstack((Ys.cpu().detach(), fips_years.cpu().detach()))  # is a numpy arrary
+            Y_stack = np.hstack((Y.cpu().detach(), fips_years.cpu().detach()))  # is a numpy arrary
             # Ts (standardized, numpy array) is standardized county-wise observed gw pumping data distributed 
             # among each pixel.
             # This distribution will be performed in each epoch, based on prediction share of Ys in Ys_sum.
-            Ts, obsv_mean, obsv_std = distribute_T_for_backprop(Ys_stack, observed_data_csv)
-
+            # Ts, obsv_mean, obsv_std = distribute_T_for_backprop(Ys_stack, observed_data_csv)
+            T = distribute_T_for_backprop(Y_stack, observed_data_csv)
             # converting to torch tensor
-            Ts = to_torch(Ts, device=device)
+            T = to_torch(T, device=device)
 
             # backpropagation
-            rmse_loss = torch.sqrt(mse_func(Ys, Ts))  # rmse of standardized obsv and predicted outputs, 
-            # coverting mse to rmse loss
+            rmse_loss = torch.sqrt(mse_func(Y, T))  # rmse of standardized obsv and predicted outputs,
+            # converting mse to rmse loss
             rmse_loss.backward()  # Backpropagates the loss function
 
             # using optimizer
@@ -412,10 +415,12 @@ def model_train_distributed_T(train_data, observed_data_csv, n_epochs,
 
     cleanup()
 
-    return nn_model, rmse_trace, train_means, train_stds, obsv_mean, obsv_std
+    return nn_model, rmse_trace, train_means, train_stds
+        # , obsv_mean, obsv_std
 
 
-def predict(X, fips_years_arr, trained_model, train_means, train_stds, obsv_mean, obsv_std):
+def predict(X, fips_years_arr, trained_model, train_means, train_stds):
+            # obsv_mean, obsv_std):
     """
     Uses trained model to predict on given data.
 
@@ -450,17 +455,22 @@ def predict(X, fips_years_arr, trained_model, train_means, train_stds, obsv_mean
     # Adding one-hot encoded columns with standardized variables
     Xs = torch.hstack((Xs, X_cat))  # Xs is standardized dataset (categoricals not stansardized)
 
-    Ys = trained_model(Xs)  # standardized result
+    # Ys
+    Y = trained_model(Xs)  # standardized result
 
-    Y = Ys * obsv_mean + obsv_std  # Unstandardizing
+    # Y = Ys * obsv_mean + obsv_std  # Unstandardizing
     Y = Y.cpu().detach()  # prediction as numpy array for each pixel  
 
-    df = pd.DataFrame(Y, columns=['GW_predicted'])  # dataframe created to store pixel-wise results
+    df = pd.DataFrame(Y, columns=['gw prediction (mm)'])  # dataframe created to store pixel-wise results
+    # df['fips_years'] = pd.Series(
+    #     fips_years)  # adding fips_years to dataframe for aggregating result to county level
+    # df = df.groupby(by=['fips_years'])['GW_predicted'].sum().reset_index()  # prediction aggregated to county level
+    # Y_predicted = df['GW_predicted'].to_numpy()
+    #
+    # return Y_predicted  # predicted result as numpy array
     df['fips_years'] = pd.Series(
         fips_years)  # adding fips_years to dataframe for aggregating result to county level
-    df = df.groupby(by=['fips_years'])['GW_predicted'].mean().reset_index()  # prediction aggregated to county level
-    Y_predicted = df['GW_predicted'].to_numpy()
+    prediction_df = df.groupby(by=['fips_years'])['gw prediction (mm)'].sum().reset_index()  # prediction aggregated to county level
 
-    return Y_predicted  # predicted result as numpy array
-
+    return prediction_df # predicted result as a dataframe
 

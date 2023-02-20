@@ -45,10 +45,11 @@ train_csv, validation_csv, test_csv, train_obsv, validation_obsv, test_obsv = \
                                drop_columns=drop_predictor, train_val_test_exists=train_val_test_exists)
 
 # Model training
-hidden_layers = [50, 30, 20, 10, 5]  # #
+hidden_layers = [50, 50, 30, 20, 10, 5]  # #
 activation = 'tanh'  # #
-optimization = 'adam'  # #
-epochs = 400  # #
+optimization = 'sgd'  # #
+betas = (0.5, 0.99)  # # Only for Adam optimizer
+epochs = 700  # #
 learning_rate = 0.001  # #
 device = 'cuda'  # #
 rank = 0  # #
@@ -63,7 +64,7 @@ setup_ddp = True  # #
 trained_model, rmse_loss, train_means, train_stds = \
     train_nn_model(predictor_csv=train_csv, observed_csv=train_obsv, hidden_layers=hidden_layers,
                    activation=activation, optimization=optimization, epochs=epochs,
-                   learning_rate=learning_rate, device=device, rank=rank, world_size=world_size,
+                   learning_rate=learning_rate, betas=betas, device=device, rank=rank, world_size=world_size,
                    batch_size=batch_size, num_workers=0, drop_columns=('fips', 'Year'),
                    verbose=True, epochs_to_print=print_epoch, skip_training=skip_train, setup_ddp=setup_ddp)
 

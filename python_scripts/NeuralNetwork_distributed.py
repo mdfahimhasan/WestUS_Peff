@@ -1,12 +1,17 @@
 import os
 import numpy as np
 import pandas as pd
+from sklearn.metrics import r2_score
+import matplotlib.pyplot as plt
 
 import torch
 import torch.distributed as dist
 from torch.utils.data import DataLoader
 from torch.utils.data.distributed import DistributedSampler
 from torch.nn.parallel import DistributedDataParallel as DDP
+
+from system_process import makedirs
+
 
 ##########################
 class NeuralNetwork(torch.nn.Module):
@@ -118,6 +123,64 @@ class NeuralNetwork(torch.nn.Module):
 
 
 ##########################
+def rmse(Y_pred, Y_obsv):
+    """
+    Calculates RMSE value of model prediction vs observed data.
+
+    :param Y_pred: prediction array or panda series object.
+    :param Y_obsv: observed array or panda series object.
+
+    :return: RMSE value.
+    """
+    if isinstance(Y_pred, np.ndarray):
+        Y_pred = Y_pred.reshape(-1, 1)
+        Y_obsv = Y_obsv.reshape(-1, 1)
+        rmse_val = np.sqrt(np.mean((Y_obsv - Y_pred) ** 2))
+    else:  # in case of pandas series
+        rmse_val = np.sqrt(np.mean((Y_obsv - Y_pred) ** 2))
+    return rmse_val
+
+
+def r2(Y_pred, Y_obsv):
+    """
+    Calculates R2 value of model prediction vs observed data.
+
+    :param Y_pred: prediction array or panda series object.
+    :param Y_obsv: observed array or panda series object.
+
+    :return: R2 value.
+    """
+    if isinstance(Y_pred, np.ndarray):
+        Y_pred = Y_pred.reshape(-1, 1)
+        Y_obsv = Y_obsv.reshape(-1, 1)
+        r2_val = r2_score(Y_obsv, Y_pred)
+    else:  # in case of pandas series
+        r2_val = r2_score(Y_obsv, Y_pred)
+    return r2_val
+
+
+def scatter_plot(Y_pred, Y_obsv, savedir='../Model_Run/Plots'):
+    """
+    Makes scatter plot of model prediction vs observed data.
+
+    :param Y_pred: flattened prediction array.
+    :param Y_obsv: flattened observed array.
+    :param savedir: filepath to save the plot.
+
+    :return: A scatter plot of model prediction vs observed data.
+    """
+    fig, ax = plt.subplots()
+    ax.plot(Y_obsv, Y_pred, 'o')
+    ax.plot([0, 1], [0, 1], '-r', transform=ax.transAxes)
+    ax.set_xlabel('GW Observed (mm)')
+    ax.set_ylabel('GW Predicted (mm)')
+
+    r2_val = round(r2(Y_pred, Y_obsv), 3)
+    ax.text(0.1, 0.9, s=f'R2={r2_val}', transform=ax.transAxes)
+
+    makedirs([savedir])
+    fig_loc = savedir + '/scatter_plot.jpeg'
+    fig.savefig(fig_loc, dpi=300)
 
 def ddp_setup(rank, world_size, backend='gloo'):
     os.environ['MASTER_ADDR'] = 'localhost'
@@ -266,19 +329,21 @@ def distribute_T_for_backprop(input_torch_stack, observedGW_data_csv):
     distributed_df = predicted_df.merge(merged_df, on=['fips_years'], how='left').reset_index()
     distributed_df['share_of_totalgw'] = (distributed_df['Ys'] / distributed_df['Ys_sum']) \
                                          * distributed_df['total_gw_observed']
-                                         # * distributed_df['total_gw_stand.']
+    # * distributed_df['total_gw_stand.']
+    # print('printing fips_year from distributed T func')
+    # print(distributed_df['fips_years'], len(distributed_df['fips_years']))
 
     gw_share = distributed_df[['share_of_totalgw']].to_numpy()
 
     return gw_share
-           # obsv_mean, obsv_std  # gw_share is standardized
+    # obsv_mean, obsv_std  # gw_share is standardized
 
 
 def model_train_distributed_T(train_data, observed_data_csv, n_epochs,
                               n_inputs, n_hiddens_list,
                               rank, world_size, batch_size=None, num_workers=0,
                               n_outputs=1, activation_func='tanh', device='cpu',
-                              optimization='adam', learning_rate=None, verbose=True,
+                              optimization='adam', learning_rate=0.01, betas=(0.5, 0.99), verbose=True,
                               fips_years_col=-1, epochs_to_print=100, setup_ddp=False):
     """
     Trains the model with given training and observed data in a distributed approach (Observed data is distributed
@@ -314,6 +379,8 @@ def model_train_distributed_T(train_data, observed_data_csv, n_epochs,
                          Optimization algorithm. Can take 'adam'/'sgd'.
     :param learning_rate: float.
                           Controls the step size of each update, only for sgd and adam.
+    :param betas: tuple.
+                  betas hyperparameter for the adam optimizer.
     :param verbose: boolean.
                     If True, prints training progress statement.
     :param fips_years_col: int.
@@ -360,9 +427,9 @@ def model_train_distributed_T(train_data, observed_data_csv, n_epochs,
 
     # Call the requested optimizer optimization to train the weights.
     if optimization == 'sgd':
-        optimizer = torch.optim.SGD(nn_model.parameters(), lr=learning_rate, momentum=0.9)
+        optimizer = torch.optim.SGD(nn_model.parameters(), lr=learning_rate, momentum=0.5)
     elif optimization == 'adam':
-        optimizer = torch.optim.Adam(nn_model.parameters(), lr=learning_rate, weight_decay=0.01)
+        optimizer = torch.optim.Adam(nn_model.parameters(), lr=learning_rate, betas=betas, weight_decay=0.01)
     else:
         raise Exception("optimization must be 'sgd', 'adam'")
 
@@ -370,14 +437,20 @@ def model_train_distributed_T(train_data, observed_data_csv, n_epochs,
     mse_func = torch.nn.MSELoss()
     rmse_trace = []  # records standardized rmse records per epoch
 
-    for epoch in range(n_epochs):
+    n_epoch = list(range(n_epochs))
+
+    pixel_obsv_last_epoch = []
+    pixel_pred_last_epoch = []
+    pixel_fips_years = []
+    for epoch in n_epoch:
         # if using DistributedSampler, have to tell it which epoch this is
         train_dataloader.sampler.set_epoch(epoch)
 
         for step, Xs in enumerate(train_dataloader):  # Xs is already standardized in execute_dataloader()
             # Separating fips_years column
             fips_years = Xs[:, fips_years_col:]
-
+            # print('training_fips_years', fips_years)
+            # print('training_fips_years length', fips_years.shape)
             # Removing fip_years columns from predictors
             Xs = Xs[:, :fips_years_col]
 
@@ -398,6 +471,12 @@ def model_train_distributed_T(train_data, observed_data_csv, n_epochs,
             # converting to torch tensor
             T = to_torch(T, device=device)
 
+            ## pixel level data save in last iteration
+            if epoch == n_epoch[-1]:
+                pixel_obsv_last_epoch.append(T.cpu().detach().numpy())
+                pixel_pred_last_epoch.append(Y.cpu().detach().numpy())
+                pixel_fips_years.append(fips_years.cpu().detach().numpy())
+
             # backpropagation
             rmse_loss = torch.sqrt(mse_func(Y, T))  # rmse of standardized obsv and predicted outputs,
             # converting mse to rmse loss
@@ -406,6 +485,27 @@ def model_train_distributed_T(train_data, observed_data_csv, n_epochs,
             # using optimizer
             optimizer.step()
             optimizer.zero_grad()  # Reset the gradients to zero
+        if epoch == n_epoch[-1]:
+            pixel_obsv_last_epoch = np.vstack(pixel_obsv_last_epoch)
+            pixel_obsv_last_epoch = [i for arr in pixel_obsv_last_epoch for i in arr]
+
+            pixel_pred_last_epoch = np.vstack(pixel_pred_last_epoch)
+            pixel_pred_last_epoch = [i for arr in pixel_pred_last_epoch for i in arr]
+
+            pixel_fips_years = np.vstack(pixel_fips_years)
+            pixel_fips_years = [i for arr in pixel_fips_years for i in arr]
+
+            pixel_dict = {'fips_years': pixel_fips_years, 'predicted_gw (mm)': pixel_pred_last_epoch,
+                          'obsv_dist_gw (mm)': pixel_obsv_last_epoch}
+            pixel_df = pd.DataFrame(pixel_dict)
+            pixel_df.to_csv('pixel_prediction.csv')
+
+            rmse_val =rmse(Y_pred=pixel_df['predicted_gw (mm)'], Y_obsv=pixel_df['obsv_dist_gw (mm)'])
+            r2_val = r2(Y_pred=pixel_df['predicted_gw (mm)'], Y_obsv=pixel_df['obsv_dist_gw (mm)'])
+
+            print(f'rmse= {rmse_val}, r2= {r2_val}')
+            scatter_plot(Y_pred=pixel_df['predicted_gw (mm)'], Y_obsv=pixel_df['obsv_dist_gw (mm)'],
+                         savedir=r'F:\WestUS_Wateruse_SpatialDist\python_scripts')
 
         # printing standardized rmse loss in training
         if verbose & (((epoch + 1) % epochs_to_print) == 0):
@@ -416,11 +516,11 @@ def model_train_distributed_T(train_data, observed_data_csv, n_epochs,
     cleanup()
 
     return nn_model, rmse_trace, train_means, train_stds
-        # , obsv_mean, obsv_std
+    # , obsv_mean, obsv_std
 
 
 def predict(X, fips_years_arr, trained_model, train_means, train_stds):
-            # obsv_mean, obsv_std):
+    # obsv_mean, obsv_std):
     """
     Uses trained model to predict on given data.
 
@@ -470,7 +570,7 @@ def predict(X, fips_years_arr, trained_model, train_means, train_stds):
     # return Y_predicted  # predicted result as numpy array
     df['fips_years'] = pd.Series(
         fips_years)  # adding fips_years to dataframe for aggregating result to county level
-    prediction_df = df.groupby(by=['fips_years'])['gw prediction (mm)'].sum().reset_index()  # prediction aggregated to county level
+    prediction_df = df.groupby(by=['fips_years'])[
+        'gw prediction (mm)'].sum().reset_index()  # prediction aggregated to county level
 
-    return prediction_df # predicted result as a dataframe
-
+    return prediction_df  # predicted result as a dataframe

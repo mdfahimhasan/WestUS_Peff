@@ -1,4 +1,5 @@
 import os
+import torch
 import pickle
 import numpy as np
 import pandas as pd
@@ -7,9 +8,6 @@ import dask.dataframe as ddf
 import matplotlib.pyplot as plt
 from sklearn.metrics import r2_score
 from sklearn.preprocessing import OneHotEncoder
-
-import torch
-from torch.nn.parallel import DistributedDataParallel as DDP
 
 from system_process import makedirs, copy_file
 from raster_process import read_raster_arr_object, write_array_to_raster, clip_resample_reproject_raster
@@ -42,7 +40,7 @@ def apply_OneHotEncoding(input_df):
 
 def create_dataframe_csv(input_data_dir, output_csv, search_by='*.tif', years=(2010, 2015),
                          drop_datasets=('MODIS_ET', 'MODIS_Terra_EVI', 'MODIS_Terra_NDVI'),
-                         encode_cols = ('USDA_cropland', 'USDA_developed'),
+                         encode_cols=('USDA_cropland', 'USDA_developed'),
                          skip_dataframe_creation=False):
     """
     Create dataframe from predictor variables (raster).
@@ -163,7 +161,7 @@ def create_train_val_test_data(predictor_csv, observed_data_csv, data_fraction, 
         print('Creating Train, Validation, Test dataset...')
         # # Processing observed dataset
         observed_df = pd.read_csv(observed_data_csv)
-
+        observed_df = observed_df[(observed_df['total_gw_observed'] > 0) & (observed_df['total_gw_observed'] <250)]  # testing outlier removal by removing top and zero counties        print(len(observed_df))
         ###################
         # Keeping year 2010 as 2010. Replacing year 2015 as 3020, otherwise tensor faces trouble differentiating between
         # 2010 and 2015
@@ -385,6 +383,10 @@ def plot_rmse_trace(rmse_torch, savedir='../Model_Run/Plots'):
     rmse_trace = [i.cpu().detach().numpy().item() for i in rmse_torch]
     final_rmse = round(rmse_trace[-1], 4)
 
+    # remove it later
+    rmse_trace = [i for i in rmse_trace if i < 2]
+
+
     fig, ax = plt.subplots(figsize=(10, 6))
     ax.plot(rmse_trace, '--o', color='lightblue')
     ax.set_xlabel('Epoch')
@@ -397,8 +399,8 @@ def plot_rmse_trace(rmse_torch, savedir='../Model_Run/Plots'):
 
 
 def train_nn_model(predictor_csv, observed_csv, hidden_layers, activation='tanh', optimization='adam',
-                   epochs=100, learning_rate=0.05, device='cuda', rank=0, world_size=1, batch_size=64, num_workers=0,
-                   drop_columns=('fips', 'Year'), verbose=True, epochs_to_print=50,
+                   epochs=100, learning_rate=0.05, betas=(0.5, 0.99), device='cuda', rank=0, world_size=1,
+                   batch_size=64, num_workers=0, drop_columns=('fips', 'Year'), verbose=True, epochs_to_print=50,
                    skip_training=False, setup_ddp=True):
     """
     Trains a feed forward Neural Network model for given hidden layers, optimization algorithm, epochs, and
@@ -413,6 +415,8 @@ def train_nn_model(predictor_csv, observed_csv, hidden_layers, activation='tanh'
     :param epochs: int. Number of passes to take through all samples. Default set to 100.
     :param learning_rate: float. Controls the step size of each update in the optimization algorithm. Default set to
                           0.05.
+    :param betas: tuple.
+                  betas hyperparameter for the adam optimizer.
     :param device: str. Name of the device to run the model. Either 'cpu'/'cuda'. 'cuda' represents GPU.
     :param rank: int.
                  Within the process group, each process is identified by its rank, from 0 to K-1.
@@ -449,7 +453,7 @@ def train_nn_model(predictor_csv, observed_csv, hidden_layers, activation='tanh'
                                                  n_epochs=epochs, n_inputs=n_inputs, n_hiddens_list=hidden_layers,
                                                  n_outputs=1, rank=rank, world_size=world_size, batch_size=batch_size,
                                                  num_workers=num_workers, activation_func=activation, device=device,
-                                                 optimization=optimization, learning_rate=learning_rate,
+                                                 optimization=optimization, learning_rate=learning_rate, betas=betas,
                                                  verbose=verbose, fips_years_col=-1, epochs_to_print=epochs_to_print,
                                                  setup_ddp=setup_ddp)
 
@@ -464,7 +468,6 @@ def train_nn_model(predictor_csv, observed_csv, hidden_layers, activation='tanh'
         nn_params = {'rmse_loss': rmse_loss, 'train_means': train_means, 'train_stds': train_stds}
             # , 'obsv_mean': obsv_mean, 'obsv_std': obsv_std}
         pickle.dump(nn_params, open('../Model_Run/Model_trained/nn_params.pkl', mode='wb+'))
-
 
     else:  ##work on this
         # Loading trained model and parameters

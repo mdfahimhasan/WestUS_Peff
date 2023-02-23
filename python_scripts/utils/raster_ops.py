@@ -1,16 +1,17 @@
 import os
+import subprocess
 import numpy as np
 from glob import glob
 import rasterio as rio
 from osgeo import gdal
-import geopandas as gpd
 from rasterio.merge import merge
-from system_process import makedirs
+
+from python_scripts.utils.system_process import make_gdal_sys_call
+from python_scripts.utils.system_process import makedirs
 
 no_data_value = -9999
 model_res = 0.02000000000000000389  # in deg, 2 km
-WestUS_raster = '../Data/shapefiles/Western_US/Western_US_refraster_2km.tif'
-conus_raster = '../Data/shapefiles/conus/conus_refraster_2km.tif'
+WestUS_raster = '../../Data_main/shapefiles/Western_US_ref_shapes/Western_US_refraster_2km.tif'
 
 
 def read_raster_arr_object(raster_file, rasterio_obj=False, band=1, get_file=True, change_dtype=True):
@@ -172,5 +173,71 @@ def clip_resample_reproject_raster(input_raster, input_shape, keyword, output_ra
     del processed_data
 
     return output_filepath
+
+
+def shapefile_to_raster(input_shape, output_dir, raster_name, burnvalue=None, use_attr=True, attribute="", add=None,
+                        ref_raster=WestUS_raster, resolution=model_res, alltouched=False):
+    """
+    Converts polygon shapefile to raster by attribute value or burn value.
+
+    :param input_shape: Filepath of input shapefile.
+    :param output_dir: Filepath of output directory.
+    :param raster_name: Output raster name.
+    :param burnvalue: Value for burning into raster. Only needed when use_attr is False. Default set to None.
+    :param use_attr: Set to True if raster needs to be created using a specific attribute value. Defaults to False.
+    :param attribute: Attribute name to use creating raster file. Defaults to "".
+    :param add: Set to True if all values inside the raster grid should be summed. Default set to None to perform rasterizing
+                with an attribute without summing.
+    :param ref_raster: Reference raster to get minx, miny,maxx, maxy. Defaults to rWestUS_raster.
+    :param resolution: Resolution of the output raster. Defaults to model_res of ~0.02.
+    :param alltouched: If True all pixels touched by lines or polygons will be updated.
+
+    :return: Filepath of created raster.
+    """
+    ref_arr, ref_file = read_raster_arr_object(ref_raster)
+    total_bounds = ref_file.bounds
+
+    makedirs([output_dir])
+    output_raster = os.path.join(output_dir, raster_name)
+
+    if use_attr:
+        if add is not None:
+            minx, miny, maxx, maxy = total_bounds
+            layer_name = input_shape[input_shape.rfind('/') + 1: input_shape.rfind('.')]
+            args = ['-l', layer_name, '-a', attribute, '-tr', str(resolution), str(resolution), '-te', str(minx),
+                    str(miny), str(maxx), str(maxy), '-init', str(0.0), '-add', '-ot', 'Float32', '-of', 'GTiff',
+                    '-a_nodata', str(no_data_value), input_shape, output_raster]
+            sys_call = make_gdal_sys_call(gdal_command='gdal_rasterize', args=args)
+            subprocess.call(sys_call)
+
+        else:
+            raster_options = gdal.RasterizeOptions(format='Gtiff', outputBounds=list(total_bounds),
+                                                   outputType=gdal.GDT_Float32, xRes=resolution, yRes=resolution,
+                                                   noData=no_data_value, attribute=attribute, allTouched=alltouched)
+            gdal.Rasterize(destNameOrDestDS=output_raster, srcDS=input_shape, options=raster_options,
+                           resolution=resolution)
+
+    else:
+        raster_options = gdal.RasterizeOptions(format='Gtiff', outputBounds=list(total_bounds),
+                                               outputType=gdal.GDT_Float32, xRes=resolution, yRes=resolution,
+                                               noData=no_data_value, burnValues=burnvalue,
+                                               allTouched=alltouched)
+        gdal.Rasterize(destNameOrDestDS=output_raster, srcDS=input_shape, options=raster_options,
+                       resolution=resolution)
+
+    return output_raster
+
+
+# def extract_raster_val_toGDF(input_shape, input_raster, output_shp):
+#     input_gdf = gpd.read_file(input_shape)
+#
+#     processed_gdf = extract_raster_features(gdf=input_gdf, raster_path=input_raster, nodata=-9999, n_jobs=-1)
+#     processed_gdf.to_file(output_shp)
+#
+#     return output_shp, processed_gdf
+
+
+
+
 
 

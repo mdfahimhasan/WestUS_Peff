@@ -9,9 +9,9 @@ import matplotlib.pyplot as plt
 from sklearn.metrics import r2_score
 from sklearn.preprocessing import OneHotEncoder
 
-from system_process import makedirs, copy_file
-from raster_process import read_raster_arr_object, write_array_to_raster, clip_resample_reproject_raster
-import NeuralNetwork_distributed as Neural_Net
+from python_scripts.utils.system_process import makedirs, copy_file
+from python_scripts.utils.raster_ops import read_raster_arr_object
+import python_scripts.NeuralNetwork_distributed as Neural_Net
 
 no_data_value = -9999
 WestUS_raster = '../Data_main/shapefiles/Western_US/Western_US_refraster_2km.tif'
@@ -347,10 +347,11 @@ def r2(Y_pred, Y_obsv):
     return r2_val
 
 
-def scatter_plot(Y_pred, Y_obsv, savedir='../Model_Run/Plots'):
+def scatter_plot(Y_pred, Y_obsv, plot_name, savedir='../Model_Run/Plots'):
     """
     Makes scatter plot of model prediction vs observed data.
 
+    :param plot_name:
     :param Y_pred: flattened prediction array.
     :param Y_obsv: flattened observed array.
     :param savedir: filepath to save the plot.
@@ -367,7 +368,7 @@ def scatter_plot(Y_pred, Y_obsv, savedir='../Model_Run/Plots'):
     ax.text(0.1, 0.9, s=f'R2={r2_val}', transform=ax.transAxes)
 
     makedirs([savedir])
-    fig_loc = savedir + '/scatter_plot.jpeg'
+    fig_loc = os.path.join(savedir, plot_name)
     fig.savefig(fig_loc, dpi=300)
 
 
@@ -398,8 +399,8 @@ def plot_rmse_trace(rmse_torch, savedir='../Model_Run/Plots'):
     fig.savefig(fig_loc, dpi=300)
 
 
-def train_nn_model(predictor_csv, observed_csv, hidden_layers, activation='tanh', optimization='adam',
-                   epochs=100, learning_rate=0.05, betas=(0.5, 0.99), device='cuda', rank=0, world_size=1,
+def train_nn_model(predictor_csv, observed_csv, hidden_layers, activation='tanh', optimization='adam_betas',
+                   epochs=100, learning_rate=0.05, adam_betas=(0.5, 0.99), sgd_momentum=0.3, device='cuda', rank=0, world_size=1,
                    batch_size=64, num_workers=0, drop_columns=('fips', 'Year'), verbose=True, epochs_to_print=50,
                    skip_training=False, setup_ddp=True):
     """
@@ -415,8 +416,10 @@ def train_nn_model(predictor_csv, observed_csv, hidden_layers, activation='tanh'
     :param epochs: int. Number of passes to take through all samples. Default set to 100.
     :param learning_rate: float. Controls the step size of each update in the optimization algorithm. Default set to
                           0.05.
-    :param betas: tuple.
-                  betas hyperparameter for the adam optimizer.
+    :param adam_betas: tuple.
+                  adam_betas hyperparameter for the adam optimizer.
+    :param sgd_momentum: float.
+                         momentum parameter of sgd optimizer.
     :param device: str. Name of the device to run the model. Either 'cpu'/'cuda'. 'cuda' represents GPU.
     :param rank: int.
                  Within the process group, each process is identified by its rank, from 0 to K-1.
@@ -453,7 +456,8 @@ def train_nn_model(predictor_csv, observed_csv, hidden_layers, activation='tanh'
                                                  n_epochs=epochs, n_inputs=n_inputs, n_hiddens_list=hidden_layers,
                                                  n_outputs=1, rank=rank, world_size=world_size, batch_size=batch_size,
                                                  num_workers=num_workers, activation_func=activation, device=device,
-                                                 optimization=optimization, learning_rate=learning_rate, betas=betas,
+                                                 optimization=optimization, learning_rate=learning_rate,
+                                                 adam_betas=adam_betas, sgd_momentum=sgd_momentum,
                                                  verbose=verbose, fips_years_col=-1, epochs_to_print=epochs_to_print,
                                                  setup_ddp=setup_ddp)
 

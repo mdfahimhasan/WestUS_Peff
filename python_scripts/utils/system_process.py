@@ -48,3 +48,27 @@ def copy_file(input_dir_file, copy_dir, search_by='*.tif', rename=None):
         shutil.copyfile(input_dir_file, copy_file)
 
     return copy_file
+
+
+def make_gdal_sys_call(gdal_command, args, verbose=True):
+    """
+    Make GDAL system call string.
+    ** followed by code from Sayantan Majumdar.
+
+    :param gdal_command: GDAL command string formatted as 'gdal_rasterize'.
+    :param args: List of GDAL command.
+    :param verbose: Set True to print system call info.
+
+    :return: GDAL system call string.
+    """
+    if os.name == 'nt':
+        # update it based on the pc's QGIS version and folderpath
+        gdal_path = 'C:/Program Files/QGIS 3.22.7/OSGeo4W.bat'
+
+        sys_call = [gdal_path] + [gdal_command] + args
+        if verbose:
+            print(sys_call)
+        return sys_call
+
+    else:
+        print('gdal sys call not optimized for linux yet')

@@ -10,7 +10,7 @@ from torch.utils.data import DataLoader
 from torch.utils.data.distributed import DistributedSampler
 from torch.nn.parallel import DistributedDataParallel as DDP
 
-from system_process import makedirs
+from python_scripts.utils.system_process import makedirs
 
 
 ##########################
@@ -182,6 +182,7 @@ def scatter_plot(Y_pred, Y_obsv, savedir='../Model_Run/Plots'):
     fig_loc = savedir + '/scatter_plot.jpeg'
     fig.savefig(fig_loc, dpi=300)
 
+
 def ddp_setup(rank, world_size, backend='gloo'):
     os.environ['MASTER_ADDR'] = 'localhost'
     os.environ['MASTER_PORT'] = '12355'
@@ -343,8 +344,8 @@ def model_train_distributed_T(train_data, observed_data_csv, n_epochs,
                               n_inputs, n_hiddens_list,
                               rank, world_size, batch_size=None, num_workers=0,
                               n_outputs=1, activation_func='tanh', device='cpu',
-                              optimization='adam', learning_rate=0.01, betas=(0.5, 0.99), verbose=True,
-                              fips_years_col=-1, epochs_to_print=100, setup_ddp=False):
+                              optimization='adam_betas', learning_rate=0.01, adam_betas=(0.5, 0.99), sgd_momentum=0.3,
+                              verbose=True, fips_years_col=-1, epochs_to_print=100, setup_ddp=False):
     """
     Trains the model with given training and observed data in a distributed approach (Observed data is distributed
     to each pixel/sample in each epoch before initiating backpropagation).
@@ -376,11 +377,13 @@ def model_train_distributed_T(train_data, observed_data_csv, n_epochs,
     :param device: str. 
                    Name of the device to run the model. Either 'cpu'/'cuda'.
     :param optimization: str.
-                         Optimization algorithm. Can take 'adam'/'sgd'.
+                         Optimization algorithm. Can take 'adam_betas'/'sgd'.
     :param learning_rate: float.
-                          Controls the step size of each update, only for sgd and adam.
-    :param betas: tuple.
-                  betas hyperparameter for the adam optimizer.
+                          Controls the step size of each update, only for sgd and adam_betas.
+    :param adam_betas: tuple.
+                  adam_betas hyperparameter for the adam_betas optimizer.
+    :param sgd_momentum: float.
+                         momentum parameter of sgd optimizer.
     :param verbose: boolean.
                     If True, prints training progress statement.
     :param fips_years_col: int.
@@ -427,9 +430,9 @@ def model_train_distributed_T(train_data, observed_data_csv, n_epochs,
 
     # Call the requested optimizer optimization to train the weights.
     if optimization == 'sgd':
-        optimizer = torch.optim.SGD(nn_model.parameters(), lr=learning_rate, momentum=0.5)
+        optimizer = torch.optim.SGD(nn_model.parameters(), lr=learning_rate, momentum=sgd_momentum)
     elif optimization == 'adam':
-        optimizer = torch.optim.Adam(nn_model.parameters(), lr=learning_rate, betas=betas, weight_decay=0.01)
+        optimizer = torch.optim.Adam(nn_model.parameters(), lr=learning_rate, betas=adam_betas, weight_decay=0.01)
     else:
         raise Exception("optimization must be 'sgd', 'adam'")
 
@@ -471,7 +474,7 @@ def model_train_distributed_T(train_data, observed_data_csv, n_epochs,
             # converting to torch tensor
             T = to_torch(T, device=device)
 
-            ## pixel level data save in last iteration
+            # # pixel level data save in last iteration
             if epoch == n_epoch[-1]:
                 pixel_obsv_last_epoch.append(T.cpu().detach().numpy())
                 pixel_pred_last_epoch.append(Y.cpu().detach().numpy())
@@ -485,6 +488,7 @@ def model_train_distributed_T(train_data, observed_data_csv, n_epochs,
             # using optimizer
             optimizer.step()
             optimizer.zero_grad()  # Reset the gradients to zero
+
         if epoch == n_epoch[-1]:
             pixel_obsv_last_epoch = np.vstack(pixel_obsv_last_epoch)
             pixel_obsv_last_epoch = [i for arr in pixel_obsv_last_epoch for i in arr]
@@ -499,13 +503,6 @@ def model_train_distributed_T(train_data, observed_data_csv, n_epochs,
                           'obsv_dist_gw (mm)': pixel_obsv_last_epoch}
             pixel_df = pd.DataFrame(pixel_dict)
             pixel_df.to_csv('pixel_prediction.csv')
-
-            rmse_val =rmse(Y_pred=pixel_df['predicted_gw (mm)'], Y_obsv=pixel_df['obsv_dist_gw (mm)'])
-            r2_val = r2(Y_pred=pixel_df['predicted_gw (mm)'], Y_obsv=pixel_df['obsv_dist_gw (mm)'])
-
-            print(f'rmse= {rmse_val}, r2= {r2_val}')
-            scatter_plot(Y_pred=pixel_df['predicted_gw (mm)'], Y_obsv=pixel_df['obsv_dist_gw (mm)'],
-                         savedir=r'F:\WestUS_Wateruse_SpatialDist\python_scripts')
 
         # printing standardized rmse loss in training
         if verbose & (((epoch + 1) % epochs_to_print) == 0):

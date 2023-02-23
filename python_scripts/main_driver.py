@@ -1,27 +1,4 @@
-import pandas as pd
-
 from ML_ops import create_dataframe_csv, create_train_val_test_data, train_nn_model, model_performance
-from download_preprocess import download_all_datasets, run_all_preprocessing, compile_observed_pumping_data
-
-# Data download
-skip_download_gee_data = True
-skip_download_ssebop_data = True
-
-gee_data_list = ['MODIS_NDWI', 'GPM_PRECIP', 'MODIS_Day_LST', 'PRISM_PRECIP']
-download_all_datasets(year_list=[2010, 2015], gee_data_list=gee_data_list,
-                      skip_download_gee_data=skip_download_gee_data,
-                      skip_download_ssebop_data=skip_download_ssebop_data)
-
-# Compiling USGS county-scale GW data
-include_years = '*201[0-5]*.xlsx'  # #
-skip_compiling = True  # # Set to False to compile USGS GW use data
-
-GW_usgs_csv = compile_observed_pumping_data\
-    (data_dir='../Data_main/USGS_water_use_data', search_by=include_years,
-     county_shape='../Data_main/shapefiles/Western_US/WestUS_county_projected.shp',
-     output_csv='../Data_main/USGS_water_use_data/WestUS_county_gw_use.csv',
-     skip_compiling=skip_compiling)
-
 
 # Creating predictor csv/dataframe
 exclude_data_from_df = ('MODIS_ET', 'MODIS_Terra_EVI', 'MODIS_Terra_NDVI', 'USDA_CDL')  # #
@@ -39,24 +16,26 @@ drop_predictor = ['USDA_cropland', 'USDA_developed']  # dropped attributes are a
 train_val_test_exists = True  # # Set to False to create train, test, and validation dataset csv
 
 train_csv, validation_csv, test_csv, train_obsv, validation_obsv, test_obsv = \
-    create_train_val_test_data(predictor_csv=predictor_WestUS, observed_data_csv=GW_usgs_csv,
+    create_train_val_test_data(predictor_csv=predictor_WestUS,
+                               observed_data_csv='../Data_main/USGS_water_use_data/WestUS_county_gw_use',
                                data_fraction=data_frac, train_fraction=train_frac, val_fraction=val_frac,
                                test_fraction=test_frac, output_dir='../Data_main/Model_csv',
                                drop_columns=drop_predictor, train_val_test_exists=train_val_test_exists)
 
 # Model training
-hidden_layers = [50, 50, 30, 20, 10, 5]  # #
-activation = 'tanh'  # #
-optimization = 'sgd'  # #
-betas = (0.5, 0.99)  # # Only for Adam optimizer
-epochs = 700  # #
-learning_rate = 0.001  # #
+hidden_layers = [512, 256, 128, 64, 8]  # #
+activation = 'relu'  # #
+optimization = 'adam'  # #
+adam_betas = (0.3, 0.99)  # # Only for Adam optimizer
+sgd_momentum = 0.2
+epochs = 60  # #
+learning_rate = 0.01  # #
 device = 'cuda'  # #
 rank = 0  # #
 world_size = 1  # #
-batch_size = int(len(pd.read_csv(train_csv))/30)  # batch_size optimization helps with CUDA memory error
+batch_size = 64  # batch_size optimization helps with CUDA memory error
 verbose = True  # #
-print_epoch = 15  # #
+print_epoch = 10  # #
 skip_train = False  # #
 setup_ddp = True  # #
 
@@ -64,7 +43,8 @@ setup_ddp = True  # #
 trained_model, rmse_loss, train_means, train_stds = \
     train_nn_model(predictor_csv=train_csv, observed_csv=train_obsv, hidden_layers=hidden_layers,
                    activation=activation, optimization=optimization, epochs=epochs,
-                   learning_rate=learning_rate, betas=betas, device=device, rank=rank, world_size=world_size,
+                   learning_rate=learning_rate, adam_betas=adam_betas, sgd_momentum=sgd_momentum,
+                   device=device, rank=rank, world_size=world_size,
                    batch_size=batch_size, num_workers=0, drop_columns=('fips', 'Year'),
                    verbose=True, epochs_to_print=print_epoch, skip_training=skip_train, setup_ddp=setup_ddp)
 

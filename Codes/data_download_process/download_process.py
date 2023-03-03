@@ -10,6 +10,7 @@ from glob import glob
 from osgeo import gdal
 import geopandas as gpd
 from Codes.utils.system_ops import makedirs, copy_file
+from Codes.utils.vector_ops import add_attr_to_county_fromCSV
 from Codes.utils.raster_ops import read_raster_arr_object, write_array_to_raster, mosaic_rasters, \
     clip_resample_reproject_raster
 
@@ -611,6 +612,7 @@ def run_all_preprocessing(skip_cdl_processing=False, skip_ssebop_processing=Fals
 def compile_USGS_WaterUse_data(data_dir='../../Data_main/USGS_water_use_data', search_by='*201[0-5]*.xlsx',
                                county_shape='../../Data_main/shapefiles/Western_US_ref_shapes/WestUS_county_projected.shp',
                                output_csv='../../Data_main/USGS_water_use_data/WestUS_county_WaterUse.csv',
+                               output_shape='../../Data_main/Compiled_data/County_total_WaterUse.shp',
                                skip_compiling=True, ref_raster=WestUS_raster):
     """
     Compile county-wide water use data for Western US from USGS dataset.
@@ -619,7 +621,8 @@ def compile_USGS_WaterUse_data(data_dir='../../Data_main/USGS_water_use_data', s
     :param search_by: Search pattern for yearly data excels. Default set to '*201[0-5]*.xlsx' for selecting 2010 and
                       2015 data only.
     :param county_shape: File path of Western US county shapefile location.
-    :param output_csv: File path to save output csv.
+    :param output_csv: Filepath to save output csv.
+    :param output_shape: Filepath of output county shapefile added with water use data.
     :param skip_compiling: Set to False to compile pumping data. Default set to True (data already compiled).
     :param ref_raster: Model reference raster filepath.
 
@@ -636,14 +639,15 @@ def compile_USGS_WaterUse_data(data_dir='../../Data_main/USGS_water_use_data', s
 
         # Counting Irrigated crop and developed area in each county
         countyID_arr, county_file = read_raster_arr_object('../../Data_main/Compiled_data/Western_US_countyID.tif')
-        crop_arr_2015, _ = read_raster_arr_object('../../Data_main/Compiled_data/USDA_cropland_2015.tif')
+        # crop_arr_2015, _ = read_raster_arr_object('../../Data_main/Compiled_data/USDA_cropland_2015.tif')
+        irrig_arr, _ = read_raster_arr_object('../../Data_main/Compiled_data/irrigated_agri_2015.tif')
         developed_arr_2015, _ = read_raster_arr_object('../../Data_main/Compiled_data/USDA_developed_2015.tif')
         #### modify for irrigation and developed of 2010 area data when adding 2010
         ref_arr, _ = read_raster_arr_object(ref_raster)
 
         # Array of pixels which are irrigated or developed
-        landUse_arr_2015 = np.where((crop_arr_2015 == 1) | (developed_arr_2015 > 0), 1, ref_arr)
-
+        # landUse_arr_2015 = np.where((crop_arr_2015 == 1) | (developed_arr_2015 > 0), 1, ref_arr)
+        landUse_arr_2015 = np.where((irrig_arr == 1) | (developed_arr_2015 > 0), 1, ref_arr)
         # Counting how many pixels in each county has irrigated and developed pixels
         unique, count = np.unique(countyID_arr[(landUse_arr_2015 == 1) & (~np.isnan(countyID_arr))], return_counts=True)
         count_dict = dict(zip(unique, count))
@@ -651,23 +655,25 @@ def compile_USGS_WaterUse_data(data_dir='../../Data_main/USGS_water_use_data', s
         county_wateruse = pd.DataFrame()
         for data in wateruse_data:
             wateruse_df = pd.read_excel(data, sheet_name='CountyData', engine='openpyxl')
-            wateruse_df = wateruse_df[['COUNTY', 'STATE', 'COUNTYFIPS', 'FIPS', 'YEAR', 'TO-WGWFr', 'TO-WSWFr',
-                                       'TO-WFrTo']]
+            wateruse_df = wateruse_df[['COUNTY', 'STATE', 'COUNTYFIPS', 'FIPS', 'YEAR', 'IR-WSWFr', 'PT-WSWFr',
+                                       'TO-WGWFr', 'TO-WSWFr', 'TO-WFrTo']]
 
             joined_df = county_df.merge(wateruse_df, left_on='fips', right_on='FIPS', how='inner')
             # adding irrigated and developed pixels count in the dataframe
-            joined_df['irrig_dev_pixels'] = None
-            joined_df['irrig_dev_pixels'] = joined_df['fips'].map(count_dict)
+            joined_df['crop_dev_pixels'] = None
+            joined_df['crop_dev_pixels'] = joined_df['fips'].map(count_dict)
             county_wateruse = pd.concat([county_wateruse, joined_df])
 
         # converting groundwater withdrawal from Mgal/day to mm/year.
         area_single_pixel = (2.22 * 2.22) * (1000 * 1000)  # area of a pixel in m2
         county_wateruse['gw_withdrawal'] = 1000 * (1e6 * county_wateruse['TO-WGWFr'] * 0.00378541 * 365 /
-                                                   (county_wateruse['irrig_dev_pixels'] * area_single_pixel))
-        county_wateruse['sw_withdrawal'] = 1000 * (1e6 * county_wateruse['TO-WSWFr'] * 0.00378541 * 365 /
-                                                   (county_wateruse['irrig_dev_pixels'] * area_single_pixel))
-        county_wateruse['total_withdrawal'] = 1000 * (1e6 * county_wateruse['TO-WFrTo'] * 0.00378541 * 365 /
-                                                      (county_wateruse['irrig_dev_pixels'] * area_single_pixel))
+                                                   (county_wateruse['crop_dev_pixels'] * area_single_pixel))
+        county_wateruse['sw_withdrawal'] = 1000 * (1e6 * (county_wateruse['TO-WSWFr'] - county_wateruse['PT-WSWFr'])
+                                                   * 0.00378541 * 365 /
+                                                   (county_wateruse['crop_dev_pixels'] * area_single_pixel))
+        county_wateruse['total_withdrawal'] = 1000 * (1e6 * (county_wateruse['TO-WSWFr'] - county_wateruse['PT-WSWFr'])
+                                                      * 0.00378541 * 365 /
+                                                      (county_wateruse['crop_dev_pixels'] * area_single_pixel))
 
         county_wateruse = county_wateruse[['NAME', 'fips', 'YEAR', 'gw_withdrawal',
                                            'sw_withdrawal', 'total_withdrawal']]
@@ -675,10 +681,20 @@ def compile_USGS_WaterUse_data(data_dir='../../Data_main/USGS_water_use_data', s
         # Saving as csv
         GW_use_usgs_csv = output_csv
         county_wateruse_df.to_csv(GW_use_usgs_csv, index=False)
-        print('USGS Water Use Use Data Compiled\n')
+
+        # Converting to shapefile
+        add_attr_to_county_fromCSV(input_shapefile='../../Data_main/shapefiles/Western_US_ref_shapes/WestUS_county.shp',
+                                   attr_csv_data=GW_use_usgs_csv,
+                                   output_shapefile=output_shape, year_filter=2015,  ## modify it later
+                                   columns_to_keep=('Name', 'fips', 'Year', 'gw_withdrawal', 'sw_withdrawal',
+                                                    'total_withdrawal'))
+        print('USGS Water Use Data Compiled\n')
 
     else:
         print('Loading USGS Water Use Data...\n')
         GW_use_usgs_csv = output_csv
 
     return GW_use_usgs_csv
+
+
+

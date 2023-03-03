@@ -6,8 +6,8 @@ import rasterio as rio
 from osgeo import gdal
 from rasterio.merge import merge
 
-from python_scripts.utils.system_process import make_gdal_sys_call
-from python_scripts.utils.system_process import makedirs
+from Codes.utils.system_ops import make_gdal_sys_call
+from Codes.utils.system_ops import makedirs
 
 no_data_value = -9999
 model_res = 0.02000000000000000389  # in deg, 2 km

@@ -128,7 +128,7 @@ class NeuralNetwork:
         error = error.reshape(1, -1)
 
         for i in reversed(range(len(self.weights))):
-            # error = (1, n_out)
+            # error_mae = (1, n_out)
             # tape[i] = (n_in)
             # weights[i] = (n_in, n_out)
             x = self.tape[i]

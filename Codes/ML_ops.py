@@ -12,7 +12,7 @@ from Codes.utils.system_ops import makedirs, copy_file
 from Codes.utils.raster_ops import read_raster_arr_object
 
 no_data_value = -9999
-WestUS_raster = '../Data_main/shapefiles/Western_US/Western_US_refraster_2km.tif'
+WestUS_raster = '../../Data_main/Compiled_data/reference_rasters/Western_US_refraster_2km.tif'
 model_res = 0.02000000000000000389  # in deg, 2 km
 
 
@@ -330,7 +330,7 @@ def create_model_input(predictor_csv, observed_csv, drop_columns=('fips', 'Year'
     return predictor_arr, n_inputs, observed_arr, fips_years_arr
 
 
-def rmse(Y_pred, Y_obsv):
+def calculate_rmse(Y_pred, Y_obsv):
     """
     Calculates RMSE value of model prediction vs observed data.
 
@@ -348,7 +348,7 @@ def rmse(Y_pred, Y_obsv):
     return rmse_val
 
 
-def r2(Y_pred, Y_obsv):
+def calculate_r2(Y_pred, Y_obsv):
     """
     Calculates R2 value of model prediction vs observed data.
 
@@ -383,7 +383,7 @@ def scatter_plot(Y_pred, Y_obsv, plot_name, savedir='../Model_Run/Plots'):
     ax.set_xlabel('GW Observed (mm)')
     ax.set_ylabel('GW Predicted (mm)')
 
-    r2_val = round(r2(Y_pred, Y_obsv), 3)
+    r2_val = round(calculate_r2(Y_pred, Y_obsv), 3)
     ax.text(0.1, 0.9, s=f'R2={r2_val}', transform=ax.transAxes)
 
     makedirs([savedir])
@@ -393,12 +393,12 @@ def scatter_plot(Y_pred, Y_obsv, plot_name, savedir='../Model_Run/Plots'):
 
 def plot_rmse_trace(rmse_torch, savedir='../Model_Run/Plots'):
     """
-    Makes plot of standardized rmse for each epoch.
+    Makes plot of standardized calculate_rmse for each epoch.
 
-    :param rmse_torch: A list of torch tensor holding rmse values.
+    :param rmse_torch: A list of torch tensor holding calculate_rmse values.
     :param savedir: filepath to save the plot.
 
-    :return: A plot of standardized rmse for each epoch.
+    :return: A plot of standardized calculate_rmse for each epoch.
     """
     rmse_trace = [i.cpu().detach().numpy().item() for i in rmse_torch]
     final_rmse = round(rmse_trace[-1], 4)
@@ -411,7 +411,7 @@ def plot_rmse_trace(rmse_torch, savedir='../Model_Run/Plots'):
     ax.plot(rmse_trace, '--o', color='lightblue')
     ax.set_xlabel('Epoch')
     ax.set_ylabel('Standardized RMSE')
-    ax.text(0.7, 0.9, s=f'rmse={final_rmse}', transform=ax.transAxes)
+    ax.text(0.7, 0.9, s=f'calculate_rmse={final_rmse}', transform=ax.transAxes)
 
     makedirs([savedir])
     fig_loc = savedir + '/rmse_trace.jpeg'
@@ -436,8 +436,8 @@ def plot_rmse_trace(rmse_torch, savedir='../Model_Run/Plots'):
 #     makedirs([prediction_dir])
 #     prediction_df.to_csv(os.path.join(prediction_dir, 'prediction.csv'), index=False)
 #
-#     rmse_value = rmse(Y_pred=prediction_df['gw prediction (mm)'], Y_obsv=prediction_df['total_gw_observed'])
-#     r2_value = r2(Y_pred=prediction_df['gw prediction (mm)'], Y_obsv=prediction_df['total_gw_observed'])
+#     rmse_value = calculate_rmse(Y_pred=prediction_df['gw prediction (mm)'], Y_obsv=prediction_df['total_gw_observed'])
+#     r2_value = calculate_r2(Y_pred=prediction_df['gw prediction (mm)'], Y_obsv=prediction_df['total_gw_observed'])
 #
 #     scatter_plot(Y_pred=prediction_df['gw prediction (mm)'], Y_obsv=prediction_df['total_gw_observed'],
 #                  savedir='../Model_Run/Plots', plot_name=plot_name)

@@ -26,7 +26,7 @@ from Codes.utils.raster_ops import read_raster_arr_object, write_array_to_raster
 
 no_data_value = -9999
 model_res = 0.02000000000000000389  # in deg, ~2.22 km
-WestUS_raster = '../../Data_main/shapefiles/Western_US_ref_shapes/Western_US_refraster_2km.tif'
+WestUS_raster = '../../Data_main/Compiled_data/reference_rasters/Western_US_refraster_2km.tif'
 
 
 def download_from_url(download_dir, url_list):

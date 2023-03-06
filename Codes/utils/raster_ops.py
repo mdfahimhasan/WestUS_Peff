@@ -11,7 +11,7 @@ from Codes.utils.system_ops import makedirs
 
 no_data_value = -9999
 model_res = 0.02000000000000000389  # in deg, 2 km
-WestUS_raster = '../../Data_main/shapefiles/Western_US_ref_shapes/Western_US_refraster_2km.tif'
+WestUS_raster = '../../Data_main/Compiled_data/reference_rasters/Western_US_refraster_2km.tif'
 
 
 def read_raster_arr_object(raster_file, rasterio_obj=False, band=1, get_file=True, change_dtype=True):

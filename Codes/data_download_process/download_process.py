@@ -639,14 +639,12 @@ def compile_USGS_WaterUse_data(data_dir='../../Data_main/USGS_water_use_data', s
 
         # Counting Irrigated crop and developed area in each county
         countyID_arr, county_file = read_raster_arr_object('../../Data_main/Compiled_data/Western_US_countyID.tif')
-        # crop_arr_2015, _ = read_raster_arr_object('../../Data_main/Compiled_data/USDA_cropland_2015.tif')
         irrig_arr, _ = read_raster_arr_object('../../Data_main/Compiled_data/irrigated_agri_2015.tif')
         developed_arr_2015, _ = read_raster_arr_object('../../Data_main/Compiled_data/USDA_developed_2015.tif')
         #### modify for irrigation and developed of 2010 area data when adding 2010
         ref_arr, _ = read_raster_arr_object(ref_raster)
 
         # Array of pixels which are irrigated or developed
-        # landUse_arr_2015 = np.where((crop_arr_2015 == 1) | (developed_arr_2015 > 0), 1, ref_arr)
         landUse_arr_2015 = np.where((irrig_arr == 1) | (developed_arr_2015 > 0), 1, ref_arr)
         # Counting how many pixels in each county has irrigated and developed pixels
         unique, count = np.unique(countyID_arr[(landUse_arr_2015 == 1) & (~np.isnan(countyID_arr))], return_counts=True)
@@ -660,20 +658,20 @@ def compile_USGS_WaterUse_data(data_dir='../../Data_main/USGS_water_use_data', s
 
             joined_df = county_df.merge(wateruse_df, left_on='fips', right_on='FIPS', how='inner')
             # adding irrigated and developed pixels count in the dataframe
-            joined_df['crop_dev_pixels'] = None
-            joined_df['crop_dev_pixels'] = joined_df['fips'].map(count_dict)
+            joined_df['irrig_dev_pixels'] = None
+            joined_df['irrig_dev_pixels'] = joined_df['fips'].map(count_dict)
             county_wateruse = pd.concat([county_wateruse, joined_df])
 
         # converting groundwater withdrawal from Mgal/day to mm/year.
         area_single_pixel = (2.22 * 2.22) * (1000 * 1000)  # area of a pixel in m2
         county_wateruse['gw_withdrawal'] = 1000 * (1e6 * county_wateruse['TO-WGWFr'] * 0.00378541 * 365 /
-                                                   (county_wateruse['crop_dev_pixels'] * area_single_pixel))
+                                                   (county_wateruse['irrig_dev_pixels'] * area_single_pixel))
         county_wateruse['sw_withdrawal'] = 1000 * (1e6 * (county_wateruse['TO-WSWFr'] - county_wateruse['PT-WSWFr'])
                                                    * 0.00378541 * 365 /
-                                                   (county_wateruse['crop_dev_pixels'] * area_single_pixel))
+                                                   (county_wateruse['irrig_dev_pixels'] * area_single_pixel))
         county_wateruse['total_withdrawal'] = 1000 * (1e6 * (county_wateruse['TO-WSWFr'] - county_wateruse['PT-WSWFr'])
                                                       * 0.00378541 * 365 /
-                                                      (county_wateruse['crop_dev_pixels'] * area_single_pixel))
+                                                      (county_wateruse['irrig_dev_pixels'] * area_single_pixel))
 
         county_wateruse = county_wateruse[['NAME', 'fips', 'YEAR', 'gw_withdrawal',
                                            'sw_withdrawal', 'total_withdrawal']]

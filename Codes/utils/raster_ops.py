@@ -186,8 +186,8 @@ def shapefile_to_raster(input_shape, output_dir, raster_name, burnvalue=None, us
     :param burnvalue: Value for burning into raster. Only needed when use_attr is False. Default set to None.
     :param use_attr: Set to True if raster needs to be created using a specific attribute value. Defaults to False.
     :param attribute: Attribute name to use creating raster file. Defaults to "".
-    :param add: Set to True if all values inside the raster grid should be summed. Default set to None to perform rasterizing
-                with an attribute without summing.
+    :param add: Set to True if all values inside the raster grid should be summed. Default set to None to perform
+                rasterizing with an attribute without summing.
     :param ref_raster: Reference raster to get minx, miny,maxx, maxy. Defaults to rWestUS_raster.
     :param resolution: Resolution of the output raster. Defaults to model_res of ~0.02.
     :param alltouched: If True all pixels touched by lines or polygons will be updated.

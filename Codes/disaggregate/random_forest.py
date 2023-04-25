@@ -32,7 +32,7 @@ def apply_LandUse_filter(crop_raster, developed_raster, threshold_percent=0.03,
     unique_fips, counts = np.unique(county_arr[~np.isnan(county_arr) & (landUse_arr == 1)], return_counts=True)
     count_dict = {'fips': unique_fips, 'pixel_counts': counts}
 
-    # Creating a dictionary which have counts of cropland (irrigated) and developed pixels in each county
+    # Creating a dataframe which have total counts of cropland (irrigated) and developed pixels in each county
     count_df = pd.DataFrame(count_dict)
     area_single_pixel = (2.22 * 2.22) * (1000 * 1000)  # area of a pixel in m2
     count_df['pixel_area'] = count_df['pixel_counts'] * area_single_pixel

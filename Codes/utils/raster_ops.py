@@ -228,16 +228,39 @@ def shapefile_to_raster(input_shape, output_dir, raster_name, burnvalue=None, us
     return output_raster
 
 
-# def extract_raster_val_toGDF(input_shape, input_raster, output_shp):
-#     input_gdf = gpd.read_file(input_shape)
-#
-#     processed_gdf = extract_raster_features(gdf=input_gdf, raster_path=input_raster, nodata=-9999, n_jobs=-1)
-#     processed_gdf.to_file(output_shp)
-#
-#     return output_shp, processed_gdf
+def sum_rasters(raster_dir, output_raster, raster_list=None, search_by='*.tif', ref_raster=WestUS_raster,
+                nodata=no_data_value):
+    """
+    Sum multiple rasters together. Can take raster directory or list of rasters as input.
 
+    :param raster_dir: Filepath of input rasters' directory. When not using (using raster_list param) set to None.
+    :param raster_list: A list of rasters to sum. Can alternatively used with raster_dir. Default set to None. While
+                        using set raster_dir=None.
+    :param output_raster: Filepath of output raster.
+    :param search_by: search by criteria to select raster from a directory.
+    :param ref_raster: Reference raster file path. Set default to conus_raster.
+    :param nodata: no_data_value set as -9999.
 
+    :return: Summed raster.
+    """
+    if raster_dir is not None:
+        input_rasters = glob(os.path.join(raster_dir, search_by))
+    else:
+        input_rasters = raster_list
 
+    sum_arr, file = None, None
+    for raster in input_rasters:
+        if raster == input_rasters[0]:
+            arr = read_raster_arr_object(raster, get_file=False)
+            sum_arr = arr
+        else:
+            arr = read_raster_arr_object(raster, get_file=False)
+            sum_arr = np.nansum(np.dstack((sum_arr, arr)), axis=2)
 
+    ref_arr, ref_file = read_raster_arr_object(ref_raster)
+    sum_arr[np.isnan(ref_arr)] = nodata  # setting nodata using reference raster
+
+    write_array_to_raster(raster_arr=sum_arr, raster_file=ref_file, transform=ref_file.transform,
+                          output_path=output_raster)
 
 

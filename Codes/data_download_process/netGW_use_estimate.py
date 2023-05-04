@@ -111,7 +111,7 @@ def estimate_netGW_use(et_data='../../Data_main/Compiled_data/SSEBOP_ET_2015.tif
 
 
 # converting canal buffer to raster
-canal_buffer = '../../Data_main/shapefiles/Surface_water_shapes/canals_buffered_1km_epsg_4269.shp'
+canal_buffer = '../../Data_main/shapefiles/Surface_water_shapes/canals_buffered_2km_epsg_4269.shp'
 output_dir = '../../scratch/net_gw_estimate'
 
 shapefile_to_raster(input_shape=canal_buffer, output_dir=output_dir, raster_name='canal_coverage.tif',

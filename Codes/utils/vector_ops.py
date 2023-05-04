@@ -1,3 +1,4 @@
+import os
 import numpy as np
 import pandas as pd
 import geopandas as gpd
@@ -8,20 +9,55 @@ from osgeo import gdal, osr, ogr
 from Codes.utils.system_ops import makedirs
 from Codes.utils.raster_ops import read_raster_arr_object, write_array_to_raster
 
-
 WestUS_raster = '../../Data_main/Compiled_data/reference_rasters/Western_US_refraster_2km.tif'
 
 
-def clip_vector(input_shapefile, mask_shapefile, output_shapefile):
+def create_buffer(input_shapefile, distance, output_shapefile, change_crs='EPSG:32611'):
+    """
+    creates a buffer region around a shapefile.
+
+    :param input_shapefile: Filepath of input shapefile.
+    :param distance: Value of distance. Unit will be in the unit of the crs.
+    :param output_shapefile: Filepath of output (buffered) shapefile.
+    :param change_crs: Default set to 'EPSG:32611' (UTM zone 11N) as the projected crs.
+
+    :return: Returns the filepath of buffered shapefile.
+    """
+    input_gdf = gpd.read_file(input_shapefile)
+    original_crs = input_gdf.crs
+    if change_crs is not None:
+        input_gdf = input_gdf.to_crs(change_crs)
+
+    input_gdf = input_gdf.buffer(distance)
+    input_gdf = input_gdf.to_crs(original_crs)  # converting back to original crs
+    input_gdf.to_file(output_shapefile)
+
+    return output_shapefile
+
+
+def clip_vector(input_shapefile, mask_shapefile, output_shapefile, create_zero_buffer=False):
     """
     Clips a vector file based on the vector mask provided.
 
     :param input_shapefile: Filepath of input shapefile.
     :param mask_shapefile: Filepath of shapefile to use as mask.
     :param output_shapefile: Filepath of output (clipped) shapefile.
+    :param create_zero_buffer: Set to True to create zero buffer around input shapefile. Default set to False.
+                               There might be intersection error for complex/problematic shapefiles. Creating a zero
+                               buffer around it solves the issue. If it doesn't further investigate.
 
     :return: Returns the filepath of clipped shapefile.
     """
+    if create_zero_buffer:
+        # # Buffering might ruin the attribute information of the input shapefile. Do further processing.
+
+        output_dir = os.path.dirname(output_shapefile)
+        buffered_shape_path = os.path.join(output_dir, 'zero_buffer.shp')
+        # Creating zero buffered shapefile. The crs will be converted to original crs of the shapefile automatically
+        buffered_shapefile = create_buffer(input_shapefile, distance=0, output_shapefile=buffered_shape_path,
+                                           change_crs='EPSG:32611')
+        input_shapefile = buffered_shapefile
+
     input_gdf = gpd.read_file(input_shapefile)
     mask_gdf = gpd.read_file(mask_shapefile)
 
@@ -106,7 +142,6 @@ def create_pixel_multipoly_shapefile(refraster, interim_output_raster, output_fi
 
 
 def extract_centroid_of_polygon(input_shapefile, output_point_shpafile, id_col='ID'):
-
     input_gdf = dgpd.read_file(input_shapefile, npartitions=4)
 
     centroid = input_gdf.geometry.centroid.compute().to_crs(input_gdf.crs)

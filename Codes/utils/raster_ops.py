@@ -264,3 +264,41 @@ def sum_rasters(raster_dir, output_raster, raster_list=None, search_by='*.tif', 
                           output_path=output_raster)
 
 
+def mean_rasters(raster_dir, output_raster, raster_list=None, search_by='*.tif', ref_raster=WestUS_raster,
+                 nodata=no_data_value):
+    """
+    Calculate mean of multiple rasters. Can take raster directory or list of rasters as input.
+
+    :param raster_dir: Filepath of input rasters' directory. When not using (using raster_list param) set to None.
+    :param raster_list: A list of rasters to sum. Can alternatively used with raster_dir. Default set to None. While
+                        using set raster_dir=None.
+    :param output_raster: Filepath of output raster.
+    :param search_by: search by criteria to select raster from a directory.
+    :param ref_raster: Reference raster file path. Set default to conus_raster.
+    :param nodata: no_data_value set as -9999.
+
+    :return: Mean raster.
+    """
+    if raster_dir is not None:
+        input_rasters = glob(os.path.join(raster_dir, search_by))
+    else:
+        input_rasters = raster_list
+
+    sum_arr, file = None, None
+    val = 0
+    for raster in input_rasters:
+        if raster == input_rasters[0]:
+            arr = read_raster_arr_object(raster, get_file=False)
+            sum_arr = arr
+        else:
+            arr = read_raster_arr_object(raster, get_file=False)
+            sum_arr += arr
+            val += 1
+
+    mean_arr = sum_arr / val
+    ref_arr, ref_file = read_raster_arr_object(ref_raster)
+    mean_arr[np.isnan(ref_arr)] = nodata  # setting nodata using reference raster
+
+    write_array_to_raster(raster_arr=mean_arr, raster_file=ref_file, transform=ref_file.transform,
+                          output_path=output_raster)
+

@@ -18,7 +18,7 @@ def read_raster_arr_object(raster_file, rasterio_obj=False, band=1, get_file=Tru
     """
     Get raster array and raster file.
 
-    :param raster_file: Input raster file path.
+    :param raster_file: Input raster filepath.
     :param rasterio_obj: Set True if raster_file is a rasterio object.
     :param band: Selected band to read. Default set to 1.
     :param get_file: Set to False if raster file is not required.
@@ -48,11 +48,11 @@ def write_array_to_raster(raster_arr, raster_file, transform, output_path, ref_f
     :param raster_arr: Raster array data to be written.
     :param raster_file: Original rasterio raster file containing geo-coordinates.
     :param transform: Affine transformation matrix.
-    :param output_path: Output file path.
+    :param output_path: Output filepath.
     :param ref_file: Write output raster considering parameters from reference raster file.
     :param nodata: no_data_value set as -9999.
 
-    :return: Output file path.
+    :return: Output filepath.
     """
     if ref_file:
         raster_file = rio.open(ref_file)
@@ -83,12 +83,12 @@ def mosaic_rasters(input_dir, output_dir, raster_name, ref_raster=WestUS_raster,
     :param input_dir: Input rasters' directory.
     :param output_dir: Output raster directory.
     :param raster_name: Output raster name.
-    :param ref_raster: Reference raster file path. Set default to conus_raster.
+    :param ref_raster: Reference raster filepath. Set default to WestUS_raster.
     :param search_by: Input raster search criteria. Default set to '*tif'.
     :param resolution: Resolution of the output raster. Default set to 0.02000000000000000389 deg (2 km).
     :param nodata: no_data_value set as -9999.
 
-    :return: Mosaiced raster array and file path of mosaiced raster.
+    :return: Mosaiced raster array and filepath of mosaiced raster.
     """
     input_rasters = glob(os.path.join(input_dir, search_by))
     raster_list = []
@@ -130,7 +130,7 @@ def clip_resample_reproject_raster(input_raster, input_shape, keyword, output_ra
                               to set a resolution. Set input_shape to None.
     :param targetaligned: Set to False if pixels don't need to be aligned in case of clip_and_resample=True. Look into
                           the result when using this to be sure about expected outcome.
-    :param resample_algorithm: Resample algorithm to use in resampling. Can take near/bilinear/average/mode/max/min etc.
+    :param resample_algorithm: Resample algorithm to use in resampling. Can take near/bilinear/average/mode/max/min/cubic etc.
                                Default is 'near'.
     :param resolution: Output raster resolution. Default set to None (for clip=True). For other purposes, use specific
                        resolution value (for example, 0.02000000000000000389 deg).
@@ -154,7 +154,7 @@ def clip_resample_reproject_raster(input_raster, input_shape, keyword, output_ra
         _, xres, _, _, _, yres = raster_file.GetGeoTransform()
         processed_data = gdal.Warp(destNameOrDestDS=output_filepath, srcDSOrSrcDSTab=raster_file, dstSRS=crs,
                                    targetAlignedPixels=targetaligned, xRes=xres, yRes=yres, cutlineDSName=input_shape,
-                                   cropToCutline=True, dstNodata=no_data_value, outputType=output_datatype)
+                                   cropToCutline=True, dstNodata=no_data_value, outputType=output_datatype, )
 
     elif resample:  # set clip, clip_and_resample = False
         # have to provide a resolution value in argument
@@ -163,7 +163,7 @@ def clip_resample_reproject_raster(input_raster, input_shape, keyword, output_ra
                                    targetAlignedPixels=targetaligned, xRes=resolution, yRes=resolution,
                                    dstNodata=no_data_value, resampleAlg=resample_algorithm, outputType=output_datatype)
 
-    elif clip_and_resample:  # set clip, resample = False
+    elif clip_and_resample:  # set clip=False, resample = False
         # argument must have input_shape and resolution value
         processed_data = gdal.Warp(destNameOrDestDS=output_filepath, srcDSOrSrcDSTab=raster_file, dstSRS=crs,
                                    targetAlignedPixels=targetaligned, xRes=resolution, yRes=resolution,
@@ -238,7 +238,7 @@ def sum_rasters(raster_dir, output_raster, raster_list=None, search_by='*.tif', 
                         using set raster_dir=None.
     :param output_raster: Filepath of output raster.
     :param search_by: search by criteria to select raster from a directory.
-    :param ref_raster: Reference raster file path. Set default to conus_raster.
+    :param ref_raster: Reference raster filepath. Set default to WestUS_raster.
     :param nodata: no_data_value set as -9999.
 
     :return: Summed raster.
@@ -274,7 +274,7 @@ def mean_rasters(raster_dir, output_raster, raster_list=None, search_by='*.tif',
                         using set raster_dir=None.
     :param output_raster: Filepath of output raster.
     :param search_by: search by criteria to select raster from a directory.
-    :param ref_raster: Reference raster file path. Set default to conus_raster.
+    :param ref_raster: Reference raster filepath. Set default to WestUS_raster.
     :param nodata: no_data_value set as -9999.
 
     :return: Mean raster.
@@ -302,3 +302,41 @@ def mean_rasters(raster_dir, output_raster, raster_list=None, search_by='*.tif',
     write_array_to_raster(raster_arr=mean_arr, raster_file=ref_file, transform=ref_file.transform,
                           output_path=output_raster)
 
+
+def filter_raster_on_threshold(input_raster, output_raster, threshold_value1, threshold_value2=None, assign_value=None,
+                               nodata=no_data_value, refraster=WestUS_raster):
+    """
+    Filters raster based on threshold (and assigns value if given).
+
+    :param input_raster: Filepath of input raster.
+    :param output_raster: Filepath of filtered/modified output raster.
+    :param threshold_value1: Threshold value no. 1. Can be integer/float.
+    :param threshold_value2: Threshold value no. 2. Can be integer/float. Default set to None so that only
+                             threshold_value1 is used.
+    :param assign_value: Assign a value to the filtered raster pixels. Default set no None to keep the original filtered
+                         values.
+    :param nodata: no_data_value set as -9999.
+    :param refraster: Reference raster filepath. Set default to WestUS_raster.
+
+    :return: Output raster filepath.
+    """
+    ref_arr, ref_file = read_raster_arr_object(refraster)
+    input_arr = read_raster_arr_object(input_raster, get_file=False)
+
+    mod_arr = None  # new array where the filtered array will be stored
+    if assign_value is None:
+        mod_arr = np.where(input_arr >= threshold_value1, input_arr, 0)
+        mod_arr[np.isnan(ref_arr)] = nodata
+    elif threshold_value2 is not None:
+        mod_arr = np.where((input_arr >= threshold_value2) & (input_arr <= threshold_value1), input_arr, 0)
+        mod_arr[np.isnan(ref_arr)] = nodata
+    elif assign_value is not None:
+        mod_arr = np.where(input_arr >= threshold_value1, assign_value, 0)
+        mod_arr[np.isnan(ref_arr)] = nodata
+    elif (threshold_value2 is not None) & (assign_value is not None):
+        mod_arr = np.where((input_arr >= threshold_value2) & (input_arr <= threshold_value1), assign_value, 0)
+        mod_arr[np.isnan(ref_arr)] = nodata
+
+    write_array_to_raster(raster_arr=mod_arr, raster_file=ref_file, transform=ref_file.transform,
+                          output_path=output_raster)
+    return output_raster

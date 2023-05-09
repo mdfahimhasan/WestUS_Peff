@@ -12,7 +12,7 @@ import geopandas as gpd
 from Codes.utils.system_ops import makedirs, copy_file
 from Codes.utils.vector_ops import add_attr_to_county_fromCSV
 from Codes.utils.raster_ops import read_raster_arr_object, write_array_to_raster, mosaic_rasters, \
-    clip_resample_reproject_raster, sum_rasters, mean_rasters
+    clip_resample_reproject_raster, sum_rasters, mean_rasters, filter_raster_on_threshold
 
 # ee.Authenticate()
 
@@ -727,7 +727,6 @@ def preprocess_cdl_data(cdl_dir='../../Data_main/Raster_data/USDA_CDL/WestUS',
 
         for cdl in cdl_US:
             year = os.path.basename(cdl).split('_')[1]
-            print(year)
             if year in year_list:
                 filtered_cdl_list.append(cdl)
 
@@ -775,11 +774,13 @@ def preprocess_cdl_data(cdl_dir='../../Data_main/Raster_data/USDA_CDL/WestUS',
     return crop_data_dict, developed_data_dict
 
 
-def process_irrigated_cropland_data(input_dir='../../Data_main/Raster_data/Irrigated_agriculture',
-                                    input_shape='../../Data_main/shapefiles/Western_US_ref_shapes/WestUS_states.shp',
-                                    output_dir='../../Data_main/Compiled_data', skip_processing=False):
+def process_irrigated_landuse_data(input_dir='../../Data_main/Raster_data/Irrigated_agriculture',
+                                   input_shape='../../Data_main/shapefiles/Western_US_ref_shapes/WestUS_states.shp',
+                                   output_dir='../../Data_main/Compiled_data', skip_processing=False):
     """
-    Process irrigated cropland data from Xie et al. 2021.
+    Process irrigated cropland data from Xie et al. 2021. Two sets of rasters are generated. First: Irrigated area
+    raster with values 0 and 1 (1 menas irrigated); second: Irrigated fraction data (values in fraction from 0 or 1,
+    higher fraction means higher irrigated lands in that 2-km pixel).
 
     :param input_dir: Filepath of input data directory.
     :param input_shape: Filepath of ROI shapefile.
@@ -788,40 +789,60 @@ def process_irrigated_cropland_data(input_dir='../../Data_main/Raster_data/Irrig
 
     :return: A dictionary of processed dataset filepaths. The dictionary has years (e.g., 2015) as keys.
     """
-    irrigated_dict = None
+    irrigated_area_dict = None
+    irrigated_frac_dict = None
+
     if not skip_processing:
         print('Processing Irrigated Agriculture dataset....')
         input_raster = glob(os.path.join(input_dir, '*.tif'))
-        irrigation_dict = {}
+
+        irrigation_area_dict = {}  # a dictionary to store irrigated area data (values in 0 or 1, 1 means irrigated)
+        irrigation_frac_dict = {}  # a dictionary to store irrigated fraction data (values in fraction from 0 or 1)
 
         for raster in input_raster:
-            if any([i in raster for i in ['clipped', 'resample']]):
+            if any([i in raster for i in ['clipped', 'resample', 'irrigated']]):
                 os.remove(raster)  # to remove raster previously processed
             else:
                 # The dataset is 30m resolution CONUS scale and huge to clip and resample at the same time
-                # Resampling to model resolution first and then clipping
+                # Resampling to model resolution first and then clipping. "average" resampling calculates the
+                # fraction of irrigated area (30m pixel) in each 2-km pixel.
+
+                # # Processing irrigated area data to fraction of irrigated area data
                 resampled_raster = clip_resample_reproject_raster(
                     input_raster=raster, input_shape=input_shape, keyword='resampled', resolution=model_res,
-                    output_raster_dir=input_dir, clip_and_resample=False, clip=False, resample=True)
+                    output_raster_dir=input_dir, clip_and_resample=False, clip=False, resample=True,
+                    resample_algorithm='average')
 
                 clipped_raster = clip_resample_reproject_raster(
                     input_raster=resampled_raster, input_shape=input_shape, keyword='clipped', resolution=model_res,
                     output_raster_dir=input_dir, clip_and_resample=True, clip=False, resample=False,
                     targetaligned=False)  # targetAlignedPixels=False to ensure equal row-columns like other dataset
-
                 # copying to compiled directory
                 year = os.path.splitext(os.path.basename(clipped_raster))[0][-4:]
-                output_name = f'irrigated_agri_{year}'
+                output_name = f'irrigated_agri_frac_{year}'
                 copied_file = copy_file(input_dir_file=clipped_raster, copy_dir=output_dir, rename=output_name)
-                irrigation_dict[year] = copied_file
+                irrigation_frac_dict[year] = copied_file
+
+                # # Processing irrigated area data to presence of irrigated area data
+                # Using threshold to choose irrigated area
+                output_name = f'irrigated_agri_{year}'
+                output_fp = os.path.join(input_dir, f'{output_name}.tif')
+                filter_raster_on_threshold(input_raster=clipped_raster, output_raster=output_fp, threshold_value1=0.3,
+                                           assign_value=1)
+
+                # copying to compiled directory
+                copied_file = copy_file(input_dir_file=output_fp, copy_dir=output_dir, rename=None)
+                irrigation_area_dict[year] = copied_file
 
         print('Processed Irrigated Agriculture dataset')
-        pickle.dump(irrigation_dict, open('../../Data_main/Compiled_data/irrigated_crop_dict.pkl', mode='wb+'))
+        pickle.dump(irrigation_frac_dict, open('../../Data_main/Compiled_data/irrigated_area_frac_dict.pkl', mode='wb+'))
+        pickle.dump(irrigation_area_dict, open('../../Data_main/Compiled_data/irrigated_area_dict.pkl', mode='wb+'))
 
     else:
-        irrigated_dict = pickle.load(open('../../Data_main/Compiled_data/irrigated_crop_dict.pkl', mode='rb'))
+        irrigated_frac_dict = pickle.load(open('../../Data_main/Compiled_data/irrigated_area_frac_dict.pkl', mode='rb'))
+        irrigated_area_dict = pickle.load(open('../../Data_main/Compiled_data/irrigated_area_dict.pkl', mode='rb'))
 
-    return irrigated_dict
+    return irrigated_frac_dict, irrigated_area_dict
 
 
 def process_ssebop_data(years=(2005, 2010, 2015), ssebop_dir='../../Data_main/Raster_data/Ssebop_monthly_ETa',
@@ -1054,7 +1075,7 @@ def run_all_preprocessing(skip_cdl_processing=False, skip_ssebop_processing=Fals
     """
     crop_data_dict, developed_data_dict = preprocess_cdl_data(skip_processing=skip_cdl_processing)
     ssebop_dict = process_ssebop_data(skip_processing=skip_ssebop_processing)
-    irrigated_crop_dict = process_irrigated_cropland_data(skip_processing=skip_irrigatedCrop_processing)
+    irrigated_crop_dict = process_irrigated_landuse_data(skip_processing=skip_irrigatedCrop_processing)
     prism_precip_dict = process_prism_data(prism_bil_dir='../../Data_main/Raster_data/PRISM_PRECIP/bil_format',
                                            prism_dir='../../Data_main/Raster_data/PRISM_PRECIP/tif_format',
                                            output_dir_prism='../../Data_main/Raster_data/PRISM_PRECIP/WestUS',

@@ -12,7 +12,7 @@ import geopandas as gpd
 from Codes.utils.system_ops import makedirs, copy_file
 from Codes.utils.vector_ops import add_attr_to_county_fromCSV
 from Codes.utils.raster_ops import read_raster_arr_object, write_array_to_raster, mosaic_rasters, \
-    clip_resample_reproject_raster, sum_rasters, mean_rasters, filter_raster_on_threshold
+    clip_resample_reproject_raster, mask_raster_by_extent, sum_rasters, mean_rasters, filter_raster_on_threshold
 
 # ee.Authenticate()
 
@@ -626,10 +626,11 @@ def download_all_datasets(year_list, month_range, gee_data_list=None, skip_downl
                        skip_download=skip_download_ssebop_data)
 
 
-def crop_cdl_and_create_2000_2005_cdl_raster(cdl_dir='../../Data_main/Raster_data/USDA_CDL',
-                                             processed_dir='../../Data_main/Raster_data/USDA_CDL/WestUS',
-                                             westUS_shape='../../Data_main/shapefiles/Western_US_ref_shapes/WestUS.shp',
-                                             try_maximum_occurrence_approach=False):
+def mask_cdl_to_WestUS(cdl_dir='../../Data_main/Raster_data/USDA_CDL/CONUS_original_30m',
+                       westus_dir='../../Data_main/Raster_data/USDA_CDL/WestUS_30m',
+                       westUS_shape='../../Data_main/shapefiles/Western_US_ref_shapes/WestUS.shp',
+                       processing_shp_dir='../../Data_main/Raster_data/USDA_CDL/processing_shapes',
+                       nodata=no_data_value, try_maximum_occurrence_approach=False):
     """
     Crop and resample cdl raster fro Western US and create 2000 & 2005 cdl data.
 
@@ -646,52 +647,97 @@ def crop_cdl_and_create_2000_2005_cdl_raster(cdl_dir='../../Data_main/Raster_dat
 
     :return: Cropped and resampled cdl rasters of 2000, 2005, 2010, 2015.
     """
-    cdl_US = glob(os.path.join(cdl_dir, '*.tif'))
+    # cdl_US = glob(os.path.join(cdl_dir, '*.tif'))
+    # processing_bounds = glob(os.path.join(processing_shp_dir, '*.shp'))
+
+    # New directory inside westus_dir ro save processed cropland data
+    cropland_dir = os.path.join(westus_dir, 'cropland')
+    makedirs([cropland_dir])
 
     cdl_2008_arr, cdl_2009_arr, cdl_2010_arr, cdl_2011_arr, cdl_file, shape = None, None, None, None, None, None
-    for cdl_ras in cdl_US:
-        westus_cdl = clip_resample_reproject_raster(cdl_ras, westUS_shape, keyword='WestUS',
-                                                    output_raster_dir=processed_dir, clip_and_resample=True,
-                                                    targetaligned=False, resample_algorithm='near',
-                                                    resolution=model_res, crs='EPSG:4269',
-                                                    output_datatype=gdal.GDT_Byte)
-        if '2008' in westus_cdl:
-            cdl_2008_arr, cdl_file = read_raster_arr_object(westus_cdl)
-            shape = cdl_2008_arr.shape
-            cdl_2008_arr = cdl_2008_arr.flatten()
-        elif '2009' in westus_cdl:
-            cdl_2009_arr = read_raster_arr_object(westus_cdl, get_file=False).flatten()
-        elif '2010' in westus_cdl:
-            cdl_2010_arr = read_raster_arr_object(westus_cdl, get_file=False).flatten()
-        elif '2011' in westus_cdl:
-            cdl_2011_arr = read_raster_arr_object(westus_cdl, get_file=False).flatten()
+    # Loop for masking cdl raster to Western US extent. Using 4 bounding boxes to minimize memory load.
+    # for cdl_ras in cdl_US:
+    #     for shape in processing_bounds:
+    #         raster_name = os.path.splitext(os.path.basename(cdl_ras))[0]
+    #         shape_name = os.path.splitext(os.path.basename(shape))[0]
+    #         name = raster_name + '_' + shape_name + '.tif'
+    #         mask_raster_by_extent(input_raster=cdl_ras, ref_file=shape, output_dir=westus_dir,
+    #                               raster_name=name, invert=False, crop=True, nodata=0)
 
-    if try_maximum_occurrence_approach:
-        # setting maximum occurring crop value of 2008-2011 cdl array as values of 2000 and 2005 cdl array
-        max_arr = np.stack([cdl_2008_arr, cdl_2009_arr, cdl_2010_arr, cdl_2011_arr])
-        new_arr = np.zeros(cdl_2008_arr.shape)
 
-        # this loop takes each column of stacked array. np.bincount() counts the number of occurance of each value in
-        # the selected column. Then, np.argmax() selects the value which occurs most frequently. Then, we paste the
-        # selected value to a new array
-        for i in range(max_arr.shape[1]):
-            selected_arr = max_arr[:, i]
-            max_occurred_value = np.argmax(np.bincount(list(selected_arr)))  # # # improve this. try to avoid loop
-            new_arr[i] = max_occurred_value
+    # converting to crop vs non-crop and developed vs non-developed data
+    noncrop_classes = [0, 58, 59, 60, 61, 63, 64, 65, 81, 82, 83, 87, 88, 111, 121, 122, 123, 124, 131, 141, 142,
+                       143, 152, 176, 190, 195]  # 0 is no data value
 
-        max_arr = new_arr.reshape(shape)
+    cdl_westus = glob(os.path.join(westus_dir, '*.tif'))
+    for cdl_ras in cdl_westus:
+            # crop vs non-crop raster  # if array value in noncrop list assigns 0, otherwise assigns 1
+            # cdl data has no_data value set to 0
+            # data_arr = np.where(ref_arr == 0, 1, ref_arr)
+            cdl_arr, cdl_file = read_raster_arr_object(cdl_ras, change_dtype=False)  # the data type will be converted to float
+            crop_arr = np.where(~np.isin(cdl_arr, noncrop_classes), 1, 0)
 
-    else:
-        max_arr = cdl_2008_arr.reshape(shape)
+            crop_raster_name = os.path.splitext(os.path.basename(cdl_ras))[0] + '_crop.tif'
+            crop_raster_path = os.path.join(cropland_dir, crop_raster_name)
+            # saving cropland rasters
+            write_array_to_raster(raster_arr=crop_arr, raster_file=cdl_file, transform=cdl_file.transform,
+                                  output_path=crop_raster_path, nodata=0)
 
-    output_2000_cdl_data = os.path.join(processed_dir, 'WestUS_2000_30m_cdls.tif')
-    output_2005_cdl_data = os.path.join(processed_dir, 'WestUS_2005_30m_cdls.tif')
+            # developed vs non-developed  # if array value is not within 121, 122, 123, and 124 assigns 0
+            ##########
+            dev_arr = np.where(cdl_arr == 121, 1, cdl_arr)  # 1: Developed/Open Space
+            dev_arr = np.where(cdl_arr == 122, 2, dev_arr)  # 2: Developed/Low Intensity
+            dev_arr = np.where(cdl_arr == 123, 3, dev_arr)  # 3: Developed/Medium Intensity
+            dev_arr = np.where(cdl_arr == 124, 4, dev_arr)  # 4: Developed/High Intensity
 
-    write_array_to_raster(max_arr, raster_file=cdl_file, transform=cdl_file.transform,
-                          output_path=output_2000_cdl_data)
-    write_array_to_raster(max_arr, raster_file=cdl_file, transform=cdl_file.transform,
-                          output_path=output_2005_cdl_data)
+        # westus_cdl = clip_resample_reproject_raster(cdl_ras, westUS_shape, keyword='WestUS',
+        #                                             output_raster_dir=processed_dir, clip_and_resample=True,
+        #                                             targetaligned=False, resample_algorithm='near',
+        #                                             resolution=model_res, crs='EPSG:4269',
+        #                                             output_datatype=gdal.GDT_Byte)
+    #     if '2008' in westus_cdl:
+    #         cdl_2008_arr, cdl_file = read_raster_arr_object(westus_cdl)
+    #         shape = cdl_2008_arr.shape
+    #         cdl_2008_arr = cdl_2008_arr.flatten()
+    #     elif '2009' in westus_cdl:
+    #         cdl_2009_arr = read_raster_arr_object(westus_cdl, get_file=False).flatten()
+    #     elif '2010' in westus_cdl:
+    #         cdl_2010_arr = read_raster_arr_object(westus_cdl, get_file=False).flatten()
+    #     elif '2011' in westus_cdl:
+    #         cdl_2011_arr = read_raster_arr_object(westus_cdl, get_file=False).flatten()
+    #
+    # if try_maximum_occurrence_approach:
+    #     # setting maximum occurring crop value of 2008-2011 cdl array as values of 2000 and 2005 cdl array
+    #     max_arr = np.stack([cdl_2008_arr, cdl_2009_arr, cdl_2010_arr, cdl_2011_arr], axis=0)
+    #     new_arr = np.zeros(cdl_2008_arr.shape)
+    #
+    #     # this loop takes each column of stacked array. np.bincount() counts the number of occurance of each value in
+    #     # the selected column. Then, np.argmax() selects the value which occurs most frequently. Then, we paste the
+    #     # selected value to a new array
+    #     for i in range(max_arr.shape[1]):
+    #         selected_arr = max_arr[:, i]
+    #         max_occurred_value = np.argmax(np.bincount(list(selected_arr)))  # # # improve this. try to avoid loop
+    #         new_arr[i] = max_occurred_value
+    #
+    #     max_arr = new_arr.reshape(shape)
+    #
+    # else:
+    #     max_arr = cdl_2008_arr.reshape(shape)
+    #
+    # output_2000_cdl_data = os.path.join(processed_dir, 'WestUS_2000_30m_cdls.tif')
+    # output_2005_cdl_data = os.path.join(processed_dir, 'WestUS_2005_30m_cdls.tif')
+    #
+    # write_array_to_raster(max_arr, raster_file=cdl_file, transform=cdl_file.transform,
+    #                       output_path=output_2000_cdl_data)
+    # write_array_to_raster(max_arr, raster_file=cdl_file, transform=cdl_file.transform,
+    #                       output_path=output_2005_cdl_data)
 
+
+mask_cdl_to_WestUS(cdl_dir='../../Data_main/Raster_data/USDA_CDL/CONUS_original_30m',
+                   westus_dir='../../Data_main/Raster_data/USDA_CDL/WestUS_30m',
+                   westUS_shape='../../Data_main/shapefiles/Western_US_ref_shapes/WestUS.shp',
+                   processing_shp_dir='../../Data_main/Raster_data/USDA_CDL/processing_shapes',
+                   try_maximum_occurrence_approach=False)
 
 def preprocess_cdl_data(cdl_dir='../../Data_main/Raster_data/USDA_CDL/WestUS',
                         processed_dir='../../Data_main/Raster_data/USDA_CDL/WestUS',

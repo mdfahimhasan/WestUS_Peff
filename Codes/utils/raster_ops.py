@@ -4,7 +4,11 @@ import numpy as np
 from glob import glob
 import rasterio as rio
 from osgeo import gdal
+import geopandas as gpd
+from rasterio.mask import mask
 from rasterio.merge import merge
+from shapely.geometry import box, mapping
+
 
 from Codes.utils.system_ops import make_gdal_sys_call
 from Codes.utils.system_ops import makedirs
@@ -108,6 +112,53 @@ def mosaic_rasters(input_dir, output_dir, raster_name, ref_raster=WestUS_raster,
                           output_path=out_raster, nodata=nodata, ref_file=ref_raster)
 
     return merged_arr, out_raster
+
+
+def mask_raster_by_extent(input_raster, ref_file, output_dir, raster_name, invert=False, crop=True,
+                          nodata=no_data_value):
+    """
+    Crop/mask a raster with a given shapefile/raster 's extent. Only use to crop to extent.
+    Cannot perform cropping to exact shapefile.
+
+    :param input_raster: Filepath of input raster.
+    :param ref_file: Filepath of raster or shape file to crop input_raster.
+    :param output_dir: Filepath of output directory.
+    :param raster_name: Masked raster name.
+    :param invert: If False (default) pixels outside shapes will be masked.
+                   If True, pixels inside shape will be masked.
+    :param crop: Whether to crop the raster to the extent of the shapes. Change to False if invert=True is used.
+
+    :return: Filepath of cropped raster.
+    """
+    # opening input raster
+    raster_arr, input_file = read_raster_arr_object(input_raster, change_dtype=False)
+
+    if '.shp' in ref_file:
+        ref_extent = gpd.read_file(ref_file)
+    else:
+        ref_raster = rio.open(ref_file)
+        minx, miny, maxx, maxy = ref_raster.bounds
+        ref_extent = gpd.GeoDataFrame({'geometry': box(minx, miny, maxx, maxy)}, index=[0],
+                                      crs=ref_raster.crs.to_string())
+
+    ref_extent = ref_extent.to_crs(crs=input_file.crs.data)
+    geoms = ref_extent['geometry'].values  # list of shapely geometries
+    geoms = [mapping(geoms[0])]   # geometry in json format
+
+    # masking
+    masked_arr, mask_transform = mask(dataset=input_file, shapes=geoms, filled=True, crop=crop, invert=invert,
+                                          all_touched=False)
+    masked_arr = masked_arr.squeeze()  # Remove axes of length 1 from the array
+
+    # naming output file
+    makedirs([output_dir])
+    output_raster = os.path.join(output_dir, raster_name)
+
+    # saving output raster
+    write_array_to_raster(raster_arr=masked_arr, raster_file=input_file, transform=mask_transform,
+                          output_path=output_raster, nodata=nodata)
+
+    return output_raster
 
 
 def clip_resample_reproject_raster(input_raster, input_shape, keyword, output_raster_dir, clip=False, resample=False,
@@ -340,3 +391,5 @@ def filter_raster_on_threshold(input_raster, output_raster, threshold_value1, th
     write_array_to_raster(raster_arr=mod_arr, raster_file=ref_file, transform=ref_file.transform,
                           output_path=output_raster)
     return output_raster
+
+

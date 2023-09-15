@@ -7,9 +7,9 @@ import geopandas as gpd
 from sklearn.ensemble import RandomForestRegressor
 
 from Codes.utils.system_ops import makedirs
-from Codes.ML_ops import reindex_df, calculate_r2, calculate_rmse, scatter_plot
+from Codes.utils.ML_utils import reindex_df, calculate_r2, calculate_rmse, scatter_plot
 from Codes.utils.raster_ops import read_raster_arr_object, write_array_to_raster, shapefile_to_raster
-from Codes.disaggregate.massP_pycnophylactic import run_mass_preserve, run_pycnophylactic_interp
+from backup_codes.massP_pycnophylactic import run_mass_preserve, run_pycnophylactic_interp
 
 no_data_value = -9999
 model_res = 0.02000000000000000389  # in deg, 2 km

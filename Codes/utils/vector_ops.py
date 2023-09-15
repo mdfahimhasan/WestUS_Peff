@@ -3,7 +3,6 @@ import numpy as np
 import pandas as pd
 import geopandas as gpd
 import dask_geopandas as dgpd
-from dask import dataframe as ddf
 from osgeo import gdal, osr, ogr
 
 from Codes.utils.system_ops import makedirs
@@ -68,27 +67,33 @@ def clip_vector(input_shapefile, mask_shapefile, output_shapefile, create_zero_b
     return output_shapefile
 
 
-def add_attr_to_county_fromCSV(input_shapefile, attr_csv_data, output_shapefile, year_filter, columns_to_keep):
+def add_attr_to_county_fromCSV(input_shapefile, attr_csv_df_data, output_shapefile, year_filter,
+                               columns_to_keep=None):
     """
     Add attribute information to county shapefile.
 
     :param input_shapefile: Filepath of input shapefile.
-    :param attr_csv_data: Filepath of attribute data for each county at csv format.
+    :param attr_csv_df_data: Filepath of attribute data for each county at csv/dataframe format.
     :param output_shapefile: Filepath of output shapefile.
     :param year_filter: int. Year to filter csv data.
-    :param columns_to_keep: Tuple of columns to keep in the final shapefile.
+    :param columns_to_keep: Tuple of columns to keep in the final shapefile. Default set to None.
 
     :return: A new shapefile with added attribute information.
     """
-    gw_df = pd.read_csv(attr_csv_data)
-    gw_df = gw_df[gw_df['Year'] == year_filter]
+    if '.csv' in attr_csv_df_data:
+        df = pd.read_csv(attr_csv_df_data)
+    else:
+        df = attr_csv_df_data
+
+    df = df[df['Year'] == year_filter]
 
     county_gdf = gpd.read_file(input_shapefile)
-    county_gdf = county_gdf.merge(gw_df, on='fips', how='left')
+    county_gdf = county_gdf.merge(df, on='fips', how='left')
 
-    keep_columns = list(columns_to_keep)
-    keep_columns.append('geometry')
-    county_gdf = county_gdf[keep_columns]
+    if columns_to_keep is not None:  # this block filters in certain columns if columns_to_keep is given
+        keep_columns = list(columns_to_keep)
+        keep_columns.append('geometry')
+        county_gdf = county_gdf[keep_columns]
 
     county_gdf.to_file(output_shapefile)
 

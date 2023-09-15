@@ -5,7 +5,7 @@ exclude_data_from_df = ('MODIS_ET', 'MODIS_Terra_EVI', 'MODIS_Terra_NDVI', 'USDA
 years = [2015]
 skip_df_creation = True  # # Set to False to create predictor dataframe
 
-predictor_WestUS = create_dataframe_csv(input_data_dir='../Data_main/Compiled_data',
+predictor_WestUS = create_dataframe_csv(input_data_dir='../../Data_main/Compiled_data',
                                         output_csv='../Data_main/Model_csv/WesternUS_data.csv',
                                         search_by='*.tif', years=years, drop_datasets=exclude_data_from_df,
                                         skip_dataframe_creation=skip_df_creation,
@@ -20,7 +20,7 @@ train_csv, validation_csv, test_csv, train_obsv, validation_obsv, test_obsv = \
     create_train_val_test_data(predictor_csv=predictor_WestUS,
                                observed_data_csv='../Data_main/USGS_water_use_data/WestUS_county_gw_use.csv',
                                data_fraction=data_frac, train_fraction=train_frac, val_fraction=val_frac,
-                               test_fraction=test_frac, output_dir='../Data_main/Model_csv',
+                               test_fraction=test_frac, output_dir='../../Data_main/Model_csv',
                                drop_columns=drop_predictor, train_val_test_exists=train_val_test_exists)
 
 # Model training

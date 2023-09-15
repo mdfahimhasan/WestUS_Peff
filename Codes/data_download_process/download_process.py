@@ -5,12 +5,11 @@ import zipfile
 import requests
 import itertools
 import numpy as np
-import pandas as pd
 from glob import glob
 from osgeo import gdal
 import geopandas as gpd
+
 from Codes.utils.system_ops import makedirs, copy_file
-from Codes.utils.vector_ops import add_attr_to_county_fromCSV
 from Codes.utils.raster_ops import read_raster_arr_object, write_array_to_raster, mosaic_rasters, \
     clip_resample_reproject_raster, mask_raster_by_extent, sum_rasters, mean_rasters, filter_raster_on_threshold
 
@@ -25,7 +24,7 @@ from Codes.utils.raster_ops import read_raster_arr_object, write_array_to_raster
 # If authenticated, no need to run the authentication process again. Just start from ee.initialize()
 
 no_data_value = -9999
-model_res = 0.02000000000000000389  # in deg, ~2.22 km
+model_res = 0.02000000000000000736  # in deg, ~2.22 km
 WestUS_raster = '../../Data_main/Compiled_data/reference_rasters/Western_US_refraster_2km.tif'
 
 
@@ -219,7 +218,7 @@ def cloud_cover_filter(data_name, start_date, end_date, from_bit, to_bit, geomet
         return cloud_masked
 
     elif data_name in ('VIIRS_NDVI', 'VIIRS_EVI', 'VIIRS_EVI2'):
-        image = ee.ImageCollection('NOAA/VIIRS/001/VNP13A1').filterDate(start_date, end_date).\
+        image = ee.ImageCollection('NOAA/VIIRS/001/VNP13A1').filterDate(start_date, end_date). \
             filterBounds(geometry_bounds)
         cloud_masked = image.map(bitwise_extract)
         return cloud_masked
@@ -230,7 +229,7 @@ def cloud_cover_filter(data_name, start_date, end_date, from_bit, to_bit, geomet
         return cloud_masked
 
 
-def download_gee_data_for_grow_season\
+def download_gee_data_for_grow_season \
                 (data_name, download_dir, year_list, merge_keyword, refraster=WestUS_raster,
                  grid_shape='../../Data_main/shapefiles/Western_US_ref_shapes/WestUS_gee_grid.shp'):
     """
@@ -305,26 +304,26 @@ def download_gee_data_for_grow_season\
             data, band, multiply_scale, reducer = get_gee_dict(data_name)
 
             if data_name in ('MODIS_Terra_NDVI', 'MODIS_Terra_EVI'):
-                download_data = cloud_cover_filter(data_name, start_date, end_date, 0, 1, gee_extent).select(band).\
+                download_data = cloud_cover_filter(data_name, start_date, end_date, 0, 1, gee_extent).select(band). \
                     reduce(reducer).multiply(multiply_scale).toFloat()
 
             elif data_name in ('VIIRS_NDVI', 'VIIRS_EVI', 'VIIRS_EVI2'):
-                download_data = cloud_cover_filter(data_name, start_date, end_date, 0, 1, gee_extent).select(band).\
+                download_data = cloud_cover_filter(data_name, start_date, end_date, 0, 1, gee_extent).select(band). \
                     reduce(reducer).multiply(multiply_scale).toFloat()
 
             elif data_name == 'MODIS_NDWI':
-                nir = cloud_cover_filter(data_name, start_date, end_date, 0, 1, gee_extent).select(band[0])\
+                nir = cloud_cover_filter(data_name, start_date, end_date, 0, 1, gee_extent).select(band[0]) \
                     .reduce(reducer).multiply(multiply_scale).toFloat()
-                swir = cloud_cover_filter(data_name, start_date, end_date, 0, 1, gee_extent).select(band[1])\
+                swir = cloud_cover_filter(data_name, start_date, end_date, 0, 1, gee_extent).select(band[1]) \
                     .reduce(reducer).multiply(multiply_scale).toFloat()
                 download_data = nir.subtract(swir).divide(nir.add(swir))
             elif data_name == 'GPW_Pop':
                 start_date = ee.Date.fromYMD(year, 1, 1)  # GPW population dataset's data starts at
                 end_date = ee.Date.fromYMD(year, 12, 31)
-                download_data = ee.ImageCollection(data).select(band).filterDate(start_date, end_date).\
+                download_data = ee.ImageCollection(data).select(band).filterDate(start_date, end_date). \
                     filterBounds(gee_extent).reduce(reducer).toFloat()
             else:
-                download_data = ee.ImageCollection(data).select(band).filterDate(start_date, end_date).\
+                download_data = ee.ImageCollection(data).select(band).filterDate(start_date, end_date). \
                     filterBounds(gee_extent).reduce(reducer).multiply(multiply_scale).toFloat()
 
             data_url = download_data.getDownloadURL({'name': data_name,
@@ -393,28 +392,28 @@ def download_gee_data_monthly(data_name, download_dir, year_list, month_range, m
 
                 # Filtering/processing datasets with data ranges, cloudcover, geometry, band, reducer, scale
                 if data_name in ('MODIS_Terra_NDVI', 'MODIS_Terra_EVI'):
-                    download_data = cloud_cover_filter(data_name, start_date, end_date, 0, 1, gee_extent).select(band).\
+                    download_data = cloud_cover_filter(data_name, start_date, end_date, 0, 1, gee_extent).select(band). \
                         reduce(reducer). \
                         multiply(multiply_scale).toFloat()
 
                 elif data_name in ('VIIRS_NDVI', 'VIIRS_EVI', 'VIIRS_EVI2'):
-                    download_data = cloud_cover_filter(data_name, start_date, end_date, 0, 1, gee_extent).select(band).\
+                    download_data = cloud_cover_filter(data_name, start_date, end_date, 0, 1, gee_extent).select(band). \
                         reduce(reducer).multiply(multiply_scale).toFloat()
 
                 elif data_name == 'MODIS_NDWI':
-                    nir = cloud_cover_filter(data_name, start_date, end_date, 0, 1, gee_extent).select(band[0]).\
+                    nir = cloud_cover_filter(data_name, start_date, end_date, 0, 1, gee_extent).select(band[0]). \
                         reduce(reducer).multiply(multiply_scale).toFloat()
-                    swir = cloud_cover_filter(data_name, start_date, end_date, 0, 1, gee_extent).select(band[1]).\
+                    swir = cloud_cover_filter(data_name, start_date, end_date, 0, 1, gee_extent).select(band[1]). \
                         reduce(reducer).multiply(multiply_scale).toFloat()
                     download_data = nir.subtract(swir).divide(nir.add(swir))
                 elif data_name == 'GPW_Pop':
                     start_date = ee.Date.fromYMD(year, 1, 1)  # GPW population dataset's data starts at
                     end_date = ee.Date.fromYMD(year, 12, 31)
                     # filterBounds are not necessary, added it to reduce processing extent
-                    download_data = ee.ImageCollection(data).select(band).filterDate(start_date, end_date).\
+                    download_data = ee.ImageCollection(data).select(band).filterDate(start_date, end_date). \
                         filterBounds(gee_extent).reduce(reducer).toFloat()
                 else:
-                    download_data = ee.ImageCollection(data).select(band).filterDate(start_date, end_date).\
+                    download_data = ee.ImageCollection(data).select(band).filterDate(start_date, end_date). \
                         filterBounds(gee_extent).reduce(reducer).multiply(multiply_scale).toFloat()
 
                 data_url = download_data.getDownloadURL({'name': data_name,
@@ -438,7 +437,7 @@ def download_gee_data_monthly(data_name, download_dir, year_list, month_range, m
 
 
 def download_gee_data_yearly(data_name, download_dir, year_list, month_range, merge_keyword, refraster=WestUS_raster,
-                              grid_shape='../../Data_main/shapefiles/Western_US_ref_shapes/WestUS_gee_grid.shp'):
+                             grid_shape='../../Data_main/shapefiles/Western_US_ref_shapes/WestUS_gee_grid.shp'):
     """
     Download data (at yearly scale) from GEE.
 
@@ -479,28 +478,28 @@ def download_gee_data_yearly(data_name, download_dir, year_list, month_range, me
 
             # Filtering/processing datasets with data ranges, cloudcover, geometry, band, reducer, scale
             if data_name in ('MODIS_Terra_NDVI', 'MODIS_Terra_EVI'):
-                download_data = cloud_cover_filter(data_name, start_date, end_date, 0, 1, gee_extent).select(band).\
+                download_data = cloud_cover_filter(data_name, start_date, end_date, 0, 1, gee_extent).select(band). \
                     reduce(reducer). \
                     multiply(multiply_scale).toFloat()
 
             elif data_name in ('VIIRS_NDVI', 'VIIRS_EVI', 'VIIRS_EVI2'):
-                download_data = cloud_cover_filter(data_name, start_date, end_date, 0, 1, gee_extent).select(band).\
+                download_data = cloud_cover_filter(data_name, start_date, end_date, 0, 1, gee_extent).select(band). \
                     reduce(reducer).multiply(multiply_scale).toFloat()
 
             elif data_name == 'MODIS_NDWI':
-                nir = cloud_cover_filter(data_name, start_date, end_date, 0, 1, gee_extent).select(band[0]).\
+                nir = cloud_cover_filter(data_name, start_date, end_date, 0, 1, gee_extent).select(band[0]). \
                     reduce(reducer).multiply(multiply_scale).toFloat()
-                swir = cloud_cover_filter(data_name, start_date, end_date, 0, 1, gee_extent).select(band[1]).\
+                swir = cloud_cover_filter(data_name, start_date, end_date, 0, 1, gee_extent).select(band[1]). \
                     reduce(reducer).multiply(multiply_scale).toFloat()
                 download_data = nir.subtract(swir).divide(nir.add(swir))
             elif data_name == 'GPW_Pop':
                 start_date = ee.Date.fromYMD(year, 1, 1)  # GPW population dataset's data starts at
                 end_date = ee.Date.fromYMD(year, 12, 31)
                 # filterBounds are not necessary, added it to reduce processing extent
-                download_data = ee.ImageCollection(data).select(band).filterDate(start_date, end_date).\
+                download_data = ee.ImageCollection(data).select(band).filterDate(start_date, end_date). \
                     filterBounds(gee_extent).reduce(reducer).toFloat()
             else:
-                download_data = ee.ImageCollection(data).select(band).filterDate(start_date, end_date).\
+                download_data = ee.ImageCollection(data).select(band).filterDate(start_date, end_date). \
                     filterBounds(gee_extent).reduce(reducer).multiply(multiply_scale).toFloat()
 
             data_url = download_data.getDownloadURL({'name': data_name,
@@ -555,8 +554,8 @@ def download_all_gee_data(data_list, download_dir, year_list, month_range, refra
             # for datasets that needed to be downloaded on yearly scale
             elif data_name in ['GPW_Pop']:
                 download_gee_data_yearly(data_name=data_name, download_dir=download_dir, year_list=year_list,
-                                          month_range=month_range, merge_keyword='WestUS',
-                                          refraster=refraster, grid_shape=grid_shape)
+                                         month_range=month_range, merge_keyword='WestUS',
+                                         refraster=refraster, grid_shape=grid_shape)
     else:
         pass
 
@@ -626,203 +625,194 @@ def download_all_datasets(year_list, month_range, gee_data_list=None, skip_downl
                        skip_download=skip_download_ssebop_data)
 
 
-def mask_cdl_to_WestUS(cdl_dir='../../Data_main/Raster_data/USDA_CDL/CONUS_original_30m',
-                       westus_dir='../../Data_main/Raster_data/USDA_CDL/WestUS_30m',
-                       westUS_shape='../../Data_main/shapefiles/Western_US_ref_shapes/WestUS.shp',
-                       processing_shp_dir='../../Data_main/Raster_data/USDA_CDL/processing_shapes',
-                       nodata=no_data_value, try_maximum_occurrence_approach=False):
+def process_cdl_data_to_cropland(cdl_dir='../../Data_main/Raster_data/USDA_CDL/CONUS_original_30m',
+                                 processing_shp_dir='../../Data_main/Raster_data/USDA_CDL/processing_shapes',
+                                 westus_30m_dir='../../Data_main/Raster_data/USDA_CDL/WestUS_30m',
+                                 westus_processed_cropland_dir='../../Data_main/Raster_data/USDA_CDL/WestUS_Processed_cropland',
+                                 ref_raster=WestUS_raster, resolution=model_res,
+                                 already_masked=False, try_maximum_occurrence_approach=False,
+                                 skip_processing=False):
     """
-    Crop and resample cdl raster fro Western US and create 2000 & 2005 cdl data.
+    Mask and process cdl datasets to only cropland. Processing includes selecting only cropland pixels and resampling
+    to 2km resolution.
 
     CDL data download link : https://www.nass.usda.gov/Research_and_Science/Cropland/Release/
 
-    :param cdl_dir: Directory path of original (whole US) CDL datasets.
-    :param processed_dir: File path of directory to save processed data.
-    :param westUS_shape: Western US shapefile.
-    :param try_maximum_occurrence_approach: Set to True if want to create 2000 and 2005 cdl data based on maximum
-                                            occurrence approach. Maximum occurrence approach assigns the most frequent
-                                            cdl data value from 2008-2011 to 2000 and 2005 cds raster.
-                                            try_maximum_occurrence_approach=False uses 2008 cdl data as 200 and 2005
-                                            cdl rasters.
+    :param cdl_dir: Directory path of original (CONUS scale) CDL datasets.
+    :param processing_shp_dir: Directory path of shapefiles that is used to process cdl data. cdl datasets are 30m
+                               resolution and memory-heavy. These shapefiles are used to mask the cdl datasets,
+                               which is later processed individually.
+    :param westus_30m_dir: Output directory path for saving Western US scale 30m cdl data.
+                           Also, automatically saves intermediate datasets before final cropland products.
+    :param westus_processed_cropland_dir: Output directory path for saving finalized Western US scale 2km cropland data.
 
-    :return: Cropped and resampled cdl rasters of 2000, 2005, 2010, 2015.
+    :param ref_raster: Filepath of Western US reference raster (set to default).
+    :param resolution: Model resolution. Default set to 0.02000000000000000389.
+    :param already_masked: Set to True to skip masking (masked cdl data has already been prepared).
+    :param try_maximum_occurrence_approach: Defaults to False to set 2008 dataset value as 2000 & 2005 datasets.
+                                            'try_maximum_occurrence_approach': (set to True to use)
+                                            2000 and 2005 cdl datasets for whole Western US isn't available.
+                                            This approach sets the maximum occurring cropland/non-cropland values from
+                                            2008-2011 as 2000 & 2005 datasets.
+    :param skip_processing: Set to True to skip cdl cropland dataset processing.
+
+    :return: None.
     """
-    # cdl_US = glob(os.path.join(cdl_dir, '*.tif'))
-    # processing_bounds = glob(os.path.join(processing_shp_dir, '*.shp'))
+    if not skip_processing:
+        print('processing cdl data to cropland...')
+        cdl_US = glob(os.path.join(cdl_dir, '*.tif'))
+        processing_bounds = glob(os.path.join(processing_shp_dir, '*.shp'))
 
-    # New directory inside westus_dir ro save processed cropland data
-    cropland_dir = os.path.join(westus_dir, 'cropland')
-    makedirs([cropland_dir])
+        cdl_2008_arr, cdl_2009_arr, cdl_2010_arr, cdl_2011_arr, cdl_file, shape = None, None, None, None, None, None
+        if not already_masked:
+            # Loop for masking cdl raster to Western US extent.
+            # Using 4 bounding boxes to mask and split the cdl for Western US into 4 regions for each year
+            # to minimize memory load.
+            for cdl_ras in cdl_US:
+                for shape in processing_bounds:
+                    raster_name = os.path.splitext(os.path.basename(cdl_ras))[0]
+                    shape_name = os.path.splitext(os.path.basename(shape))[0]
+                    name = raster_name + '_' + shape_name + '.tif'
+                    mask_raster_by_extent(input_raster=cdl_ras, ref_file=shape, output_dir=westus_30m_dir,
+                                          raster_name=name, invert=False, crop=True, nodata=0)
 
-    cdl_2008_arr, cdl_2009_arr, cdl_2010_arr, cdl_2011_arr, cdl_file, shape = None, None, None, None, None, None
-    # Loop for masking cdl raster to Western US extent. Using 4 bounding boxes to minimize memory load.
-    # for cdl_ras in cdl_US:
-    #     for shape in processing_bounds:
-    #         raster_name = os.path.splitext(os.path.basename(cdl_ras))[0]
-    #         shape_name = os.path.splitext(os.path.basename(shape))[0]
-    #         name = raster_name + '_' + shape_name + '.tif'
-    #         mask_raster_by_extent(input_raster=cdl_ras, ref_file=shape, output_dir=westus_dir,
-    #                               raster_name=name, invert=False, crop=True, nodata=0)
+        # Creating new directory inside westus_30m_dir to save processed cropland data
+        # Creating new directory to save processed cropland data
+        cropland_30m_dir = os.path.join(westus_30m_dir, 'cropland')
+        makedirs([cropland_30m_dir, westus_processed_cropland_dir])
 
+        # converting to crop vs non-crop and developed vs non-developed data
+        noncrop_classes = [0, 58, 59, 60, 61, 63, 64, 65, 81, 82, 83, 87, 88, 111, 121, 122, 123, 124, 131, 141, 142,
+                           143, 152, 176, 190, 195]  # 0 is no data value
 
-    # converting to crop vs non-crop and developed vs non-developed data
-    noncrop_classes = [0, 58, 59, 60, 61, 63, 64, 65, 81, 82, 83, 87, 88, 111, 121, 122, 123, 124, 131, 141, 142,
-                       143, 152, 176, 190, 195]  # 0 is no data value
+        # Listing all 30m cdl datasets for WestUS (each year consists of 4 cdl datasets, each for a particular region)
+        cdl_westus = glob(os.path.join(westus_30m_dir, '*.tif'))
 
-    cdl_westus = glob(os.path.join(westus_dir, '*.tif'))
-    for cdl_ras in cdl_westus:
+        # cropped each year's cdl data in 4 shapefile bounds for memory issue. They are specified as 'bound1', 'bound2',...
+        # at the end of each raster's name. In this tep, we will select only the cropland pixels, resample them to 2km.
+        for cdl_ras in cdl_westus:
             # crop vs non-crop raster  # if array value in noncrop list assigns 0, otherwise assigns 1
             # cdl data has no_data value set to 0
-            # data_arr = np.where(ref_arr == 0, 1, ref_arr)
-            cdl_arr, cdl_file = read_raster_arr_object(cdl_ras, change_dtype=False)  # the data type will be converted to float
+            cdl_arr, cdl_file = read_raster_arr_object(cdl_ras, change_dtype=False)  # datatype unsigned integer 8bit
             crop_arr = np.where(~np.isin(cdl_arr, noncrop_classes), 1, 0)
 
             crop_raster_name = os.path.splitext(os.path.basename(cdl_ras))[0] + '_crop.tif'
-            crop_raster_path = os.path.join(cropland_dir, crop_raster_name)
-            # saving cropland rasters
-            write_array_to_raster(raster_arr=crop_arr, raster_file=cdl_file, transform=cdl_file.transform,
-                                  output_path=crop_raster_path, nodata=0)
+            crop_raster_path = os.path.join(cropland_30m_dir, crop_raster_name)
 
-            # developed vs non-developed  # if array value is not within 121, 122, 123, and 124 assigns 0
-            ##########
-            dev_arr = np.where(cdl_arr == 121, 1, cdl_arr)  # 1: Developed/Open Space
-            dev_arr = np.where(cdl_arr == 122, 2, dev_arr)  # 2: Developed/Low Intensity
-            dev_arr = np.where(cdl_arr == 123, 3, dev_arr)  # 3: Developed/Medium Intensity
-            dev_arr = np.where(cdl_arr == 124, 4, dev_arr)  # 4: Developed/High Intensity
+            # saving 30m cropland rasters
+            # setting nodata to None, otherwise all 0 values will become nodata.
+            # nodata pixels will be assigned to -9999 at mosaicing step
+            crop_30m_raster = write_array_to_raster(raster_arr=crop_arr, raster_file=cdl_file,
+                                                    transform=cdl_file.transform, output_path=crop_raster_path,
+                                                    nodata=None, dtype=np.uint8)
 
-        # westus_cdl = clip_resample_reproject_raster(cdl_ras, westUS_shape, keyword='WestUS',
-        #                                             output_raster_dir=processed_dir, clip_and_resample=True,
-        #                                             targetaligned=False, resample_algorithm='near',
-        #                                             resolution=model_res, crs='EPSG:4269',
-        #                                             output_datatype=gdal.GDT_Byte)
-    #     if '2008' in westus_cdl:
-    #         cdl_2008_arr, cdl_file = read_raster_arr_object(westus_cdl)
-    #         shape = cdl_2008_arr.shape
-    #         cdl_2008_arr = cdl_2008_arr.flatten()
-    #     elif '2009' in westus_cdl:
-    #         cdl_2009_arr = read_raster_arr_object(westus_cdl, get_file=False).flatten()
-    #     elif '2010' in westus_cdl:
-    #         cdl_2010_arr = read_raster_arr_object(westus_cdl, get_file=False).flatten()
-    #     elif '2011' in westus_cdl:
-    #         cdl_2011_arr = read_raster_arr_object(westus_cdl, get_file=False).flatten()
-    #
-    # if try_maximum_occurrence_approach:
-    #     # setting maximum occurring crop value of 2008-2011 cdl array as values of 2000 and 2005 cdl array
-    #     max_arr = np.stack([cdl_2008_arr, cdl_2009_arr, cdl_2010_arr, cdl_2011_arr], axis=0)
-    #     new_arr = np.zeros(cdl_2008_arr.shape)
-    #
-    #     # this loop takes each column of stacked array. np.bincount() counts the number of occurance of each value in
-    #     # the selected column. Then, np.argmax() selects the value which occurs most frequently. Then, we paste the
-    #     # selected value to a new array
-    #     for i in range(max_arr.shape[1]):
-    #         selected_arr = max_arr[:, i]
-    #         max_occurred_value = np.argmax(np.bincount(list(selected_arr)))  # # # improve this. try to avoid loop
-    #         new_arr[i] = max_occurred_value
-    #
-    #     max_arr = new_arr.reshape(shape)
-    #
-    # else:
-    #     max_arr = cdl_2008_arr.reshape(shape)
-    #
-    # output_2000_cdl_data = os.path.join(processed_dir, 'WestUS_2000_30m_cdls.tif')
-    # output_2005_cdl_data = os.path.join(processed_dir, 'WestUS_2005_30m_cdls.tif')
-    #
-    # write_array_to_raster(max_arr, raster_file=cdl_file, transform=cdl_file.transform,
-    #                       output_path=output_2000_cdl_data)
-    # write_array_to_raster(max_arr, raster_file=cdl_file, transform=cdl_file.transform,
-    #                       output_path=output_2005_cdl_data)
+            # Resampling 30m raster to 2km using 'average' resampling algorithm
+            # the values represent percent (weighted average) cropland in the pixel
+            year = crop_raster_name.split('_')[0]
+            bound_no = crop_raster_name.split('_')[3]
+            resampled_raster_name = f'{year}_2km_crop_percent_{bound_no}.tif'
+            resampled_raster = clip_resample_reproject_raster(input_raster=crop_30m_raster, input_shape=None,
+                                                              raster_name=resampled_raster_name,
+                                                              output_raster_dir=cropland_30m_dir,
+                                                              clip=False, resample=True, clip_and_resample=False,
+                                                              targetaligned=True, resample_algorithm='average',
+                                                              resolution=resolution, crs='EPSG:4269',
+                                                              output_datatype=gdal.GDT_Float32)
 
+            # filtering resampled rasters by a value threshold and setting them as cropland (value=1)
+            output_raster = os.path.join(cropland_30m_dir, f'{year}_2km_{bound_no}.tif')
+            filter_raster_on_threshold(input_raster=resampled_raster, output_raster=output_raster,
+                                       threshold_value1=0.15,
+                                       assign_value=1, refraster=resampled_raster)
 
-mask_cdl_to_WestUS(cdl_dir='../../Data_main/Raster_data/USDA_CDL/CONUS_original_30m',
-                   westus_dir='../../Data_main/Raster_data/USDA_CDL/WestUS_30m',
-                   westUS_shape='../../Data_main/shapefiles/Western_US_ref_shapes/WestUS.shp',
-                   processing_shp_dir='../../Data_main/Raster_data/USDA_CDL/processing_shapes',
-                   try_maximum_occurrence_approach=False)
+        # In this step, we are mosaicin each year's datasets to form a single cropland dataset for each year
+        year_list = [2008, 2009, 2010, 2011, 2015]
 
-def preprocess_cdl_data(cdl_dir='../../Data_main/Raster_data/USDA_CDL/WestUS',
-                        processed_dir='../../Data_main/Raster_data/USDA_CDL/WestUS',
-                        ref_raster=WestUS_raster, skip_processing=False):
-    """
-    Preprocess (reclassify) cdl data for Western US. Reclassifies cdl to crop vs non-crop and developed vs
-    non-developed datasets.
+        for year in year_list:
+            search_by = f'*{year}_2km_bound*.tif'
+            raster_name = f'USDA_cropland_{year}.tif'
+            mosaic_rasters(input_dir=cropland_30m_dir, output_dir=westus_processed_cropland_dir,
+                           raster_name=raster_name, ref_raster=ref_raster, search_by=search_by,
+                           dtype=np.float32, mosaicing_method='max', resolution=resolution, nodata=no_data_value)
+            print(f'cdl data for {year} processed to cropland')
 
-    Developed classes: 121, 122, 123, 124
-    non-crop classes : 58, 59, 60, 61, 63, 64, 65, 81, 82, 83, 87, 88, 111, 121, 122, 123, 124, 131, 141, 142, 143,
-                       152, 176, 190, 195
-    details in: https://developers.google.com/earth-engine/datasets/catalog/USDA_NASS_CDL
+        # 2000 and 2005 cdl data isn't available for all Western US.
+        # 'try_maximum_occurrence_approach' compares each pixel between 2008-2011.
+        # Assigns cropland (value 1) for a pixel if that pixel is cropland in most years between 2008-2011
+        if try_maximum_occurrence_approach:
+            # Reading 2008-2011 cropland data in memory to apply maximum occurence approach
+            westus_cdl_crops = glob(os.path.join(westus_processed_cropland_dir, '*.tif'))
 
-    :param cdl_dir: Directory path of original (whole US) CDL datasets.
-    :param processed_dir: File path of directory to save processed data.
-    :param ref_raster: File path of reference raster. Default set to WesternUS 2km reference raster.
-    :param skip_processing: Set to True to skip processing.
+            for crop_cdl in westus_cdl_crops:
+                if '2008' in crop_cdl:
+                    cdl_2008_arr, cdl_file = read_raster_arr_object(crop_cdl)
+                    shape = cdl_2008_arr.shape
+                    cdl_2008_arr = cdl_2008_arr.flatten()
+                elif '2009' in crop_cdl:
+                    cdl_2009_arr = read_raster_arr_object(crop_cdl, get_file=False).flatten()
+                elif '2010' in crop_cdl:
+                    cdl_2010_arr = read_raster_arr_object(crop_cdl, get_file=False).flatten()
+                elif '2011' in crop_cdl:
+                    cdl_2011_arr = read_raster_arr_object(crop_cdl, get_file=False).flatten()
 
-    :return: Dictionaries of file paths of processed crop vs non-crop and developed vs non-developed datasets.
-    """
-    crop_data_dict, developed_data_dict = None, None
+            # stacking 2008-2011 cropland cdl arrays
+            max_arr = np.stack([cdl_2008_arr, cdl_2009_arr, cdl_2010_arr, cdl_2011_arr], axis=0)
+            # creating an empty array to assign cropland (1) if most years between 2008-2011 are cropland
+            new_arr = np.zeros(cdl_2008_arr.shape)
 
-    if not skip_processing:
-        makedirs([processed_dir])
-        crop_cdl_and_create_2000_2005_cdl_raster()  # cropping cdl rasters and creating 2000 and 2005 cdl rasters
+            # this loop takes each column of stacked array. np.bincount() counts the number of occurence of each value
+            # in the selected column. Then, np.argmax() selects the value which occurs most frequently. Then, we paste
+            # the selected value to a new array
+            for i in range(max_arr.shape[1]):
+                selected_arr = max_arr[:, i]
+                selected_arr = np.where(np.isnan(selected_arr), 0, selected_arr)  # replacing Nan values with 0
 
-        crop_data_dict = {}
-        developed_data_dict = {}
+                max_occurred_value = np.argmax(np.bincount(list(selected_arr)))  # # # improve this. try to avoid loop
+                new_arr[i] = max_occurred_value
 
-        cdl_US = glob(os.path.join(cdl_dir, '*WestUS*.tif'))
-        year_list = ['2000', '2005', '2010', '2015']
-        filtered_cdl_list = []
+            max_arr = new_arr.reshape(shape)
 
-        for cdl in cdl_US:
-            year = os.path.basename(cdl).split('_')[1]
-            if year in year_list:
-                filtered_cdl_list.append(cdl)
+            # replacing the nan pixels with -9999 value
+            ref_arr = read_raster_arr_object(ref_raster, get_file=False)
+            max_arr = np.where(~np.isnan(ref_arr), max_arr, ref_arr)
 
-        for cdl_ras in filtered_cdl_list:
-            # converting to crop vs non-crop and developed vs non-developed data
-            noncrop_classes = [58, 59, 60, 61, 63, 64, 65, 81, 82, 83, 87, 88, 111, 121, 122, 123, 124, 131, 141, 142,
-                               143, 152, 176, 190, 195]
+        else:  # if try_maximum_occurrence_approach=False, assigns 2008 cropland arrays
+            # value as 2000 and 2005 cropland data
+            cdl_2008_data = glob(os.path.join(westus_processed_cropland_dir, '*2008.tif'))
+            cdl_2008_arr, cdl_file = read_raster_arr_object(cdl_2008_data)
+            max_arr = cdl_2008_arr.reshape(cdl_2008_arr.shape)
 
-            year = os.path.splitext(os.path.basename(cdl_ras))[0].split('_')[1]
-            cdl_arr = read_raster_arr_object(cdl_ras, get_file=False)
-            ref_arr, ref_file = read_raster_arr_object(ref_raster)
+        # writing generated cropland rasters for 2000 and 2005
+        output_2000_cdl_data = os.path.join(westus_processed_cropland_dir, 'USDA_cropland_2000.tif')
+        output_2005_cdl_data = os.path.join(westus_processed_cropland_dir, 'USDA_cropland_2005.tif')
 
-            # crop vs non-crop raster  # if array value in noncrop list assigns 0, otherwise assigns 1
-            # cdl data has no_data value set to 0
-            data_arr = np.where(ref_arr == 0, 1, ref_arr)
-            crop_arr = np.where(~np.isin(cdl_arr, noncrop_classes) & (data_arr == 1) & (cdl_arr > 0), 1, ref_arr)
+        write_array_to_raster(max_arr, raster_file=cdl_file, transform=cdl_file.transform,
+                              output_path=output_2000_cdl_data)
+        write_array_to_raster(max_arr, raster_file=cdl_file, transform=cdl_file.transform,
+                              output_path=output_2005_cdl_data)
+        print('cdl cropland data for 2000 and 2005 generated')
 
-            crop_raster_path = os.path.join(processed_dir, f'USDA_cropland_{year}.tif')
-            crop_output_file = write_array_to_raster(crop_arr, ref_file, ref_file.transform, crop_raster_path)
-
-            # developed vs non-developed  # if array value is not within 121, 122, 123, and 124 assigns 0
-            dev_arr = np.where(cdl_arr == 121, 1, ref_arr)  # 1: Developed/Open Space
-            dev_arr = np.where(cdl_arr == 122, 2, dev_arr)  # 2: Developed/Low Intensity
-            dev_arr = np.where(cdl_arr == 123, 3, dev_arr)  # 3: Developed/Medium Intensity
-            dev_arr = np.where(cdl_arr == 124, 4, dev_arr)  # 4: Developed/High Intensity
-
-            dev_raster_path = os.path.join(processed_dir, f'USDA_developed_{year}.tif')
-            dev_output_file = write_array_to_raster(dev_arr, ref_file, ref_file.transform, dev_raster_path)
-
-            crop_output_file = copy_file(crop_output_file, copy_dir='../../Data_main/Compiled_data')
-            data_name = crop_output_file[crop_output_file.rfind(os.sep) + 1:crop_output_file.rfind('.')]
-            crop_data_dict[data_name] = crop_output_file
-
-            dev_output_file = copy_file(dev_output_file, copy_dir='../../Data_main/Compiled_data')
-            data_name = dev_output_file[dev_output_file.rfind(os.sep) + 1:dev_output_file.rfind('.')]
-            developed_data_dict[data_name] = dev_output_file
-
-        pickle.dump(crop_data_dict, open('../../Data_main/Compiled_data/crop_data_dict.pkl', mode='wb+'))
-        pickle.dump(developed_data_dict, open('../../Data_main/Compiled_data/developed_land_data_dict.pkl', mode='wb+'))
-
+        # Copying processed cdl cropland data to compiled data folder and saving in a dictionary to load later
+        westus_cdl_crops = glob(os.path.join(westus_processed_cropland_dir, '*.tif'))
+        cdl_cropland_processing_dict = {}
+        for crop_cdl in westus_cdl_crops:
+            data_name = os.path.basename(crop_cdl)
+            copied_data = copy_file(crop_cdl, copy_dir='../../Data_main/Compiled_data')
+            cdl_cropland_processing_dict[data_name] = copied_data
+            pickle.dump(cdl_cropland_processing_dict, open('../../Data_main/Compiled_data/cdl_cropland_dict.pkl',
+                                                           mode='wb+'))
     else:
-        crop_data_dict = pickle.load(open('../../Data_main/Compiled_data/crop_data_dict.pkl', mode='rb'))
-        developed_data_dict = pickle.load(open('../../Data_main/Compiled_data/developed_land_data_dict.pkl', mode='rb'))
+        cdl_cropland_processing_dict = pickle.load(open('../../Data_main/Compiled_data/cdl_cropland_dict.pkl',
+                                                        mode='rb'))
 
-    return crop_data_dict, developed_data_dict
+    return cdl_cropland_processing_dict
 
 
 def process_irrigated_landuse_data(input_dir='../../Data_main/Raster_data/Irrigated_agriculture',
                                    input_shape='../../Data_main/shapefiles/Western_US_ref_shapes/WestUS_states.shp',
-                                   output_dir='../../Data_main/Compiled_data', skip_processing=False):
+                                   skip_processing=False,
+                                   ref_raster=WestUS_raster, resampling_resolution=model_res,
+                                   try_maximum_occurrence_approach=True):
     """
     Process irrigated cropland data from Xie et al. 2021. Two sets of rasters are generated. First: Irrigated area
     raster with values 0 and 1 (1 menas irrigated); second: Irrigated fraction data (values in fraction from 0 or 1,
@@ -830,20 +820,34 @@ def process_irrigated_landuse_data(input_dir='../../Data_main/Raster_data/Irriga
 
     :param input_dir: Filepath of input data directory.
     :param input_shape: Filepath of ROI shapefile.
-    :param output_dir: Filepath of output data directory.
     :param skip_processing: Bool. Set to True is want to skip processing.
+    :param ref_raster: Filepath of Western US reference raster.
+    :param resampling_resolution: Model resolution used for resampling dataset.
+                                  Here, the model resolution is only used for resampling CONUS-scale dataset.
+                                  At later step of masking/clipping, output raster dimension was used from the
+                                  reference raster.
+    :param try_maximum_occurrence_approach: Defaults to False to set 2017 dataset value as 2018-2022 datasets.
+                                            'try_maximum_occurrence_approach': (set to true to use)
+                                            2018-2022 irrigated cropland data aren't available.
+                                            'try_maximum_occurrence_approach' compares each pixel between 2013-2017.
+                                            Assigns irrigated cropland (value 1) for a pixel if that pixel is irrigated
+                                            in most years between 2008-2011.
 
     :return: A dictionary of processed dataset filepaths. The dictionary has years (e.g., 2015) as keys.
     """
-    irrigated_area_dict = None
-    irrigated_frac_dict = None
+    irrigated_land_dict = None
 
     if not skip_processing:
         print('Processing Irrigated Agriculture dataset....')
         input_raster = glob(os.path.join(input_dir, '*.tif'))
 
-        irrigation_area_dict = {}  # a dictionary to store irrigated area data (values in 0 or 1, 1 means irrigated)
-        irrigation_frac_dict = {}  # a dictionary to store irrigated fraction data (values in fraction from 0 or 1)
+        irrigation_land_dict = {}  # a dictionary to store irrigated area data (values in 0 or 1, 1 means irrigated)
+
+        # creating output directory
+        interim_dir = os.path.join(input_dir, 'interim_data')
+        irrigated_frac_dir = os.path.join(input_dir, 'WestUS_Processed_irrigated_frac')
+        irrigated_land_dir = os.path.join(input_dir, 'WestUS_Processed_irrigated_lands')
+        makedirs([interim_dir, irrigated_frac_dir, irrigated_land_dir])
 
         for raster in input_raster:
             if any([i in raster for i in ['clipped', 'resample', 'irrigated']]):
@@ -854,44 +858,122 @@ def process_irrigated_landuse_data(input_dir='../../Data_main/Raster_data/Irriga
                 # fraction of irrigated area (30m pixel) in each 2-km pixel.
 
                 # # Processing irrigated area data to fraction of irrigated area data
+                # resampling (by weighted average method) CONUS-scale dataset to 2km
+                # Using model resolution for resampling
                 resampled_raster = clip_resample_reproject_raster(
-                    input_raster=raster, input_shape=input_shape, keyword='resampled', resolution=model_res,
-                    output_raster_dir=input_dir, clip_and_resample=False, clip=False, resample=True,
-                    resample_algorithm='average')
+                    input_raster=raster, input_shape=input_shape, keyword='resampled', resolution=resampling_resolution,
+                    output_raster_dir=interim_dir, clip_and_resample=False, clip=False, resample=True,
+                    resample_algorithm='average', use_ref_width_height=False)
 
-                clipped_raster = clip_resample_reproject_raster(
-                    input_raster=resampled_raster, input_shape=input_shape, keyword='clipped', resolution=model_res,
-                    output_raster_dir=input_dir, clip_and_resample=True, clip=False, resample=False,
-                    targetaligned=False)  # targetAlignedPixels=False to ensure equal row-columns like other dataset
-                # copying to compiled directory
-                year = os.path.splitext(os.path.basename(clipped_raster))[0][-4:]
+                # Masking resampled dataset to Western US scale
+                # Using width height of reference raster. 'resolution' set to None.
+                year = os.path.splitext(os.path.basename(resampled_raster))[0][-4:]
                 output_name = f'irrigated_agri_frac_{year}'
-                copied_file = copy_file(input_dir_file=clipped_raster, copy_dir=output_dir, rename=output_name)
-                irrigation_frac_dict[year] = copied_file
+                clipped_raster = clip_resample_reproject_raster(
+                    input_raster=resampled_raster, input_shape=input_shape, keyword=' ', raster_name=output_name,
+                    resolution=None, output_raster_dir=irrigated_frac_dir,
+                    clip_and_resample=True, clip=False, resample=False, targetaligned=False,
+                    use_ref_width_height=True,
+                    ref_raster=ref_raster)  # targetAlignedPixels=False to ensure equal row-columns like other dataset
 
                 # # Processing irrigated area data to presence of irrigated area data
                 # Using threshold to choose irrigated area
                 output_name = f'irrigated_agri_{year}'
-                output_fp = os.path.join(input_dir, f'{output_name}.tif')
-                filter_raster_on_threshold(input_raster=clipped_raster, output_raster=output_fp, threshold_value1=0.3,
+                output_fp = os.path.join(irrigated_land_dir, f'{output_name}.tif')
+                filter_raster_on_threshold(input_raster=clipped_raster, output_raster=output_fp, threshold_value1=0.15,
                                            assign_value=1)
 
                 # copying to compiled directory
-                copied_file = copy_file(input_dir_file=output_fp, copy_dir=output_dir, rename=None)
-                irrigation_area_dict[year] = copied_file
+                copied_data = copy_file(input_dir_file=output_fp, copy_dir='../../Data_main/Compiled_data', rename=None)
+                irrigation_land_dict[year] = copied_data
+
+        # 2018-2022 irrigated cropland data aren't available.
+        # 'try_maximum_occurrence_approach' compares each pixel between 2013-2017.
+        # Assigns irrigated cropland (value 1) for a pixel if that pixel is irrigated
+        # in most years between 2008-2011
+        irrig_2013_arr, irrig_2014_arr, irrig_2015_arr, irrig_2016_arr, irrig_2017_arr = None, None, None, \
+                                                                                         None, None
+        if try_maximum_occurrence_approach:
+            # Reading 2013-2017 cropland data in memory to apply maximum occurrence approach
+            westus_irrigated_crops = glob(os.path.join(irrigated_land_dir, '*201[3-7].tif'))
+            print(westus_irrigated_crops)
+
+            for irrigated_crop in westus_irrigated_crops:
+                if '2013' in irrigated_crop:
+                    irrig_2013_arr, irrig_file = read_raster_arr_object(irrigated_crop)
+                    shape = irrig_2013_arr.shape
+                    irrig_2013_arr = irrig_2013_arr.flatten()
+                elif '2014' in irrigated_crop:
+                    irrig_2014_arr = read_raster_arr_object(irrigated_crop, get_file=False).flatten()
+                elif '2015' in irrigated_crop:
+                    irrig_2015_arr = read_raster_arr_object(irrigated_crop, get_file=False).flatten()
+                elif '2016' in irrigated_crop:
+                    irrig_2016_arr = read_raster_arr_object(irrigated_crop, get_file=False).flatten()
+                elif '2017' in irrigated_crop:
+                    irrig_2017_arr = read_raster_arr_object(irrigated_crop, get_file=False).flatten()
+
+            # stacking 2013-2017 irrigated cropland arrays
+            max_arr = np.stack([irrig_2013_arr, irrig_2014_arr, irrig_2015_arr, irrig_2016_arr, irrig_2017_arr],
+                               axis=0)
+            # creating an empty array to assign cropland (1) if most years between 2008-2011 are cropland
+            new_arr = np.zeros(irrig_2017_arr.shape)
+
+            # this loop takes each column of stacked array. np.bincount() counts the number of occurence of
+            # each value in the selected column. Then, np.argmax() selects the value which occurs most
+            # frequently. Then, we paste the selected value to a new array
+            for i in range(max_arr.shape[1]):
+                selected_arr = max_arr[:, i]
+                selected_arr = np.where(np.isnan(selected_arr), 0, selected_arr)  # replacing Nan values with 0
+
+                max_occurred_value = np.argmax(
+                    np.bincount(list(selected_arr)))
+                new_arr[i] = max_occurred_value
+
+            max_arr = new_arr.reshape(shape)
+
+            # replacing the nan pixels with -9999 value
+            ref_arr = read_raster_arr_object(ref_raster, get_file=False)
+            max_arr = np.where(~np.isnan(ref_arr), max_arr, ref_arr)
+
+        else:  # if try_maximum_occurrence_approach=False, assigns 2017 irrigated cropland arrays value
+            # as 2018-2022 irrigated cropland data
+            irrig_crop_2017_data = glob(os.path.join(irrigated_land_dir, '*2017.tif'))
+            irrig_2017_arr, irrig_file = read_raster_arr_object(irrig_crop_2017_data)
+            max_arr = irrig_2017_arr.reshape(irrig_2017_arr.shape)
+
+        # writing generated cropland rasters for 2018-2022
+        output_2018_irrigated_data = os.path.join(irrigated_land_dir, 'irrigated_agri_2018.tif')
+        output_2019_irrigated_data = os.path.join(irrigated_land_dir, 'irrigated_agri_2019.tif')
+        output_2020_irrigated_data = os.path.join(irrigated_land_dir, 'irrigated_agri_2020.tif')
+        output_2021_irrigated_data = os.path.join(irrigated_land_dir, 'irrigated_agri_2021.tif')
+        output_2022_irrigated_data = os.path.join(irrigated_land_dir, 'irrigated_agri_2022.tif')
+
+        write_copy_files = [output_2018_irrigated_data, output_2019_irrigated_data, output_2020_irrigated_data,
+                            output_2021_irrigated_data, output_2022_irrigated_data]
+
+        for each_data in write_copy_files:
+            # writing created file
+            write_array_to_raster(max_arr, raster_file=irrig_file, transform=irrig_file.transform,
+                                  output_path=each_data)
+            # copying to compiled directory
+            copied_data = copy_file(input_dir_file=each_data, copy_dir='../../Data_main/Compiled_data', rename=None)
+            year = os.path.splitext(os.path.basename(each_data))[0][-4:]
+            irrigation_land_dict[year] = copied_data
+
+            print('Irrigated cropland data for 2018-2022 generated')
 
         print('Processed Irrigated Agriculture dataset')
-        pickle.dump(irrigation_frac_dict, open('../../Data_main/Compiled_data/irrigated_area_frac_dict.pkl', mode='wb+'))
-        pickle.dump(irrigation_area_dict, open('../../Data_main/Compiled_data/irrigated_area_dict.pkl', mode='wb+'))
+        pickle.dump(irrigation_land_dict, open('../../Data_main/Compiled_data/irrigated_land_dict.pkl', mode='wb+'))
 
     else:
-        irrigated_frac_dict = pickle.load(open('../../Data_main/Compiled_data/irrigated_area_frac_dict.pkl', mode='rb'))
-        irrigated_area_dict = pickle.load(open('../../Data_main/Compiled_data/irrigated_area_dict.pkl', mode='rb'))
+        irrigated_land_dict = pickle.load(open('../../Data_main/Compiled_data/irrigated_land_dict.pkl', mode='rb'))
 
-    return irrigated_frac_dict, irrigated_area_dict
+    return irrigated_land_dict
 
 
-def process_ssebop_data(years=(2005, 2010, 2015), ssebop_dir='../../Data_main/Raster_data/Ssebop_monthly_ETa',
+def process_ssebop_data(years=(2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012,
+                               2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022),
+                        ssebop_dir='../../Data_main/Raster_data/Ssebop_monthly_ETa',
                         output_dir_ssebop='../../Data_main/Raster_data/Ssebop_monthly_ETa/WesternUS',
                         ref_raster=WestUS_raster, resolution=model_res, skip_processing=False):
     """
@@ -966,8 +1048,8 @@ def process_ssebop_data(years=(2005, 2010, 2015), ssebop_dir='../../Data_main/Ra
                                                 search_by=search_by, resolution=resolution)
 
             # Copying mosaiced ssebop ET to compiled data folder and saving in a dictionary to load later
-            copy_file(mosaiced_ssebop, copy_dir='../../Data_main/Compiled_data')
-            ssebop_processing_dict[yearly_summed_ssebop[:yearly_summed_ssebop.rfind('.')]] = mosaiced_ssebop
+            copied_data = copy_file(mosaiced_ssebop, copy_dir='../../Data_main/Compiled_data')
+            ssebop_processing_dict[yearly_summed_ssebop[:yearly_summed_ssebop.rfind('.')]] = copied_data
             pickle.dump(ssebop_processing_dict, open('../../Data_main/Compiled_data/ssebop_dict.pkl', mode='wb+'))
     else:
         ssebop_processing_dict = pickle.load(open('../../Data_main/Compiled_data/ssebop_dict.pkl', mode='rb'))
@@ -998,7 +1080,10 @@ def convert_prism_data_to_tif(input_dir, output_dir, keyword='prism_precip'):
                        outputSRS='EPSG:4269')
 
 
-def process_prism_data(prism_bil_dir, prism_dir, output_dir_prism, years=(2005, 2010, 2015), keyword='prism_precip',
+def process_prism_data(prism_bil_dir, prism_dir, output_dir_prism,
+                       years=(2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012,
+                              2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022),
+                       keyword='prism_precip',
                        ref_raster=WestUS_raster, resolution=model_res, skip_processing=False):
     """
     Process (sum and clip to Western US extent) Prism Precipitation.
@@ -1027,7 +1112,6 @@ def process_prism_data(prism_bil_dir, prism_dir, output_dir_prism, years=(2005, 
         elif 'temp' in keyword:
             interim_dir_for_mean = os.path.join(prism_dir, 'interim_dir_mean')
             makedirs([interim_dir_for_clip, interim_dir_for_mean, output_dir_prism])
-
 
         prism_processing_dict = {}
 
@@ -1098,8 +1182,8 @@ def process_prism_data(prism_bil_dir, prism_dir, output_dir_prism, years=(2005, 
                                                        search_by=search_by, resolution=resolution)
 
             # Copying mosaiced prism precip to compiled data folder and saving in a dictionary to load later
-            copy_file(mosaiced_prism, copy_dir='../../Data_main/Compiled_data')
-            prism_processing_dict[yearly_prism[:yearly_prism.rfind('.')]] = mosaiced_prism
+            copied_data = copy_file(mosaiced_prism, copy_dir='../../Data_main/Compiled_data')
+            prism_processing_dict[yearly_prism[:yearly_prism.rfind('.')]] = copied_data
             pickle.dump(prism_processing_dict, open('../../Data_main/Compiled_data/prism_dict.pkl', mode='wb+'))
     else:
         prism_processing_dict = pickle.load(open('../../Data_main/Compiled_data/prism_dict.pkl', mode='rb'))
@@ -1107,118 +1191,55 @@ def process_prism_data(prism_bil_dir, prism_dir, output_dir_prism, years=(2005, 
         return prism_processing_dict
 
 
-def run_all_preprocessing(skip_cdl_processing=False, skip_ssebop_processing=False, skip_irrigatedCrop_processing=False,
-                          skip_prism_processing=False):
+def run_all_preprocessing(skip_cdl_cropland_processing=False, cdl_already_masked=False,
+                          try_maximum_occurrence_approach_for_cdl=True,
+                          skip_ssebop_processing=False,
+                          skip_irrigatedCrop_processing=False, skip_prism_processing=False):
     """
     Run all preprocessing steps.
 
-    :param skip_cdl_processing: Set True if want to skip cdl data preprocessing.
+    :param skip_cdl_cropland_processing: Set to True to skip cdl cropland dataset processing.
+    :param cdl_already_masked: Set to True to skip masking (if masked cdl data has already been prepared).
+    :param try_maximum_occurrence_approach_for_cdl: Defaults to False to set 2008 dataset value as 2000 & 2005 datasets.
+                                            'try_maximum_occurrence_approach': (set to True to use)
+                                            2000 and 2005 cdl datasets for whole Western US isn't available.
+                                            This approach sets the maximum occurring cropland/non-cropland values from
+                                            2008-2011 as 2000 & 2005 datasets.
     :param skip_ssebop_processing: Set True if want to skip ssebop data preprocessing.
     :param skip_irrigatedCrop_processing: Set True if want to skip Irrigated cropland data preprocessing.
     :param skip_prism_processing: Set True if want to skip prism (precipitation and temperature) data preprocessing.
 
     :return: Dictionaries of crop and developed land use data file paths
     """
-    crop_data_dict, developed_data_dict = preprocess_cdl_data(skip_processing=skip_cdl_processing)
+    # USDA cdl to cropland processing
+    cdl_cropland_dict = \
+        process_cdl_data_to_cropland(cdl_dir='../../Data_main/Raster_data/USDA_CDL/CONUS_original_30m',
+                                     processing_shp_dir='../../Data_main/Raster_data/USDA_CDL/processing_shapes',
+                                     westus_30m_dir='../../Data_main/Raster_data/USDA_CDL/WestUS_30m',
+                                     westus_processed_cropland_dir='../../Data_main/Raster_data/USDA_CDL/WestUS_Processed_cropland',
+                                     ref_raster=WestUS_raster, resolution=model_res,
+                                     already_masked=cdl_already_masked,
+                                     try_maximum_occurrence_approach=try_maximum_occurrence_approach_for_cdl,
+                                     skip_processing=skip_cdl_cropland_processing)
+
+    # ssebop data processing
     ssebop_dict = process_ssebop_data(skip_processing=skip_ssebop_processing)
+
+    # irrigated cropland data processing
     irrigated_crop_dict = process_irrigated_landuse_data(skip_processing=skip_irrigatedCrop_processing)
+
+    # prism precipitation data processing
     prism_precip_dict = process_prism_data(prism_bil_dir='../../Data_main/Raster_data/PRISM_PRECIP/bil_format',
                                            prism_dir='../../Data_main/Raster_data/PRISM_PRECIP/tif_format',
                                            output_dir_prism='../../Data_main/Raster_data/PRISM_PRECIP/WestUS',
                                            keyword='prism_precip', skip_processing=skip_prism_processing)
 
+    # prism maximum temperature data processing
     prism_temp_dict = process_prism_data(prism_bil_dir='../../Data_main/Raster_data/PRISM_PRECIP/bil_format',
-                                         prism_dir='../../Data_main/Raster_data/PRISM_PRECIP/tif_format',
+                                         prism_dir='../../Data_main/Raster_data/PRISM_TEMP/tif_format',
                                          output_dir_prism='../../Data_main/Raster_data/PRISM_PRECIP/WestUS',
                                          keyword='prism_temp', skip_processing=skip_prism_processing)
 
-    return crop_data_dict, developed_data_dict, ssebop_dict, irrigated_crop_dict, prism_precip_dict, prism_temp_dict
-
-
-def compile_USGS_WaterUse_data(data_dir='../../Data_main/USGS_water_use_data', search_by='*201[0-5]*.xlsx',
-                               county_shape='../../Data_main/shapefiles/Western_US_ref_shapes/WestUS_county_projected.shp',
-                               output_csv='../../Data_main/USGS_water_use_data/WestUS_county_WaterUse.csv',
-                               output_shape='../../Data_main/Compiled_data/County_total_WaterUse.shp',
-                               skip_compiling=True, ref_raster=WestUS_raster):
-    """
-    Compile county-wide water use data for Western US from USGS dataset.
-
-    :param data_dir: Directory path of yearly groundwater data excels.
-    :param search_by: Search pattern for yearly data excels. Default set to '*201[0-5]*.xlsx' for selecting 2010 and
-                      2015 data only.
-    :param county_shape: File path of Western US county shapefile location.
-    :param output_csv: Filepath to save output csv.
-    :param output_shape: Filepath of output county shapefile added with water use data.
-    :param skip_compiling: Set to False to compile pumping data. Default set to True (data already compiled).
-    :param ref_raster: Model reference raster filepath.
-
-    :return: Compiled USGS pumping data csv.
-    """
-    if not skip_compiling:
-        import warnings
-        warnings.simplefilter('ignore')  # adding to remove warning from excel opening
-
-        print('Compiling USGS Water Use Data...')
-
-        wateruse_data = glob(os.path.join(data_dir, search_by))
-        county_df = gpd.read_file(county_shape)
-
-        # Counting Irrigated crop and developed area in each county
-        countyID_arr, county_file = read_raster_arr_object('../../Data_main/Compiled_data/Western_US_countyID.tif')
-        irrig_arr, _ = read_raster_arr_object('../../Data_main/Compiled_data/irrigated_agri_2015.tif')
-        developed_arr_2015, _ = read_raster_arr_object('../../Data_main/Compiled_data/USDA_developed_2015.tif')
-        #### modify for irrigation and developed of 2010 area data when adding 2010
-        ref_arr, _ = read_raster_arr_object(ref_raster)
-
-        # Array of pixels which are irrigated or developed
-        landUse_arr_2015 = np.where((irrig_arr == 1) | (developed_arr_2015 > 0), 1, ref_arr)
-        # Counting how many pixels in each county has irrigated and developed pixels
-        unique, count = np.unique(countyID_arr[(landUse_arr_2015 == 1) & (~np.isnan(countyID_arr))], return_counts=True)
-        count_dict = dict(zip(unique, count))
-
-        county_wateruse = pd.DataFrame()
-        for data in wateruse_data:
-            wateruse_df = pd.read_excel(data, sheet_name='CountyData', engine='openpyxl')
-            wateruse_df = wateruse_df[['COUNTY', 'STATE', 'COUNTYFIPS', 'FIPS', 'YEAR', 'IR-WSWFr', 'PT-WSWFr',
-                                       'TO-WGWFr', 'TO-WSWFr', 'TO-WFrTo']]
-
-            joined_df = county_df.merge(wateruse_df, left_on='fips', right_on='FIPS', how='inner')
-            # adding irrigated and developed pixels count in the dataframe
-            joined_df['irrig_dev_pixels'] = None
-            joined_df['irrig_dev_pixels'] = joined_df['fips'].map(count_dict)
-            county_wateruse = pd.concat([county_wateruse, joined_df])
-
-        # converting groundwater withdrawal from Mgal/day to mm/year.
-        area_single_pixel = (2.22 * 2.22) * (1000 * 1000)  # area of a pixel in m2
-        county_wateruse['gw_withdrawal'] = 1000 * (1e6 * county_wateruse['TO-WGWFr'] * 0.00378541 * 365 /
-                                                   (county_wateruse['irrig_dev_pixels'] * area_single_pixel))
-        county_wateruse['sw_withdrawal'] = 1000 * (1e6 * (county_wateruse['TO-WSWFr'] - county_wateruse['PT-WSWFr'])
-                                                   * 0.00378541 * 365 /
-                                                   (county_wateruse['irrig_dev_pixels'] * area_single_pixel))
-        county_wateruse['total_withdrawal'] = 1000 * (1e6 * (county_wateruse['TO-WSWFr'] - county_wateruse['PT-WSWFr'])
-                                                      * 0.00378541 * 365 /
-                                                      (county_wateruse['irrig_dev_pixels'] * area_single_pixel))
-
-        county_wateruse = county_wateruse[['NAME', 'fips', 'YEAR', 'gw_withdrawal',
-                                           'sw_withdrawal', 'total_withdrawal']]
-        county_wateruse_df = county_wateruse.rename(columns={'NAME': 'Name', 'fips': 'fips', 'YEAR': 'Year'})
-        # Saving as csv
-        GW_use_usgs_csv = output_csv
-        county_wateruse_df.to_csv(GW_use_usgs_csv, index=False)
-
-        # Converting to shapefile
-        add_attr_to_county_fromCSV(input_shapefile='../../Data_main/shapefiles/Western_US_ref_shapes/WestUS_county.shp',
-                                   attr_csv_data=GW_use_usgs_csv,
-                                   output_shapefile=output_shape, year_filter=2015,  ## modify it later
-                                   columns_to_keep=('Name', 'fips', 'Year', 'gw_withdrawal', 'sw_withdrawal',
-                                                    'total_withdrawal'))
-        print('USGS Water Use Data Compiled\n')
-
-    else:
-        print('Loading USGS Water Use Data...\n')
-        GW_use_usgs_csv = output_csv
-
-    return GW_use_usgs_csv
-
+    return cdl_cropland_dict, ssebop_dict, irrigated_crop_dict, prism_precip_dict, prism_temp_dict
 
 

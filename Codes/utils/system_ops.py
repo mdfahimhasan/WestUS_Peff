@@ -31,23 +31,23 @@ def copy_file(input_dir_file, copy_dir, search_by='*.tif', rename=None):
     if '.tif' not in input_dir_file:
         input_file = glob(os.path.join(input_dir_file, search_by))
         if rename is not None:
-            copy_file = os.path.join(copy_dir, f'{rename}.tif')
+            copied_file = os.path.join(copy_dir, f'{rename}.tif')
         else:
             file_name = os.path.basename(input_file)
-            copy_file = os.path.join(copy_dir, file_name)
+            copied_file = os.path.join(copy_dir, file_name)
 
-        shutil.copyfile(input_file, copy_file)
+        shutil.copyfile(input_file, copied_file)
 
     else:
         if rename is not None:
-            copy_file = os.path.join(copy_dir, f'{rename}.tif')
+            copied_file = os.path.join(copy_dir, f'{rename}.tif')
         else:
             file_name = os.path.basename(input_dir_file)
-            copy_file = os.path.join(copy_dir, file_name)
+            copied_file = os.path.join(copy_dir, file_name)
 
-        shutil.copyfile(input_dir_file, copy_file)
+        shutil.copyfile(input_dir_file, copied_file)
 
-    return copy_file
+    return copied_file
 
 
 def make_gdal_sys_call(gdal_command, args, verbose=True):

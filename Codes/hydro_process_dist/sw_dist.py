@@ -218,4 +218,4 @@ def compile_USGS_WaterUse_data(yearlist, usgs_data_dir='../../Data_main/USGS_wat
     return wateruse_compiled_csv
 
 
-compile_USGS_WaterUse_data(yearlist=[2005, 2010, 2015], skip_compiling=False)
+# compile_USGS_WaterUse_data(yearlist=[2005, 2010, 2015], skip_compiling=False)

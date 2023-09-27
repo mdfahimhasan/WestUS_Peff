@@ -2,8 +2,10 @@ import os
 import numpy as np
 import pandas as pd
 import geopandas as gpd
+from rasterio.crs import CRS
 import dask_geopandas as dgpd
 from osgeo import gdal, osr, ogr
+from shapely.geometry import Polygon
 
 from Codes.utils.system_ops import makedirs
 from Codes.utils.raster_ops import read_raster_arr_object, write_array_to_raster
@@ -49,9 +51,9 @@ def clip_vector(input_shapefile, mask_shapefile, output_shapefile, create_zero_b
     """
     if create_zero_buffer:
         # # Buffering might ruin the attribute information of the input shapefile. Do further processing.
-
         output_dir = os.path.dirname(output_shapefile)
         buffered_shape_path = os.path.join(output_dir, 'zero_buffer.shp')
+
         # Creating zero buffered shapefile. The crs will be converted to original crs of the shapefile automatically
         buffered_shapefile = create_buffer(input_shapefile, distance=0, output_shapefile=buffered_shape_path,
                                            change_crs='EPSG:32611')
@@ -107,7 +109,7 @@ def create_pixel_multipoly_shapefile(refraster, interim_output_raster, output_fi
     shapefile in python/gis to get the intended polygon shapefile.
 
     :param refraster: Filepath of reference raster.
-    :param interim_output_raster: Filepath of intermediate output raster where each pixel has unique DNvalue.
+    :param interim_output_raster: Filepath of intermediate output raster where each pixel has unique DNv alue.
     :param output_file: Filepath of output polygon.
 
     :return: A multi-polygon with each polygon having a width of the input raster's pixel size.
@@ -145,6 +147,49 @@ def create_pixel_multipoly_shapefile(refraster, interim_output_raster, output_fi
 
     raster = None
 
+###########
+# # # This function isn't optimized and need major change/modification.
+
+def raster_to_shapefile(input_raster, output_shapefile, shapefile_crs=None):
+    """
+    Convert a raster to shapefile.
+    * This code is fitted to convert raster with binary data, e.g., 0 and 1.
+
+    :param input_raster: Filepath of input raster.
+    :param output_shapefile: Filepath of output polygon shapefile.
+    :param shapefile_crs: The output shapefile crs in EPSG format, e.g., 'EPSG:4269'.
+                          Default set to None to set projection from the input_raster.
+
+    :return: A polygon shapefile.
+    """
+    # opening raster
+    raster = gdal.Open(input_raster)
+    band = raster.GetRasterBand(1)
+
+    # Projection
+    if shapefile_crs is None:
+        proj = raster.GetProjection()
+        shp_proj = osr.SpatialReference()
+        shp_proj.ImportFromWkt(proj)
+    else:
+        proj = CRS.from_string(shapefile_crs)
+        shp_proj = osr.SpatialReference()
+        shp_proj.ImportFromWkt(proj)
+
+    # Creating Polygon shapefile holder
+    call_drive = ogr.GetDriverByName('ESRI Shapefile')
+    create_shp = call_drive.CreateDataSource(output_shapefile)
+    shp_layer = create_shp.CreateLayer('layername', srs=shp_proj)
+    new_field = ogr.FieldDefn(str('ID'), ogr.OFTInteger)
+    shp_layer.CreateField(new_field)
+
+    # Polygonize
+    gdal.Polygonize(band, None, shp_layer, 0, [], callback=None)
+    create_shp.Destroy()
+
+    raster = None
+###########
+
 
 def extract_centroid_of_polygon(input_shapefile, output_point_shpafile, id_col='ID'):
     input_gdf = dgpd.read_file(input_shapefile, npartitions=4)
@@ -156,3 +201,45 @@ def extract_centroid_of_polygon(input_shapefile, output_point_shpafile, id_col='
 
     point_gdf = gpd.GeoDataFrame(data, geometry='geometry')
     point_gdf.to_file(output_point_shpafile)
+
+
+def create_fishnets_from_shapefile(input_shape, num_cols, num_rows, output_shape, crs=None):
+    """
+    Create fishnet polygons' shapefile using the extent of input shapefile.
+
+    :param input_shape: Filepath of input shapefile from which extent will be extracted.
+    :param num_cols: Number of columns in the fishnet.
+    :param num_rows: Number of rowss in the fishnet.
+    :param output_shape: Filepath of output fishnet shapefile.
+    :param crs: CRS in 'EPSG:4269' format. Default set to None to use crs from input shapefile.
+
+    :return: None.
+    """
+    input_shp_gdf = gpd.read_file(input_shape)
+    xmin, ymin, xmax, ymax = input_shp_gdf.total_bounds
+
+    grid_x_size = abs((xmin - xmax) / num_cols)
+    grid_y_size = abs((ymin - ymax) / num_rows)
+
+    lats = list(np.arange(xmin, (xmax + grid_x_size), grid_x_size))
+    lons = list(np.arange(ymin, (ymax + grid_y_size), grid_y_size))
+
+    poly_geoms = []
+    for i in range(len(lats)-1):
+        for j in range(len(lons)-1):
+            bounds = Polygon([(lats[i], lons[j]), (lats[i], lons[j+1]), (lats[i+1], lons[j+1]), (lats[i+1], lons[j]),
+                             (lats[i], lons[j])])
+            poly_geoms.append(bounds)
+
+    if crs is None:
+        crs = input_shp_gdf.crs
+
+    fishnet = gpd.GeoDataFrame(poly_geoms, columns=['geometry']).set_crs(crs)
+    fishnet.to_file(output_shape)
+
+#
+# create_fishnets_from_shapefile(input_shape='../../Data_main/shapefiles/Western_US_ref_shapes/WestUS_gee_grid.shp',
+#                                num_cols=50, num_rows=50,
+#                                output_shape='../../Data_main/shapefiles/Western_US_ref_shapes/WestUS_gee_grid_for30m.shp')
+
+

@@ -448,5 +448,3 @@ def filter_raster_on_threshold(input_raster, output_raster, threshold_value1, th
     write_array_to_raster(raster_arr=mod_arr, raster_file=ref_file, transform=ref_file.transform,
                           output_path=output_raster)
     return output_raster
-
-

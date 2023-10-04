@@ -237,9 +237,9 @@ def create_fishnets_from_shapefile(input_shape, num_cols, num_rows, output_shape
     fishnet = gpd.GeoDataFrame(poly_geoms, columns=['geometry']).set_crs(crs)
     fishnet.to_file(output_shape)
 
-#
+
 # create_fishnets_from_shapefile(input_shape='../../Data_main/shapefiles/Western_US_ref_shapes/WestUS_gee_grid.shp',
-#                                num_cols=50, num_rows=50,
+#                                num_cols=50, num_rows=25,
 #                                output_shape='../../Data_main/shapefiles/Western_US_ref_shapes/WestUS_gee_grid_for30m.shp')
 
 

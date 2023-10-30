@@ -1,9 +1,6 @@
-import os
 import numpy as np
-import matplotlib.pyplot as plt
-from sklearn.metrics import r2_score
-
-from Codes.utils.system_ops import makedirs
+import pandas as pd
+from sklearn.metrics import r2_score, mean_squared_error
 
 
 def calculate_rmse(Y_pred, Y_obsv):
@@ -16,12 +13,12 @@ def calculate_rmse(Y_pred, Y_obsv):
     :return: RMSE value.
     """
     if isinstance(Y_pred, np.ndarray):
-        Y_pred = Y_pred.reshape(-1, 1)
-        Y_obsv = Y_obsv.reshape(-1, 1)
-        rmse_val = np.sqrt(np.mean((Y_obsv - Y_pred) ** 2))
-    else:  # in case of pandas series
-        rmse_val = np.sqrt(np.mean((Y_obsv - Y_pred) ** 2))
+        Y_pred = pd.Series(Y_pred)
+
+    rmse_val = mean_squared_error(y_true=Y_obsv, y_pred=Y_pred, squared=False)
+
     return rmse_val
+
 
 def calculate_r2(Y_pred, Y_obsv):
     """
@@ -33,37 +30,11 @@ def calculate_r2(Y_pred, Y_obsv):
     :return: R2 value.
     """
     if isinstance(Y_pred, np.ndarray):
-        Y_pred = Y_pred.reshape(-1, 1)
-        Y_obsv = Y_obsv.reshape(-1, 1)
-        r2_val = r2_score(Y_obsv, Y_pred)
-    else:  # in case of pandas series
-        r2_val = r2_score(Y_obsv, Y_pred)
+        Y_pred = pd.Series(Y_pred)
+
+    r2_val = r2_score(Y_obsv, Y_pred)
+
     return r2_val
-
-
-def scatter_plot(Y_pred, Y_obsv, plot_name, savedir='../Model_Run/Plots'):
-    """
-    Makes scatter plot of model prediction vs observed data.
-
-    :param plot_name:
-    :param Y_pred: flattened prediction array.
-    :param Y_obsv: flattened observed array.
-    :param savedir: filepath to save the plot.
-
-    :return: A scatter plot of model prediction vs observed data.
-    """
-    fig, ax = plt.subplots()
-    ax.plot(Y_obsv, Y_pred, 'o')
-    ax.plot([0, 1], [0, 1], '-r', transform=ax.transAxes)
-    ax.set_xlabel('GW Observed (mm)')
-    ax.set_ylabel('GW Predicted (mm)')
-
-    r2_val = round(calculate_r2(Y_pred, Y_obsv), 3)
-    ax.text(0.1, 0.9, s=f'R2={r2_val}', transform=ax.transAxes)
-
-    makedirs([savedir])
-    fig_loc = os.path.join(savedir, plot_name)
-    fig.savefig(fig_loc, dpi=300)
 
 
 def calc_outlier_ranges_IQR(data, axis=None, decrease_lower_range_by=None, increase_upper_range_by=None):

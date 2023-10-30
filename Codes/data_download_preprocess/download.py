@@ -15,7 +15,7 @@ from os.path import dirname, abspath
 sys.path.insert(0, dirname(dirname(dirname(abspath(__file__)))))
 
 from Codes.utils.system_ops import makedirs
-from Codes.utils.raster_ops import read_raster_arr_object, mosaic_rasters
+from Codes.utils.raster_ops import read_raster_arr_object, mosaic_rasters_from_directory
 
 # ee.Authenticate()
 
@@ -29,7 +29,7 @@ from Codes.utils.raster_ops import read_raster_arr_object, mosaic_rasters
 
 no_data_value = -9999
 model_res = 0.02000000000000000736  # in deg, ~2.22 km
-WestUS_raster = '../../Data_main/Compiled_data/reference_rasters/Western_US_refraster_2km.tif'
+WestUS_raster = '../../Data_main/reference_rasters/Western_US_refraster_2km.tif'
 
 
 def download_from_url(download_dir, url_list):
@@ -90,13 +90,13 @@ def get_gee_dict(data_name):
         'SMAP_SM': 'NASA_USDA/HSL/SMAP10KM_soil_moisture',
         'LANDSAT_NDWI': 'LANDSAT/LC08/C01/T1_8DAY_NDWI',  # check for cloudcover
         'LANDSAT_NDVI': 'LANDSAT/LC08/C01/T1_8DAY_NDVI',  # check for cloudcover
-        'GPM_PRECIP': 'NASA/GPM_L3/IMERG_MONTHLY_V06',
-        'GRIDMET_PRECIP': 'IDAHO_EPSCOR/GRIDMET',
-        'PRISM_PRECIP': 'OREGONSTATE/PRISM/AN81m',
+        'GPM_Precip': 'NASA/GPM_L3/IMERG_MONTHLY_V06',
+        'GRIDMET_Precip': 'IDAHO_EPSCOR/GRIDMET',
         'MODIS_Day_LST': 'MODIS/006/MOD11A2',  # check for cloudcover
         'MODIS_Terra_NDVI': 'MODIS/006/MOD13Q1',  # cloudcover mask added later
         'MODIS_Terra_EVI': 'MODIS/006/MOD13Q1',  # cloudcover mask added later
         'MODIS_NDWI': 'MODIS/006/MOD09A1',  # cloudcover mask added later
+        'MODIS_NDVI': 'MODIS/006/MOD09A1',  # cloudcover mask added later
         'MODIS_LAI': 'MODIS/006/MCD15A3H',
         'MODIS_ET': 'MODIS/006/MOD16A2',  # unit in kg/m2
         'TERRACLIMATE_ET': 'IDAHO_EPSCOR/TERRACLIMATE',
@@ -105,6 +105,16 @@ def get_gee_dict(data_name):
         'Irrig_crop_OpenET_LANID': 'OpenET/ENSEMBLE/CONUS/GRIDMET/MONTHLY/v2_0',
         'Rainfed_crop_OpenET_IrrMapper': 'OpenET/ENSEMBLE/CONUS/GRIDMET/MONTHLY/v2_0',
         'Rainfed_crop_OpenET_LANID': 'OpenET/ENSEMBLE/CONUS/GRIDMET/MONTHLY/v2_0',
+        'TERRACLIMATE_RET': 'IDAHO_EPSCOR/TERRACLIMATE',
+        'TERRACLIMATE_vap_pres': 'IDAHO_EPSCOR/TERRACLIMATE',
+        'TERRACLIMATE_vap_pres_def': 'IDAHO_EPSCOR/TERRACLIMATE',
+        'GRIDMET_RET': 'IDAHO_EPSCOR/GRIDMET',
+        'GRIDMET_max_RH': 'IDAHO_EPSCOR/GRIDMET',
+        'GRIDMET_min_RH': 'IDAHO_EPSCOR/GRIDMET',
+        'GRIDMET_wind_vel': 'IDAHO_EPSCOR/GRIDMET',  # at 10m
+        'GRIDMET_short_rad': 'IDAHO_EPSCOR/GRIDMET',
+        'GRIDMET_vap_pres_def': 'IDAHO_EPSCOR/GRIDMET',
+        'DAYMET_sun_hr': 'NASA/ORNL/DAYMET_V4',
         'USDA_CDL': 'USDA/NASS/CDL',
         'IrrMapper': 'projects/ee-dgketchum/assets/IrrMapper/IrrMapperComp',
         'LANID': 'projects/ee-fahim/assets/LANID_for_selected_states/selected_Annual_LANID',
@@ -112,24 +122,25 @@ def get_gee_dict(data_name):
         'Irrigation_Frac_LANID': 'projects/ee-fahim/assets/LANID_for_selected_states/selected_Annual_LANID',
         'Rainfed_Frac_IrrMapper': 'projects/ee-dgketchum/assets/IrrMapper/IrrMapperComp',
         'Rainfed_Frac_LANID': 'projects/ee-fahim/assets/LANID_for_selected_states/selected_Annual_LANID',
-        'GPW_Pop': 'CIESIN/GPWv411/GPW_UNWPP-Adjusted_Population_Density',
         'Field_capacity': 'OpenLandMap/SOL/SOL_WATERCONTENT-33KPA_USDA-4B1C_M/v01',
         'Bulk_density': 'OpenLandMap/SOL/SOL_BULKDENS-FINEEARTH_USDA-4A1H_M/v02',
         'Organic_carbon_content': 'OpenLandMap/SOL/SOL_ORGANIC-CARBON_USDA-6A1C_M/v02',
         'Sand_content': 'OpenLandMap/SOL/SOL_SAND-WFRACTION_USDA-3A1A1A_M/v02',
-        'Clay_content': 'OpenLandMap/SOL/SOL_CLAY-WFRACTION_USDA-3A1A1A_M/v02'
+        'Clay_content': 'OpenLandMap/SOL/SOL_CLAY-WFRACTION_USDA-3A1A1A_M/v02',
+        'DEM': 'USGS/SRTMGL1_003'
     }
+
     gee_band_dict = {
         'SMAP_SM': 'ssm',
         'LANDSAT_NDWI': 'NDWI',
         'LANDSAT_NDVI': 'NDVI',
-        'GPM_PRECIP': 'precipitation',
-        'GRIDMET_PRECIP': 'pr',
-        'PRISM_PRECIP': 'ppt',
+        'GPM_Precip': 'precipitation',
+        'GRIDMET_Precip': 'pr',
         'MODIS_Day_LST': 'LST_Day_1km',
         'MODIS_Terra_NDVI': 'NDVI',
         'MODIS_Terra_EVI': 'EVI',
-        'MODIS_NDWI': ['sur_refl_b02', 'sur_refl_b06'],  # bands for NIR and SWIR, respectively.
+        'MODIS_NDWI': ['sur_refl_b02', 'sur_refl_b06'],  # bands for NIR and SWIR, respectively
+        'MODIS_NDVI': ['sur_refl_b02', 'sur_refl_b01'],  # bands for NIR and SWIR, respectively
         'MODIS_LAI': 'Lai',
         'MODIS_ET': 'ET',
         'TERRACLIMATE_ET': 'aet',  # unit in mm, monthly total
@@ -138,30 +149,43 @@ def get_gee_dict(data_name):
         'Irrig_crop_OpenET_LANID': 'et_ensemble_mad',  # unit in mm, monthly total
         'Rainfed_crop_OpenET_IrrMapper': 'et_ensemble_mad',  # unit in mm, monthly total
         'Rainfed_crop_OpenET_LANID': 'et_ensemble_mad',  # unit in mm, monthly total
+        'TERRACLIMATE_RET': 'pet',
+        'TERRACLIMATE_vap_pres': 'vap',
+        'TERRACLIMATE_vap_pres_def': 'vpd',
+        'GRIDMET_RET': 'eto',
+        'GRIDMET_max_RH': 'rmax',
+        'GRIDMET_min_RH': 'rmin',
+        'GRIDMET_wind_vel': 'vs',
+        'GRIDMET_short_rad': 'srad',
+        'GRIDMET_vap_pres_def': 'vpd',
+        'DAYMET_sun_hr': 'dayl',
         'USDA_CDL': 'cropland',
         'IrrMapper': 'classification',
         'LANID': None,  # The data holds annual datasets in separate band. Will process it out separately
         'Irrigation_Frac_IrrMapper': 'classification',
-        'Irrigation_Frac_LANID': None,  # The data holds annual datasets in separate band. Will process it out separately
+        'Irrigation_Frac_LANID': None,
+        # The data holds annual datasets in separate band. Will process it out separately
         'Rainfed_Frac_IrrMapper': 'classification',
         'Rainfed_Frac_LANID': None,  # The data holds annual datasets in separate band. Will process it out separately
         'Field_capacity': ['b0', 'b10', 'b30', 'b60', 'b100', 'b200'],
         'Bulk_density': ['b0', 'b10', 'b30', 'b60', 'b100', 'b200'],
         'Organic_carbon_content': ['b0', 'b10', 'b30', 'b60', 'b100', 'b200'],
         'Sand_content': ['b0', 'b10', 'b30', 'b60', 'b100', 'b200'],
-        'Clay_content': ['b0', 'b10', 'b30', 'b60', 'b100', 'b200']
+        'Clay_content': ['b0', 'b10', 'b30', 'b60', 'b100', 'b200'],
+        'DEM': 'elevation'
     }
+
     gee_scale_dict = {
         'SMAP_SM': 1,
         'LANDSAT_NDWI': 1,
         'LANDSAT_NDVI': 1,
-        'GPM_PRECIP': 1,
-        'GRIDMET_PRECIP': 1,
-        'PRISM_PRECIP': 1,
+        'GPM_Precip': 1,
+        'GRIDMET_Precip': 1,
         'MODIS_Day_LST': 0.02,
         'MODIS_Terra_NDVI': 0.0001,
         'MODIS_Terra_EVI': 0.0001,
         'MODIS_NDWI': 0.0001,
+        'MODIS_NDVI': 0.0001,
         'MODIS_LAI': 0.1,
         'MODIS_ET': 0.1,
         'TERRACLIMATE_ET': 0.1,
@@ -170,6 +194,16 @@ def get_gee_dict(data_name):
         'Irrig_crop_OpenET_LANID': 1,
         'Rainfed_crop_OpenET_IrrMapper': 1,
         'Rainfed_crop_OpenET_LANID': 1,
+        'TERRACLIMATE_RET': 0.1,
+        'TERRACLIMATE_vap_pres': 0.001,
+        'TERRACLIMATE_vap_pres_def': 0.01,
+        'GRIDMET_RET': 1,
+        'GRIDMET_max_RH': 1,
+        'GRIDMET_min_RH': 1,
+        'GRIDMET_wind_vel': 1,
+        'GRIDMET_short_rad': 1,
+        'GRIDMET_vap_pres_def': 1,
+        'DAYMET_sun_hr': 1,
         'USDA_CDL': 1,
         'IrrMapper': 1,
         'LANID': 1,
@@ -181,32 +215,42 @@ def get_gee_dict(data_name):
         'Bulk_density': 1,
         'Organic_carbon_content': 1,
         'Sand_content': 1,
-        'Clay_content': 1
-
+        'Clay_content': 1,
+        'DEM': 1
     }
 
     aggregation_dict = {
         'SMAP_SM': ee.Reducer.sum(),
         'LANDSAT_NDWI': ee.Reducer.mean(),
         'LANDSAT_NDVI': ee.Reducer.mean(),
-        'GPM_PRECIP': ee.Reducer.sum(),
-        'GRIDMET_PRECIP': ee.Reducer.sum(),
-        'PRISM_PRECIP': ee.Reducer.sum(),
+        'GPM_Precip': ee.Reducer.sum(),
+        'GRIDMET_Precip': ee.Reducer.sum(),
         'MODIS_Day_LST': ee.Reducer.mean(),
         'MODIS_Terra_NDVI': ee.Reducer.mean(),
         'MODIS_Terra_EVI': ee.Reducer.mean(),
         'MODIS_NDWI': ee.Reducer.mean(),
+        'MODIS_NDVI': ee.Reducer.mean(),
         'MODIS_LAI': ee.Reducer.mean(),
         'MODIS_ET': ee.Reducer.sum(),
         'TERRACLIMATE_ET': ee.Reducer.median(),
         # set for downloading monthly data, change if want to download yearly data
-        'OpenET_ensemble': ee.Reducer.median(),
-        # taking the median of 30m pixels to assign the value of 2km pixel. Change for yearly data download if needed.
+        'OpenET_ensemble': ee.Reducer.mean(),
+        # taking the mean of 30m pixels to assign the value of 2km pixel. Change for yearly data download if needed.
         'Irrig_crop_OpenET_IrrMapper': ee.Reducer.sum(),
         'Irrig_crop_OpenET_LANID': ee.Reducer.sum(),
         # as the data is downloaded at monthly resolution, setting mean/median/max as reducer won't make any difference. Setting it as sum() as it can be used for yearly aggregation
         'Rainfed_crop_OpenET_IrrMapper': ee.Reducer.sum(),
         'Rainfed_crop_OpenET_LANID': ee.Reducer.sum(),
+        'TERRACLIMATE_RET': ee.Reducer.mean(),
+        'TERRACLIMATE_vap_pres': ee.Reducer.mean(),
+        'TERRACLIMATE_vap_pres_def': ee.Reducer.mean(),
+        'GRIDMET_RET': ee.Reducer.mean(),
+        'GRIDMET_max_RH': ee.Reducer.mean(),
+        'GRIDMET_min_RH': ee.Reducer.mean(),
+        'GRIDMET_wind_vel': ee.Reducer.mean(),
+        'GRIDMET_short_rad': ee.Reducer.mean(),
+        'GRIDMET_vap_pres_def': ee.Reducer.mean(),
+        'DAYMET_sun_hr': ee.Reducer.mean(),
         'USDA_CDL': ee.Reducer.first(),
         'IrrMapper': ee.Reducer.max(),
         'LANID': None,
@@ -218,7 +262,8 @@ def get_gee_dict(data_name):
         'Bulk_density': ee.Reducer.mean(),
         'Organic_carbon_content': ee.Reducer.mean(),
         'Sand_content': ee.Reducer.mean(),
-        'Clay_content': ee.Reducer.mean()
+        'Clay_content': ee.Reducer.mean(),
+        'DEM': None
     }
 
     # # Note on start date and end date dictionaries
@@ -230,13 +275,13 @@ def get_gee_dict(data_name):
         'SMAP_SM': datetime(2015, 4, 1),
         'LANDSAT_NDWI': datetime(2013, 4, 1),
         'LANDSAT_NDVI': datetime(2013, 4, 1),
-        'GPM_PRECIP': datetime(2006, 6, 1),
-        'GRIDMET_PRECIP': datetime(1979, 1, 1),
-        'PRISM_PRECIP': datetime(1895, 1, 1),
+        'GPM_Precip': datetime(2006, 6, 1),
+        'GRIDMET_Precip': datetime(1979, 1, 1),
         'MODIS_Day_LST': datetime(2000, 2, 1),
         'MODIS_Terra_NDVI': datetime(2000, 2, 1),
         'MODIS_Terra_EVI': datetime(2000, 2, 1),
         'MODIS_NDWI': datetime(2000, 2, 1),
+        'MODIS_NDVI': datetime(2000, 2, 1),
         'MODIS_LAI': datetime(2002, 7, 1),
         'MODIS_ET': datetime(2001, 1, 1),
         'TERRACLIMATE_ET': datetime(1958, 1, 1),
@@ -245,72 +290,16 @@ def get_gee_dict(data_name):
         'Irrig_crop_OpenET_LANID': datetime(2016, 1, 1),
         'Rainfed_crop_OpenET_IrrMapper': datetime(2016, 1, 1),
         'Rainfed_crop_OpenET_LANID': datetime(2016, 1, 1),
-        'USDA_CDL': datetime(2008, 1, 1), # CONUS/West US full coverage starts from 2008
-        'IrrMapper': datetime(1986, 1, 1),
-        'LANID': None,
-        'Irrigation_Frac_IrrMapper': datetime(1986, 1, 1),
-        'Irrigation_Frac_LANID': None,
-        'Rainfed_Frac_IrrMapper': datetime(1986, 1, 1),
-        'Rainfed_Frac_LANID': None,
-        'Field_capacity': None,
-        'Bulk_density': None,
-        'Organic_carbon_content': None,
-        'Sand_content': None,
-        'Clay_content': None
-    }
-
-    month_end_date_dict = {
-        'SMAP_SM': datetime(2022, 8, 2),
-        'LANDSAT_NDWI': datetime(2022, 1, 1),
-        'LANDSAT_NDVI': datetime(2022, 1, 1),
-        'GPM_PRECIP': datetime(2021, 9, 1),
-        'GRIDMET_PRECIP': datetime(2023, 9, 15),
-        'PRISM_PRECIP': datetime(2023, 8, 1),
-        'MODIS_Day_LST': datetime(2023, 8, 29),
-        'MODIS_Terra_NDVI': datetime(2023, 8, 13),
-        'MODIS_Terra_EVI': datetime(2023, 8, 13),
-        'MODIS_NDWI': datetime(2023, 8, 29),
-        'MODIS_LAI': datetime(2023, 9, 6),
-        'MODIS_ET': datetime(2023, 8, 29),
-        'TERRACLIMATE_ET': datetime(2022, 12, 1),
-        'OpenET_ensemble': datetime(2022, 12, 1),
-        'Irrig_crop_OpenET_IrrMapper': datetime(2021, 1, 1),
-        'Irrig_crop_OpenET_LANID': datetime(2021, 1, 1),
-        'Rainfed_crop_OpenET_IrrMapper': datetime(2021, 1, 1),
-        'Rainfed_crop_OpenET_LANID': datetime(2021, 1, 1),
-        'USDA_CDL': datetime(2022, 1, 1),
-        'IrrMapper': datetime(2020, 1, 1),
-        'LANID': None,
-        'Irrigation_Frac_IrrMapper': datetime(2020, 1, 1),
-        'Irrigation_Frac_LANID': None,
-        'Rainfed_Frac_IrrMapper': datetime(2020, 1, 1),
-        'Rainfed_Frac_LANID': None,
-        'Field_capacity': None,
-        'Bulk_density': None,
-        'Organic_carbon_content': None,
-        'Sand_content': None,
-        'Clay_content': None
-    }
-
-    year_start_date_dict = {
-        'SMAP_SM': datetime(2015, 1, 1),
-        'LANDSAT_NDWI': datetime(2013, 1, 1),
-        'LANDSAT_NDVI': datetime(2013, 1, 1),
-        'GPM_PRECIP': datetime(2006, 1, 1),
-        'GRIDMET_PRECIP': datetime(1979, 1, 1),
-        'PRISM_PRECIP': datetime(1895, 1, 1),
-        'MODIS_Day_LST': datetime(2000, 1, 1),
-        'MODIS_Terra_NDVI': datetime(2000, 1, 1),
-        'MODIS_Terra_EVI': datetime(2000, 1, 1),
-        'MODIS_NDWI': datetime(2000, 1, 1),
-        'MODIS_LAI': datetime(2002, 1, 1),
-        'MODIS_ET': datetime(2001, 1, 1),
-        'TERRACLIMATE_ET': datetime(1958, 1, 1),
-        'OpenET_ensemble': datetime(2016, 1, 1),
-        'Irrig_crop_OpenET_IrrMapper': datetime(2016, 1, 1),
-        'Irrig_crop_OpenET_LANID': datetime(2016, 1, 1),
-        'Rainfed_crop_OpenET_IrrMapper': datetime(2016, 1, 1),
-        'Rainfed_crop_OpenET_LANID': datetime(2016, 1, 1),
+        'TERRACLIMATE_RET': datetime(1958, 1, 1),
+        'TERRACLIMATE_vap_pres': datetime(1958, 1, 1),
+        'TERRACLIMATE_vap_pres_def': datetime(1958, 1, 1),
+        'GRIDMET_RET': datetime(1979, 1, 1),
+        'GRIDMET_max_RH': datetime(1979, 1, 1),
+        'GRIDMET_min_RH': datetime(1979, 1, 1),
+        'GRIDMET_wind_vel': datetime(1979, 1, 1),
+        'GRIDMET_short_rad': datetime(1979, 1, 1),
+        'GRIDMET_vap_pres_def': datetime(1979, 1, 1),
+        'DAYMET_sun_hr': datetime(1980, 1, 1),
         'USDA_CDL': datetime(2008, 1, 1),  # CONUS/West US full coverage starts from 2008
         'IrrMapper': datetime(1986, 1, 1),
         'LANID': None,
@@ -322,20 +311,109 @@ def get_gee_dict(data_name):
         'Bulk_density': None,
         'Organic_carbon_content': None,
         'Sand_content': None,
-        'Clay_content': None
+        'Clay_content': None,
+        'DEM': None
+    }
+
+    month_end_date_dict = {
+        'SMAP_SM': datetime(2022, 8, 2),
+        'LANDSAT_NDWI': datetime(2022, 1, 1),
+        'LANDSAT_NDVI': datetime(2022, 1, 1),
+        'GPM_Precip': datetime(2021, 9, 1),
+        'GRIDMET_Precip': datetime(2023, 9, 15),
+        'MODIS_Day_LST': datetime(2023, 8, 29),
+        'MODIS_Terra_NDVI': datetime(2023, 8, 13),
+        'MODIS_Terra_EVI': datetime(2023, 8, 13),
+        'MODIS_NDWI': datetime(2023, 8, 29),
+        'MODIS_NDVI': datetime(2023, 8, 29),
+        'MODIS_LAI': datetime(2023, 9, 6),
+        'MODIS_ET': datetime(2023, 8, 29),
+        'TERRACLIMATE_ET': datetime(2022, 12, 1),
+        'OpenET_ensemble': datetime(2022, 12, 1),
+        'Irrig_crop_OpenET_IrrMapper': datetime(2021, 1, 1),
+        'Irrig_crop_OpenET_LANID': datetime(2021, 1, 1),
+        'Rainfed_crop_OpenET_IrrMapper': datetime(2021, 1, 1),
+        'Rainfed_crop_OpenET_LANID': datetime(2021, 1, 1),
+        'TERRACLIMATE_RET': datetime(2022, 12, 31),
+        'TERRACLIMATE_vap_pres': datetime(2022, 12, 31),
+        'TERRACLIMATE_vap_pres_def': datetime(2022, 12, 31),
+        'GRIDMET_RET': datetime(2022, 12, 1),
+        'GRIDMET_max_RH': datetime(2022, 12, 1),
+        'GRIDMET_min_RH': datetime(2022, 12, 1),
+        'GRIDMET_wind_vel': datetime(2022, 12, 1),
+        'GRIDMET_short_rad': datetime(2022, 12, 1),
+        'GRIDMET_vap_pres_def': datetime(2022, 12, 1),
+        'DAYMET_sun_hr': datetime(2022, 12, 31),
+        'USDA_CDL': datetime(2022, 1, 1),
+        'IrrMapper': datetime(2020, 1, 1),
+        'LANID': None,
+        'Irrigation_Frac_IrrMapper': datetime(2020, 1, 1),
+        'Irrigation_Frac_LANID': None,
+        'Rainfed_Frac_IrrMapper': datetime(2020, 1, 1),
+        'Rainfed_Frac_LANID': None,
+        'Field_capacity': None,
+        'Bulk_density': None,
+        'Organic_carbon_content': None,
+        'Sand_content': None,
+        'Clay_content': None,
+        'DEM': None
+    }
+
+    year_start_date_dict = {
+        'SMAP_SM': datetime(2015, 1, 1),
+        'LANDSAT_NDWI': datetime(2013, 1, 1),
+        'LANDSAT_NDVI': datetime(2013, 1, 1),
+        'GPM_Precip': datetime(2006, 1, 1),
+        'GRIDMET_Precip': datetime(1979, 1, 1),
+        'MODIS_Day_LST': datetime(2000, 1, 1),
+        'MODIS_Terra_NDVI': datetime(2000, 1, 1),
+        'MODIS_Terra_EVI': datetime(2000, 1, 1),
+        'MODIS_NDWI': datetime(2000, 1, 1),
+        'MODIS_NDVI': datetime(2000, 1, 1),
+        'MODIS_LAI': datetime(2002, 1, 1),
+        'MODIS_ET': datetime(2001, 1, 1),
+        'TERRACLIMATE_ET': datetime(1958, 1, 1),
+        'OpenET_ensemble': datetime(2016, 1, 1),
+        'Irrig_crop_OpenET_IrrMapper': datetime(2016, 1, 1),
+        'Irrig_crop_OpenET_LANID': datetime(2016, 1, 1),
+        'Rainfed_crop_OpenET_IrrMapper': datetime(2016, 1, 1),
+        'Rainfed_crop_OpenET_LANID': datetime(2016, 1, 1),
+        'TERRACLIMATE_RET': datetime(1958, 1, 1),
+        'TERRACLIMATE_vap_pres': datetime(1958, 1, 1),
+        'TERRACLIMATE_vap_pres_def': datetime(1958, 1, 1),
+        'GRIDMET_RET': datetime(1979, 1, 1),
+        'GRIDMET_max_RH': datetime(1979, 1, 1),
+        'GRIDMET_min_RH': datetime(1979, 1, 1),
+        'GRIDMET_wind_vel': datetime(1979, 1, 1),
+        'GRIDMET_short_rad': datetime(1979, 1, 1),
+        'GRIDMET_vap_pres_def': datetime(1979, 1, 1),
+        'DAYMET_sun_hr': datetime(1980, 1, 1),
+        'USDA_CDL': datetime(2008, 1, 1),  # CONUS/West US full coverage starts from 2008
+        'IrrMapper': datetime(1986, 1, 1),
+        'LANID': None,
+        'Irrigation_Frac_IrrMapper': datetime(1986, 1, 1),
+        'Irrigation_Frac_LANID': None,
+        'Rainfed_Frac_IrrMapper': datetime(1986, 1, 1),
+        'Rainfed_Frac_LANID': None,
+        'Field_capacity': None,
+        'Bulk_density': None,
+        'Organic_carbon_content': None,
+        'Sand_content': None,
+        'Clay_content': None,
+        'DEM': None
     }
 
     year_end_date_dict = {
         'SMAP_SM': datetime(2023, 1, 1),
         'LANDSAT_NDWI': datetime(2022, 1, 1),
         'LANDSAT_NDVI': datetime(2022, 1, 1),
-        'GPM_PRECIP': datetime(2022, 1, 1),
-        'GRIDMET_PRECIP': datetime(2024, 1, 1),
-        'PRISM_PRECIP': datetime(2024, 1, 1),
+        'GPM_Precip': datetime(2022, 1, 1),
+        'GRIDMET_Precip': datetime(2024, 1, 1),
         'MODIS_Day_LST': datetime(2024, 1, 1),
         'MODIS_Terra_NDVI': datetime(2024, 1, 1),
         'MODIS_Terra_EVI': datetime(2024, 1, 1),
         'MODIS_NDWI': datetime(2024, 1, 1),
+        'MODIS_NDVI': datetime(2024, 1, 1),
         'MODIS_LAI': datetime(2024, 1, 1),
         'MODIS_ET': datetime(2024, 1, 1),
         'TERRACLIMATE_ET': datetime(2023, 1, 1),
@@ -344,6 +422,16 @@ def get_gee_dict(data_name):
         'Irrig_crop_OpenET_LANID': datetime(2021, 1, 1),
         'Rainfed_crop_OpenET_IrrMapper': datetime(2021, 1, 1),
         'Rainfed_crop_OpenET_LANID': datetime(2021, 1, 1),
+        'TERRACLIMATE_RET': datetime(2023, 1, 1),
+        'TERRACLIMATE_vap_pres': datetime(2023, 1, 1),
+        'TERRACLIMATE_vap_pres_def': datetime(2023, 1, 1),
+        'GRIDMET_RET': datetime(2024, 12, 1),
+        'GRIDMET_max_RH': datetime(2024, 1, 1),
+        'GRIDMET_min_RH': datetime(2024, 1, 1),
+        'GRIDMET_wind_vel': datetime(2024, 1, 1),
+        'GRIDMET_short_rad': datetime(2024, 1, 1),
+        'GRIDMET_vap_pres_def': datetime(2024, 12, 1),
+        'DAYMET_sun_hr': datetime(2023, 1, 1),
         'USDA_CDL': datetime(2022, 1, 1),
         'IrrMapper': datetime(2021, 1, 1),
         'LANID': None,
@@ -355,7 +443,8 @@ def get_gee_dict(data_name):
         'Bulk_density': None,
         'Organic_carbon_content': None,
         'Sand_content': None,
-        'Clay_content': None
+        'Clay_content': None,
+        'DEM': None
     }
 
     return gee_data_dict[data_name], gee_band_dict[data_name], gee_scale_dict[data_name], aggregation_dict[data_name], \
@@ -368,7 +457,7 @@ def cloud_cover_filter(data_name, start_date, end_date, from_bit, to_bit, geomet
     Applies cloud cover mask on GEE data.
 
     :param data_name: Data Name.
-           Valid dataset include- ['MODIS_Terra_NDVI', 'MODIS_Terra_EVI', 'MODIS_NDWI'].
+           Valid dataset include- ['MODIS_Terra_NDVI', 'MODIS_Terra_EVI', 'MODIS_NDWI', 'MODIS_NDVI'].
     :param start_date: Start date of data to download. Generated from download_gee_data() func.
     :param end_date: End date of data to download. Generated from download_gee_data() func.
     :param from_bit: Start bit to consider for masking.
@@ -381,14 +470,15 @@ def cloud_cover_filter(data_name, start_date, end_date, from_bit, to_bit, geomet
     def bitwise_extract(img):
         """
         Applies cloudmask on image.
-        :param Image.
+        :param img: The image.
+
         :return Cloud-masked image.
         """
         ee.Initialize(opt_url='https://earthengine-highvolume.googleapis.com')
         global qc_img
         if data_name in ('MODIS_Terra_NDVI', 'MODIS_Terra_EVI'):
             qc_img = img.select('DetailedQA')
-        elif data_name == 'MODIS_NDWI':
+        elif data_name in ['MODIS_NDWI', 'MODIS_NDVI']:
             qc_img = img.select('StateQA')
 
         masksize = ee.Number(1).add(to_bit).subtract(from_bit)
@@ -402,7 +492,7 @@ def cloud_cover_filter(data_name, start_date, end_date, from_bit, to_bit, geomet
         cloud_masked = image.map(bitwise_extract)
         return cloud_masked
 
-    elif data_name == 'MODIS_NDWI':
+    elif data_name in ['MODIS_NDWI', 'MODIS_NDVI']:
         image = ee.ImageCollection('MODIS/061/MOD09A1').filterDate(start_date, end_date).filterBounds(geometry_bounds)
         cloud_masked = image.map(bitwise_extract)
         return cloud_masked
@@ -421,7 +511,7 @@ def cloud_cover_filter(data_name, start_date, end_date, from_bit, to_bit, geomet
 #
 #     :param data_name: Data name.
 #     Current valid data names are -
-#         ['SMAP_SM', 'LANDSAT_NDWI', 'LANDSAT_NDVI', 'GPM_PRECIP', 'GRIDMET_PRECIP', 'PRISM_PRECIP',
+#         ['SMAP_SM', 'LANDSAT_NDWI', 'LANDSAT_NDVI', 'GPM_Precip', 'GRIDMET_Precip',
 #         'MODIS_Day_LST', 'MODIS_Terra_NDVI', 'MODIS_Terra_EVI', 'MODIS_NDWI', 'MODIS_LAI',
 #         'MODIS_ET']
 #     :param download_dir: File path of download directory.
@@ -494,11 +584,7 @@ def cloud_cover_filter(data_name, start_date, end_date, from_bit, to_bit, geomet
 #                 swir = cloud_cover_filter(data_name, start_date, end_date, 0, 1, gee_extent).select(band[1]) \
 #                     .reduce(reducer).multiply(multiply_scale).toFloat()
 #                 download_data = nir.subtract(swir).divide(nir.add(swir))
-#             elif data_name == 'GPW_Pop':
-#                 start_date = ee.Date.fromYMD(year, 1, 1)  # GPW population dataset's data starts at
-#                 end_date = ee.Date.fromYMD(year, 12, 31)
-#                 download_data = ee.ImageCollection(data).select(band).filterDate(start_date, end_date). \
-#                     filterBounds(gee_extent).reduce(reducer).toFloat()
+#
 #             else:
 #                 download_data = ee.ImageCollection(data).select(band).filterDate(start_date, end_date). \
 #                     filterBounds(gee_extent).reduce(reducer).multiply(multiply_scale).toFloat()
@@ -518,7 +604,7 @@ def cloud_cover_filter(data_name, start_date, end_date, from_bit, to_bit, geomet
 #         mosaic_name = f'{data_name}_{year}.tif'
 #         mosaic_dir = os.path.join(download_dir, f'{merge_keyword}')
 #         makedirs([mosaic_dir])
-#         downloaded_arr, downloaded_raster = mosaic_rasters(download_dir, mosaic_dir, mosaic_name, ref_raster=refraster,
+#         downloaded_arr, downloaded_raster = mosaic_rasters_from_directory(download_dir, mosaic_dir, mosaic_name, ref_raster=refraster,
 #                                                            search_by=f'*{year}*.tif', nodata=no_data_value)
 #         print('Downloaded Data Merged')
 #         downloaded_raster_dict[mosaic_name] = downloaded_raster
@@ -539,10 +625,12 @@ def download_soil_datasets(data_name, download_dir, merge_keyword, grid_shape, r
 
     :return: None.
     """
+    ee.Initialize()
+
     download_dir = os.path.join(download_dir, data_name)
     makedirs([download_dir])
 
-    if data_name in ['Field_capacity', 'Bulk_density', 'Organic_carbon_content', 'Sand_content',' Clay_content']:
+    if data_name in ['Field_capacity', 'Bulk_density', 'Organic_carbon_content', 'Sand_content', 'Clay_content']:
         data, all_bands, multiply_scale, reducer, _, _, _, _ = get_gee_dict(data_name)
 
         # selecting datasets with all bands ['b0', 'b10', 'b30', 'b60', 'b100', 'b200']
@@ -576,12 +664,72 @@ def download_soil_datasets(data_name, download_dir, merge_keyword, grid_shape, r
         mosaic_name = f'{data_name}.tif'
         mosaic_dir = os.path.join(download_dir, f'{merge_keyword}')
         makedirs([mosaic_dir])
-        mosaic_rasters(download_dir, mosaic_dir, mosaic_name, ref_raster=refraster, search_by=f'*.tif',
-                       nodata=no_data_value)
+        mosaic_rasters_from_directory(download_dir, mosaic_dir, mosaic_name, ref_raster=refraster, search_by=f'*.tif',
+                                      nodata=no_data_value)
         print(f'{data_name} data downloaded and merged')
 
     else:
         pass
+
+
+def download_DEM_Slope_data(data_name, download_dir, merge_keyword, grid_shape, refraster=WestUS_raster,
+                            terrain_slope=False):
+    """
+    Download DEM/Slope data from GEE.
+
+    :param data_name: Data name. Use keyword 'DEM' for downloading both DEM and Slope data. SLope is downloaded
+                      in degrees.
+    :param download_dir: File path of download directory.
+    :param merge_keyword: Keyword to use for merging downloaded data. Suggested 'WestUS'/'Conus'.
+    :param grid_shape: File path of grid shape for which data will be downloaded and mosaiced.
+    :param refraster: Reference raster to use for merging downloaded datasets.
+    :param terrain_slope : If slope data download is needed in degress from GEE directly. Defaults to False to download
+                           DEM data only. The DEM data will be later processed to 'percent' slope data using gdal.
+
+    :return: None.
+    """
+    ee.Initialize()
+
+    download_dir = os.path.join(download_dir, data_name)
+    makedirs([download_dir])
+
+    # getting dataset information from the data dictionary
+    data, band, multiply_scale, reducer, _, _, _, _ = get_gee_dict(data_name)
+
+    # filtering data
+    dataset = ee.Image(data).select(band).multiply(multiply_scale).toFloat()
+
+    if terrain_slope:
+        dataset = ee.Terrain.slope(dataset)
+
+    # Loading grid files to be used for data download
+    grids = gpd.read_file(grid_shape)
+    grids = grids.sort_values(by='grid_no', ascending=True)
+    grid_geometry = grids['geometry']
+    grid_no = grids['grid_no']
+
+    for grid_sr, geometry in zip(grid_no, grid_geometry):  # second loop for grids
+        roi = geometry.bounds
+        gee_extent = ee.Geometry.Rectangle(roi)
+
+        # making data url
+        data_url = dataset.getDownloadURL({'name': data_name,
+                                           'crs': 'EPSG:4269',  # NAD83
+                                           'scale': 2000,  # in meter. equal to ~0.02 deg
+                                           'region': gee_extent,
+                                           'format': 'GEO_TIFF'})
+        key_word = data_name
+        local_file_name = os.path.join(download_dir, f'{key_word}_{str(grid_sr)}.tif')
+        print('Downloading', local_file_name, '.....')
+        r = requests.get(data_url, allow_redirects=True)
+        open(local_file_name, 'wb').write(r.content)
+
+    mosaic_name = f'{data_name}.tif'
+    mosaic_dir = os.path.join(download_dir, f'{merge_keyword}')
+    makedirs([mosaic_dir])
+    mosaic_rasters_from_directory(download_dir, mosaic_dir, mosaic_name, ref_raster=refraster, search_by=f'*.tif',
+                                  nodata=no_data_value)
+    print(f'{data_name} data downloaded and merged')
 
 
 # # The download_gee_data_yearly() function isn't fully optimized. Might need to change things at the
@@ -594,8 +742,11 @@ def download_gee_data_yearly(data_name, download_dir, year_list, month_range, me
 
     :param data_name: Data name.
     Current valid data names are -
-        ['SMAP_SM', 'LANDSAT_NDWI', 'LANDSAT_NDVI', 'GPM_PRECIP', 'GRIDMET_PRECIP', 'PRISM_PRECIP'
-        , 'MODIS_Day_LST', 'MODIS_Terra_NDVI', 'MODIS_Terra_EVI', 'MODIS_NDWI', 'MODIS_LAI', 'MODIS_ET']
+        ['SMAP_SM', 'LANDSAT_NDWI', 'LANDSAT_NDVI', 'GPM_Precip', 'GRIDMET_Precip',
+        'MODIS_Day_LST', 'MODIS_Terra_NDVI', 'MODIS_Terra_EVI', 'MODIS_NDWI', 'MODIS_NDVI', 'MODIS_LAI', 'MODIS_ET',
+        'TERRACLIMATE_RET', 'TERRACLIMATE_vap_pres', 'TERRACLIMATE_vap_pres_def', 'GRIDMET_max_RH',
+        'GRIDMET_min_RH', 'GRIDMET_wind_vel', 'GRIDMET_short_rad', 'GRIDMET_RET', 'GRIDMET_vap_pres_def',
+        'DAYMET_sun_hr']
     :param download_dir: File path of download directory.
     :param year_list: List of years to download data for.
     :param month_range: Tuple of month ranges to download data for, e.g., for months 4-12 use (4, 12).
@@ -649,13 +800,20 @@ def download_gee_data_yearly(data_name, download_dir, year_list, month_range, me
                         reduce(reducer).multiply(multiply_scale).toFloat()
                     download_data = nir.subtract(swir).divide(nir.add(swir))
 
+                elif data_name == 'MODIS_NDVI':
+                    nir = cloud_cover_filter(data_name, start_date, end_date, 0, 1, gee_extent).select(band[0]). \
+                        reduce(reducer).multiply(multiply_scale).toFloat()
+                    red = cloud_cover_filter(data_name, start_date, end_date, 0, 1, gee_extent).select(band[1]). \
+                        reduce(reducer).multiply(multiply_scale).toFloat()
+                    download_data = nir.subtract(red).divide(nir.add(red))
+
                 elif data_name == 'USDA_CDL':
-                    cdl_dataset = ee.ImageCollection(data).filter((ee.Filter.calendarRange(year, year, 'year')))\
-                                     .select(band).reduce(reducer).multiply(multiply_scale).toFloat()
+                    cdl_dataset = ee.ImageCollection(data).filter((ee.Filter.calendarRange(year, year, 'year'))) \
+                        .select(band).reduce(reducer).multiply(multiply_scale).toFloat()
 
                     # List of non-crop pixels
-                    noncrop_list = ee.List([60,61, 63,64,65,81, 82,83, 87, 88, 111, 112, 121, 122, 123,
-                            124, 131, 141, 142, 143, 152, 176, 190, 195])
+                    noncrop_list = ee.List([60, 61, 63, 64, 65, 81, 82, 83, 87, 88, 111, 112, 121, 122, 123,
+                                            124, 131, 141, 142, 143, 152, 190, 195])  # 176 (pasture) kept in downloaded data
 
                     # Filtering out non-crop pixels. In non-crop pixels, assigning 0 and in crop pixels assigning 1
                     cdl_mask = cdl_dataset.remap(noncrop_list, ee.List.repeat(0, noncrop_list.size()), 1)
@@ -664,9 +822,17 @@ def download_gee_data_yearly(data_name, download_dir, year_list, month_range, me
                     cdl_cropland = cdl_dataset.updateMask(cdl_mask)
                     download_data = cdl_cropland
 
-                elif data_name == 'IrrMapper':
-                    print('This code cannot download IrrMapper datasets.', '\n',
-                          'Use download_Irr_frac_from_IrrMapper_yearly() function')
+                elif data_name == 'GRIDMET_RET':
+                    # multiplying by 0.85 to applying bias correction in GRIDMET RET. GRIDMET RET is overestimated
+                    # by 12-31% across CONUS (Blankenau et al. (2020). Senay et al. (2022) applied 0.85 as constant
+                    # bias correction factor.
+                    download_data = ee.ImageCollection(data).select(band).filterDate(start_date, end_date). \
+                        filterBounds(gee_extent).reduce(reducer).multiply(0.85).multiply(multiply_scale).toFloat()
+
+                elif data_name == 'DAYMET_sun_hr':
+                    # dividing by 3600 to convert from second to hr
+                    download_data = ee.ImageCollection(data).select(band).filterDate(start_date, end_date). \
+                        filterBounds(gee_extent).reduce(reducer).divide(3600).multiply(multiply_scale).toFloat()
 
                 else:
                     download_data = ee.ImageCollection(data).select(band).filterDate(start_date, end_date). \
@@ -683,11 +849,23 @@ def download_gee_data_yearly(data_name, download_dir, year_list, month_range, me
                 r = requests.get(data_url, allow_redirects=True)
                 open(local_file_name, 'wb').write(r.content)
 
+                # This is a check block to see if downloaded datasets are OK
+                # sometimes a particular grid's data is corrupted but it's completely random, not sure why it happens.
+                # Re-downloading the same data might not have that error
+                try:
+                    arr = read_raster_arr_object(local_file_name, get_file=False)
+
+                except:
+                    print(f'Downloaded data corrupted. Re-downloading {local_file_name}.....')
+                    r = requests.get(data_url, allow_redirects=True)
+                    open(local_file_name, 'wb').write(r.content)
+
             mosaic_name = f'{data_name}_{year}.tif'
             mosaic_dir = os.path.join(download_dir, f'{merge_keyword}')
             makedirs([mosaic_dir])
-            mosaic_rasters(download_dir, mosaic_dir, mosaic_name, ref_raster=refraster, search_by=f'*{year}*.tif',
-                           nodata=no_data_value)
+            mosaic_rasters_from_directory(download_dir, mosaic_dir, mosaic_name, ref_raster=refraster,
+                                          search_by=f'*{year}*.tif',
+                                          nodata=no_data_value)
             print(f'{data_name} yearly data downloaded and merged')
 
         else:
@@ -1363,7 +1541,7 @@ def download_Rainfed_frac_from_IrrMapper_yearly(data_name, download_dir, year_li
     # Extracting IrrMapper and CDL dataset information required for downloading from GEE
     irr_data, irr_band, irr_multiply_scale, irr_reducer, _, _, _, _ = get_gee_dict('IrrMapper')
     cdl_data, cdl_band, cdl_multiply_scale, cdl_reducer, _, _, \
-        cdl_year_start_date, cdl_year_end_date = get_gee_dict('USDA_CDL')
+    cdl_year_start_date, cdl_year_end_date = get_gee_dict('USDA_CDL')
 
     # Loading grid files to be used for data download
     grids = gpd.read_file(grid_shape)
@@ -1379,8 +1557,8 @@ def download_Rainfed_frac_from_IrrMapper_yearly(data_name, download_dir, year_li
 
         # # IrrMapper data for the year
         irrmap_imcol = ee.ImageCollection(irr_data)
-        irrmapper_img = irrmap_imcol.filter(ee.Filter.calendarRange(year, year, 'year')).select(irr_band)\
-                                                                                            .reduce(irr_reducer)
+        irrmapper_img = irrmap_imcol.filter(ee.Filter.calendarRange(year, year, 'year')).select(irr_band) \
+            .reduce(irr_reducer)
         # In IrrMapper dataset irrigated fields are assigned as 0, converting it to 1 and others to 0
         irrmapper_img = irrmapper_img.eq(0)
 
@@ -1390,10 +1568,11 @@ def download_Rainfed_frac_from_IrrMapper_yearly(data_name, download_dir, year_li
 
         # # USDA CDL data for the year
         cdl_img = ee.ImageCollection(cdl_data).filter(ee.Filter.calendarRange(year, year, 'year')) \
-                                                                    .first().select(cdl_band)
+            .first().select(cdl_band)
         #  List of non-crop pixels
-        noncrop_list = ee.List([0, 60, 61, 63, 64, 65, 81, 82,83, 87, 88, 111, 112, 121, 122, 123,
-                                124, 131, 141, 142, 143, 152, 176, 190, 195])  # 0 is no data value
+        noncrop_list = ee.List([0, 60, 61, 63, 64, 65, 81, 82, 83, 87, 88, 111, 112, 121, 122, 123,
+                                124, 131, 141, 142, 143, 152, 190,
+                                195])  # 0 is no data value, keeping 176 (pasture) in cropland class
         # Filtering out non-crop pixels
         cdl_cropland = cdl_img.remap(noncrop_list, ee.List.repeat(0, noncrop_list.size()), 1)
 
@@ -1404,20 +1583,20 @@ def download_Rainfed_frac_from_IrrMapper_yearly(data_name, download_dir, year_li
         irrmapper_reversed = irrmapper_img.remap([0], [1])
         rainfed_cropland_for_IrrMapper = cdl_cropland.multiply(irrmapper_reversed)
         mask = rainfed_cropland_for_IrrMapper.eq(1)
-        rainfed_cropland_for_IrrMapper = rainfed_cropland_for_IrrMapper.updateMask(mask)\
-                                                        .setDefaultProjection(crs=projection_irrmap)
+        rainfed_cropland_for_IrrMapper = rainfed_cropland_for_IrrMapper.updateMask(mask) \
+            .setDefaultProjection(crs=projection_irrmap)
 
         # Counting number of rainfed pixel in each 2km pixel
         rainfed_pixel_count = rainfed_cropland_for_IrrMapper.reduceResolution(reducer=ee.Reducer.count(),
-                                                                              maxPixels=60000)\
-                                                                                .reproject(crs=projection2km_scale)
+                                                                              maxPixels=60000) \
+            .reproject(crs=projection2km_scale)
 
         # Unmaking the rainfed pixels so that non-rainfed pixels have 0 value
         rainfed_with_total = rainfed_cropland_for_IrrMapper.unmask()
 
         # total 30m pixel count in 2km pixel
-        total_pixel_count = rainfed_with_total.reduceResolution(reducer=ee.Reducer.count(), maxPixels=60000)\
-                                                                    .reproject(crs=projection2km_scale)
+        total_pixel_count = rainfed_with_total.reduceResolution(reducer=ee.Reducer.count(), maxPixels=60000) \
+            .reproject(crs=projection2km_scale)
 
         # counting fraction of irrigated lands in a pixel
         rainfed_frac_IrrMapper = rainfed_pixel_count.divide(total_pixel_count)
@@ -1559,10 +1738,11 @@ def download_Rainfed_frac_from_LANID_yearly(data_name, download_dir, year_list, 
 
         # # USDA CDL data for the year
         cdl_img = ee.ImageCollection(cdl_data).filter(ee.Filter.calendarRange(year, year, 'year')) \
-                                                                    .first().select(cdl_band)
+            .first().select(cdl_band)
         #  List of non-crop pixels
-        noncrop_list = ee.List([0, 60, 61, 63, 64, 65, 81, 82,83, 87, 88, 111, 112, 121, 122, 123,
-                                124, 131, 141, 142, 143, 152, 176, 190, 195])  # 0 is no data value
+        noncrop_list = ee.List([0, 60, 61, 63, 64, 65, 81, 82, 83, 87, 88, 111, 112, 121, 122, 123,
+                                124, 131, 141, 142, 143, 152, 190,
+                                195])  # 0 is no data value, keeping 176 (pasture) in cropland class
         # Filtering out non-crop pixels
         cdl_cropland = cdl_img.remap(noncrop_list, ee.List.repeat(0, noncrop_list.size()), 1)
 
@@ -1573,20 +1753,20 @@ def download_Rainfed_frac_from_LANID_yearly(data_name, download_dir, year_list, 
         lanid_reversed = lanid_img.remap([0], [1])
         rainfed_cropland_for_lanid = cdl_cropland.multiply(lanid_reversed)
         mask = rainfed_cropland_for_lanid.eq(1)
-        rainfed_cropland_for_lanid = rainfed_cropland_for_lanid.updateMask(mask)\
-                                                        .setDefaultProjection(crs=projection_lanid)
+        rainfed_cropland_for_lanid = rainfed_cropland_for_lanid.updateMask(mask) \
+            .setDefaultProjection(crs=projection_lanid)
 
         # Counting number of rainfed pixel in each 2km pixel
         rainfed_pixel_count = rainfed_cropland_for_lanid.reduceResolution(reducer=ee.Reducer.count(),
-                                                                              maxPixels=60000)\
-                                                                                .reproject(crs=projection2km_scale)
+                                                                          maxPixels=60000) \
+            .reproject(crs=projection2km_scale)
 
         # Unmaking the rainfed pixels so that non-rainfed pixels have 0 value
         rainfed_with_total = rainfed_cropland_for_lanid.unmask()
 
         # total 30m pixel count in 2km pixel
-        total_pixel_count = rainfed_with_total.reduceResolution(reducer=ee.Reducer.count(), maxPixels=60000)\
-                                                                    .reproject(crs=projection2km_scale)
+        total_pixel_count = rainfed_with_total.reduceResolution(reducer=ee.Reducer.count(), maxPixels=60000) \
+            .reproject(crs=projection2km_scale)
 
         # counting fraction of irrigated lands in a pixel
         rainfed_frac_LANID = rainfed_pixel_count.divide(total_pixel_count)
@@ -1714,8 +1894,8 @@ def download_Rainfed_CropET_from_OpenET_IrrMapper_monthly(data_name, download_di
 
         # # IrrMapper data for the year
         irrmap_imcol = ee.ImageCollection(irr_data)
-        irrmapper_img = irrmap_imcol.filter(ee.Filter.calendarRange(year, year, 'year')).select(irr_band)\
-                                                                                            .reduce(irr_reducer)
+        irrmapper_img = irrmap_imcol.filter(ee.Filter.calendarRange(year, year, 'year')).select(irr_band) \
+            .reduce(irr_reducer)
         # In IrrMapper dataset irrigated fields are assigned as 0, converting it to 1 and others to 0
         irrmapper_img = irrmapper_img.eq(0)
 
@@ -1725,10 +1905,11 @@ def download_Rainfed_CropET_from_OpenET_IrrMapper_monthly(data_name, download_di
 
         # # USDA CDL data for the year
         cdl_img = ee.ImageCollection(cdl_data).filter(ee.Filter.calendarRange(year, year, 'year')) \
-                                                                    .first().select(cdl_band)
+            .first().select(cdl_band)
         #  List of non-crop pixels
-        noncrop_list = ee.List([0, 60,61, 63,64,65,81, 82,83, 87, 88, 111, 112, 121, 122, 123,
-                            124, 131, 141, 142, 143, 152, 176, 190, 195])  # 0 is no data value
+        noncrop_list = ee.List([0, 60, 61, 63, 64, 65, 81, 82, 83, 87, 88, 111, 112, 121, 122, 123,
+                                124, 131, 141, 142, 143, 152, 190,
+                                195])  # 0 is no data value, keeping 176 (pasture) in cropland class
         # Filtering out non-crop pixels
         cdl_cropland = cdl_img.remap(noncrop_list, ee.List.repeat(0, noncrop_list.size()), 1)
 
@@ -1739,8 +1920,8 @@ def download_Rainfed_CropET_from_OpenET_IrrMapper_monthly(data_name, download_di
         irrmapper_reversed = irrmapper_img.remap([0], [1])
         rainfed_cropland_for_IrrMapper = cdl_cropland.multiply(irrmapper_reversed)
         mask = rainfed_cropland_for_IrrMapper.eq(1)
-        rainfed_cropland_for_IrrMapper = rainfed_cropland_for_IrrMapper.updateMask(mask)\
-                                                        .setDefaultProjection(crs=projection_irrmap).unmask()
+        rainfed_cropland_for_IrrMapper = rainfed_cropland_for_IrrMapper.updateMask(mask) \
+            .setDefaultProjection(crs=projection_irrmap).unmask()
         # # # # # # # # #
 
         for month in month_list:  # second loop for months
@@ -1912,10 +2093,11 @@ def download_Rainfed_CropET_from_OpenET_LANID_monthly(data_name, download_dir, y
 
         # # USDA CDL data for the year
         cdl_img = ee.ImageCollection(cdl_data).filter(ee.Filter.calendarRange(year, year, 'year')) \
-                                                                    .first().select(cdl_band)
+            .first().select(cdl_band)
         #  List of non-crop pixels
-        noncrop_list = ee.List([0, 60,61, 63,64,65,81, 82,83, 87, 88, 111, 112, 121, 122, 123,
-                                124, 131, 141, 142, 143, 152, 176, 190, 195])  # 0 is no data value
+        noncrop_list = ee.List([0, 60, 61, 63, 64, 65, 81, 82, 83, 87, 88, 111, 112, 121, 122, 123,
+                                124, 131, 141, 142, 143, 152, 190,
+                                195])  # 0 is no data value, keeping 176 (pasture) in cropland class
         # Filtering out non-crop pixels
         cdl_cropland = cdl_img.remap(noncrop_list, ee.List.repeat(0, noncrop_list.size()), 1)
 
@@ -1926,8 +2108,8 @@ def download_Rainfed_CropET_from_OpenET_LANID_monthly(data_name, download_dir, y
         lanid_reversed = lanid_img.remap([0], [1])
         rainfed_cropland_for_lanid = cdl_cropland.multiply(lanid_reversed)
         mask = rainfed_cropland_for_lanid.eq(1)
-        rainfed_cropland_for_lanid = rainfed_cropland_for_lanid.updateMask(mask)\
-                                                        .setDefaultProjection(crs=projection_lanid).unmask()
+        rainfed_cropland_for_lanid = rainfed_cropland_for_lanid.updateMask(mask) \
+            .setDefaultProjection(crs=projection_lanid).unmask()
         # # # # # # # # #
 
         for month in month_list:  # second loop for months
@@ -2028,8 +2210,11 @@ def download_gee_data_monthly(data_name, download_dir, year_list, month_range, m
 
     :param data_name: Data name.
     Current valid data names are -
-        ['SMAP_SM', 'LANDSAT_NDWI', 'LANDSAT_NDVI', 'GPM_PRECIP', 'GRIDMET_PRECIP', 'PRISM_PRECIP',
-        'MODIS_Day_LST', 'MODIS_Terra_NDVI', 'MODIS_Terra_EVI', 'MODIS_NDWI', 'MODIS_LAI', 'MODIS_ET', 'TERRSCLIMATE_ET']
+        ['SMAP_SM', 'LANDSAT_NDWI', 'LANDSAT_NDVI', 'GPM_Precip', 'GRIDMET_Precip',
+        'MODIS_Day_LST', 'MODIS_Terra_NDVI', 'MODIS_Terra_EVI', 'MODIS_NDWI', 'MODIS_NDVI', 'MODIS_LAI', 'MODIS_ET',
+        'TERRSCLIMATE_ET', 'TERRACLIMATE_RET', 'TERRACLIMATE_vap_pres', 'TERRACLIMATE_vap_pres_def', 'GRIDMET_max_RH',
+        'GRIDMET_min_RH', 'GRIDMET_wind_vel', 'GRIDMET_short_rad', 'GRIDMET_RET', 'GRIDMET_vap_pres_def',
+        'DAYMET_sun_hr']
     :param download_dir: File path of download directory.
     :param year_list: List of years to download data for.
     :param month_range: Tuple of month ranges to download data for, e.g., for months 1-12 use (1, 12).
@@ -2057,12 +2242,13 @@ def download_gee_data_monthly(data_name, download_dir, year_list, month_range, m
 
     month_list = [m for m in range(month_range[0], month_range[1] + 1)]  # creating list of months
 
+    # the variables in data_exclude_list can't be downloaded by this function. They have separate download functions
     data_exclude_list = ['Irrig_crop_OpenET_IrrMapper', 'Irrig_crop_OpenET_LANID',
                          'Irrigation_Frac_IrrMapper', 'Irrigation_Frac_LANID',
                          'Rainfed_crop_OpenET_IrrMapper', 'Rainfed_crop_OpenET_LANID',
                          'Rainfed_Frac_IrrMapper', 'Rainfed_Frac_LANID', 'USDA_CDL',
                          'Field_capacity', 'Bulk_density', 'Organic_carbon_content',
-                         'Sand_content','Clay_content']
+                         'Sand_content', 'Clay_content', 'DEM']
 
     if data_name not in data_exclude_list:
         for year in year_list:  # first loop for years
@@ -2097,7 +2283,8 @@ def download_gee_data_monthly(data_name, download_dir, year_list, month_range, m
 
                         # Filtering/processing datasets with data ranges, cloudcover, geometry, band, reducer, scale
                         if data_name in ('MODIS_Terra_NDVI', 'MODIS_Terra_EVI'):
-                            download_data = cloud_cover_filter(data_name, start_date, end_date, 0, 1, gee_extent).select(
+                            download_data = cloud_cover_filter(data_name, start_date, end_date, 0, 1,
+                                                               gee_extent).select(
                                 band). \
                                 reduce(reducer). \
                                 multiply(multiply_scale).toFloat()
@@ -2105,27 +2292,42 @@ def download_gee_data_monthly(data_name, download_dir, year_list, month_range, m
                         elif data_name == 'MODIS_NDWI':
                             nir = cloud_cover_filter(data_name, start_date, end_date, 0, 1, gee_extent).select(band[0]). \
                                 reduce(reducer).multiply(multiply_scale).toFloat()
-                            swir = cloud_cover_filter(data_name, start_date, end_date, 0, 1, gee_extent).select(band[1]). \
+                            swir = cloud_cover_filter(data_name, start_date, end_date, 0, 1, gee_extent).select(
+                                band[1]). \
                                 reduce(reducer).multiply(multiply_scale).toFloat()
                             download_data = nir.subtract(swir).divide(nir.add(swir))
+
+                        elif data_name == 'MODIS_NDVI':
+                            nir = cloud_cover_filter(data_name, start_date, end_date, 0, 1, gee_extent).select(band[0]). \
+                                reduce(reducer).multiply(multiply_scale).toFloat()
+                            red = cloud_cover_filter(data_name, start_date, end_date, 0, 1, gee_extent).select(band[1]). \
+                                reduce(reducer).multiply(multiply_scale).toFloat()
+                            download_data = nir.subtract(red).divide(nir.add(red))
 
                         elif data_name in ('TERRACLIMATE_ET', 'OpenET_ensemble'):
                             download_data = ee.ImageCollection(data).select(band).filterDate(start_date, end_date). \
                                 filterBounds(gee_extent).reduce(reducer).multiply(multiply_scale).toFloat()
 
-                        elif data_name == 'GPW_Pop':
-                            start_date = ee.Date.fromYMD(year, 1, 1)  # GPW population dataset's data starts at
-                            end_date = ee.Date.fromYMD(year, 12, 31)
-                            # filterBounds are not necessary, added it to reduce processing extent
+                        elif data_name == 'GRIDMET_RET':
+                            # multiplying by 0.85 to applying bias correction in GRIDMET RET. GRIDMET RET is overestimated
+                            # by 12-31% across CONUS (Blankenau et al. (2020). Senay et al. (2022) applied 0.85 as constant
+                            # bias correction factor.
                             download_data = ee.ImageCollection(data).select(band).filterDate(start_date, end_date). \
-                                filterBounds(gee_extent).reduce(reducer).toFloat()
+                                filterBounds(gee_extent).reduce(reducer).multiply(0.85).multiply(
+                                multiply_scale).toFloat()
+
+                        elif data_name == 'DAYMET_sun_hr':
+                            # dividing by 3600 to convert from second to hr
+                            download_data = ee.ImageCollection(data).select(band).filterDate(start_date, end_date). \
+                                filterBounds(gee_extent).reduce(reducer).divide(3600).multiply(multiply_scale).toFloat()
+
                         else:
                             download_data = ee.ImageCollection(data).select(band).filterDate(start_date, end_date). \
                                 filterBounds(gee_extent).reduce(reducer).multiply(multiply_scale).toFloat()
 
                         # Getting Data URl for each grid from GEE
-                        # The GEE connection gets disconnected sometimes, therefore, we adding the try-except block to retry
-                        # failed connections
+                        # The GEE connection gets disconnected sometimes, therefore, we adding the try-except block to
+                        # retry failed connections
                         try:
                             data_url = download_data.getDownloadURL({'name': data_name,
                                                                      'crs': 'EPSG:4269',  # NAD83
@@ -2169,8 +2371,9 @@ def download_gee_data_monthly(data_name, download_dir, year_list, month_range, m
                     mosaic_dir = os.path.join(download_dir, f'{merge_keyword}')
                     makedirs([mosaic_dir])
                     search_by = f'*{year}_{month}*.tif'
-                    mosaic_rasters(download_dir, mosaic_dir, mosaic_name, ref_raster=refraster, search_by=search_by,
-                                   nodata=no_data_value)
+                    mosaic_rasters_from_directory(download_dir, mosaic_dir, mosaic_name, ref_raster=refraster,
+                                                  search_by=search_by,
+                                                  nodata=no_data_value)
                     print(f'{data_name} monthly data downloaded and merged')
 
                 else:
@@ -2186,10 +2389,13 @@ def download_all_gee_data(data_list, download_dir, year_list, month_range,
 
     :param data_list: List of valid data names to download.
     Current valid data names are -
-        ['MODIS_Day_LST', 'MODIS_NDWI', 'MODIS_LAI', 'Irrig_crop_OpenET_IrrMapper', 'Irrig_crop_OpenET_LANID',
-        'Irrigation_Frac_IrrMapper', 'Irrigation_Frac_LANID', 'Rainfed_crop_OpenET_IrrMapper',
-        'Rainfed_crop_OpenET_LANID', 'Rainfed_Frac_IrrMapper', 'Rainfed_Frac_LANID', 'USDA_CDL',
-        'Field_capacity', 'Bulk_density', 'Organic_carbon_content', 'Sand_content','Clay_content']
+        ['GRIDMET_Precip', 'MODIS_Day_LST', 'MODIS_NDWI', 'MODIS_NDVI', 'MODIS_LAI',
+        'TERRACLIMATE_RET', 'TERRACLIMATE_vap_pres', 'TERRACLIMATE_vap_pres_def',
+        'GRIDMET_max_RH', 'GRIDMET_min_RH', 'GRIDMET_wind_vel', 'GRIDMET_short_rad',
+        'GRIDMET_RET', 'GRIDMET_vap_pres_def', 'DAYMET_sun_hr',
+        'Irrig_crop_OpenET_IrrMapper', 'Irrig_crop_OpenET_LANID', 'Irrigation_Frac_IrrMapper', 'Irrigation_Frac_LANID',
+        'Rainfed_crop_OpenET_IrrMapper', 'Rainfed_crop_OpenET_LANID', 'Rainfed_Frac_IrrMapper', 'Rainfed_Frac_LANID',
+        'USDA_CDL', 'Field_capacity', 'Bulk_density', 'Organic_carbon_content', 'Sand_content', 'Clay_content', 'DEM]
         ******************************
 
     :param download_dir: File path of main download directory. It will consist directory of individual dataset.
@@ -2218,7 +2424,7 @@ def download_all_gee_data(data_list, download_dir, year_list, month_range,
                                  'Rainfed_crop_OpenET_IrrMapper', 'Rainfed_crop_OpenET_LANID',
                                  'Rainfed_Frac_IrrMapper', 'Rainfed_Frac_LANID', 'USDA_CDL',
                                  'Field_capacity', 'Bulk_density', 'Organic_carbon_content',
-                                 'Sand_content','Clay_content']:
+                                 'Sand_content', 'Clay_content', 'DEM']:
                 # for datasets that needed to be downloaded on monthly scale
                 download_gee_data_monthly(data_name=data_name, download_dir=download_dir, year_list=year_list,
                                           month_range=month_range, merge_keyword='WestUS_monthly',
@@ -2277,6 +2483,11 @@ def download_all_gee_data(data_list, download_dir, year_list, month_range,
                                'Clay_content']:
                 download_soil_datasets(data_name=data_name, download_dir=download_dir, merge_keyword='WestUS',
                                        grid_shape=grid_shape_large, refraster=WestUS_raster)
+
+            elif data_name == 'DEM':
+                download_DEM_Slope_data(data_name=data_name, download_dir=download_dir,
+                                        merge_keyword='WestUS', grid_shape=grid_shape_large,
+                                        refraster=WestUS_raster, terrain_slope=False)
 
     else:
         pass
@@ -2343,7 +2554,7 @@ def download_all_datasets(year_list, month_range,
                                     grids are required).
     :param gee_data_list: List of data to download from GEE. Default set to None, use if skip_download_gee_data=True.
                           Datasets currently used in the model:
-                          ['MODIS_Day_LST', 'MODIS_NDWI', 'MODIS_LAI', 'Irrig_crop_OpenET_IrrMapper',
+                          ['MODIS_Day_LST', 'MODIS_NDWI', 'MODIS_NDVI', 'MODIS_LAI', 'Irrig_crop_OpenET_IrrMapper',
                           'Irrig_crop_OpenET_LANID', 'IrrMApper', 'LANID', 'USDA_CDL']
     :param data_download_dir: Directory path to download and save data.
     :param skip_download_gee_data: Set to False if want to download listed data. Default set to True.

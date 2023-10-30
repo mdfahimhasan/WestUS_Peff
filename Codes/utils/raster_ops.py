@@ -130,16 +130,16 @@ def mask_raster_by_extent(input_raster, ref_file, output_dir, raster_name, inver
     return output_raster
 
 
-def mosaic_rasters(input_dir, output_dir, raster_name, ref_raster=WestUS_raster, search_by="*.tif",
-                   dtype=None, mosaicing_method='first', resolution=model_res, nodata=no_data_value):
+def mosaic_rasters_from_directory(input_dir, output_dir, raster_name, ref_raster=WestUS_raster, search_by="*.tif",
+                                  dtype=None, mosaicing_method='first', resolution=model_res, nodata=no_data_value):
     """
-    Mosaics multiple rasters into a single raster (rasters have to be in the same directory).
+    Mosaics multiple rasters into a single raster from a directory (rasters have to be in the same directory).
 
     :param input_dir: Input rasters' directory.
     :param output_dir: Output raster directory.
     :param raster_name: Output raster name.
     :param ref_raster: Reference raster filepath. Set default to WestUS_raster.
-    :param search_by: Input raster search criteria. Default set to '*tif'.
+    :param search_by: Input raster search criteria. Default set to '*.tif'.
     :param dtype: Output raster data type. Default set to None.
     :param mosaicing_method: Mosaicing method. Can be 'first' or 'max' or 'min'. Default set to 'first'.
     :param resolution: Resolution of the output raster. Default set to 0.02000000000000000389 deg (2 km).
@@ -155,6 +155,42 @@ def mosaic_rasters(input_dir, output_dir, raster_name, ref_raster=WestUS_raster,
 
     ref_arr, ref_file = read_raster_arr_object(ref_raster)
     merged_arr, out_transform = merge(raster_list, bounds=ref_file.bounds, res=(resolution, resolution),
+                                      method=mosaicing_method, nodata=nodata)
+
+    merged_arr = np.where(ref_arr == 0, merged_arr, ref_arr)
+    merged_arr = merged_arr.squeeze()
+
+    makedirs([output_dir])
+    out_raster = os.path.join(output_dir, raster_name)
+    write_array_to_raster(raster_arr=merged_arr, raster_file=ref_file, transform=ref_file.transform,
+                          output_path=out_raster, nodata=nodata, ref_file=ref_raster, dtype=dtype)
+
+    return merged_arr, out_raster
+
+
+def mosaic_rasters_list(input_raster_list, output_dir, raster_name, ref_raster=WestUS_raster, dtype=None,
+                        mosaicing_method='first', resolution=model_res, nodata=no_data_value):
+    """
+    Mosaics a list of input rasters.
+
+    :param input_raster_list: A list of input rasters to merge/mosaic.
+    :param output_dir: Output raster directory.
+    :param raster_name: Output raster name.
+    :param ref_raster: Reference raster filepath. Set default to WestUS_raster.
+    :param dtype: Output raster data type. Default set to None.
+    :param mosaicing_method: Mosaicing method. Can be 'first' or 'max' or 'min'. Default set to 'first'.
+    :param resolution: Resolution of the output raster. Default set to 0.02000000000000000389 deg (2 km).
+    :param nodata: no_data_value set as -9999.
+
+    :return: Mosaiced raster array and filepath of mosaiced raster.
+    """
+    raster_file_list = []  # a list to store raster file information
+    for raster in input_raster_list:
+        arr, file = read_raster_arr_object(raster)
+        raster_file_list.append(file)
+
+    ref_arr, ref_file = read_raster_arr_object(ref_raster)
+    merged_arr, out_transform = merge(raster_file_list, bounds=ref_file.bounds, res=(resolution, resolution),
                                       method=mosaicing_method, nodata=nodata)
 
     merged_arr = np.where(ref_arr == 0, merged_arr, ref_arr)
@@ -446,3 +482,36 @@ def filter_raster_on_threshold(input_raster, output_raster, threshold_value1, th
     write_array_to_raster(raster_arr=mod_arr, raster_file=ref_file, transform=ref_file.transform,
                           output_path=output_raster)
     return output_raster
+
+
+def make_lat_lon_array_from_raster(input_raster, nodata=-9999):
+    """
+    Make lat, lon array for each pixel using the input raster.
+
+    params:
+    input_raster : Input raster filepath that will be used as reference raster.
+    nodata : No data value. Default set to -9999.
+
+    returns: Lat, lon array with nan value (-9999) applied.
+    """
+
+    raster_file = rio.open(input_raster)
+    raster_arr = raster_file.read(1)
+
+    # calculating lat, lon of each cells centroid
+    height, width = raster_arr.shape
+    cols, rows = np.meshgrid(np.arange(width), np.arange(height))
+    xs, ys = rio.transform.xy(rows=rows, cols=cols, transform=raster_file.transform)
+
+    # flattening and reshaping to the input_raster's array size
+    xs = np.array(xs).flatten()
+    ys = np.array(ys).flatten()
+
+    lon_arr = xs.reshape(raster_arr.shape)
+    lat_arr = ys.reshape(raster_arr.shape)
+
+    # assigning no_data_value
+    lon_arr[raster_arr == nodata] = nodata
+    lat_arr[raster_arr == nodata] = nodata
+
+    return lon_arr, lat_arr

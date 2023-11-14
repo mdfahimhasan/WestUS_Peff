@@ -7,14 +7,17 @@ from osgeo import gdal
 import geopandas as gpd
 from rasterio.mask import mask
 from rasterio.merge import merge
+from rasterio.enums import Resampling
 from shapely.geometry import box, mapping
 
 from Codes.utils.system_ops import make_gdal_sys_call
 from Codes.utils.system_ops import makedirs
 
 no_data_value = -9999
-model_res = 0.02000000000000000736  # in deg, ~2.22 km
-WestUS_raster = '../../Data_main/Compiled_data/reference_rasters/Western_US_refraster_2km.tif'
+model_res = 0.01976293625031605786  # in deg, ~2 km
+WestUS_shape = '../../Data_main/shapefiles/Western_US_ref_shapes/WestUS_states.shp'
+WestUS_raster = '../../Data_main/reference_rasters/Western_US_refraster_2km.tif'
+GEE_merging_refraster_large_grids = '../../Data_main/reference_rasters/GEE_merging_refraster_larger_grids.tif'
 
 
 def read_raster_arr_object(raster_file, rasterio_obj=False, band=1, get_file=True, change_dtype=True):
@@ -131,7 +134,8 @@ def mask_raster_by_extent(input_raster, ref_file, output_dir, raster_name, inver
 
 
 def mosaic_rasters_from_directory(input_dir, output_dir, raster_name, ref_raster=WestUS_raster, search_by="*.tif",
-                                  dtype=None, mosaicing_method='first', resolution=model_res, nodata=no_data_value):
+                                  dtype=None, resampling_method='nearest',mosaicing_method='first',
+                                  resolution=None, nodata=no_data_value):
     """
     Mosaics multiple rasters into a single raster from a directory (rasters have to be in the same directory).
 
@@ -141,8 +145,10 @@ def mosaic_rasters_from_directory(input_dir, output_dir, raster_name, ref_raster
     :param ref_raster: Reference raster filepath. Set default to WestUS_raster.
     :param search_by: Input raster search criteria. Default set to '*.tif'.
     :param dtype: Output raster data type. Default set to None.
+    :param resampling_method: Resampling method. Default set to 'nearest'. Can also take 'bilinear'. Currently can use
+                              only these two resampling methods.
     :param mosaicing_method: Mosaicing method. Can be 'first' or 'max' or 'min'. Default set to 'first'.
-    :param resolution: Resolution of the output raster. Default set to 0.02000000000000000389 deg (2 km).
+    :param resolution: Resolution of the output raster. Default set to None to use first input raster's resolution.
     :param nodata: no_data_value set as -9999.
 
     :return: Mosaiced raster array and filepath of mosaiced raster.
@@ -153,11 +159,27 @@ def mosaic_rasters_from_directory(input_dir, output_dir, raster_name, ref_raster
         arr, file = read_raster_arr_object(raster)
         raster_list.append(file)
 
-    ref_arr, ref_file = read_raster_arr_object(ref_raster)
-    merged_arr, out_transform = merge(raster_list, bounds=ref_file.bounds, res=(resolution, resolution),
-                                      method=mosaicing_method, nodata=nodata)
+    # setting resampling method
+    if resampling_method == 'nearest':
+        resampling_method = Resampling.nearest
+    elif resampling_method == 'bilinear':
+        resampling_method = Resampling.bilinear
 
-    merged_arr = np.where(ref_arr == 0, merged_arr, ref_arr)
+    # reference raster
+    ref_arr, ref_file = read_raster_arr_object(ref_raster)
+
+    # merging
+    if resolution is None:  # will use first input raster's resolution
+        merged_arr, out_transform = merge(raster_list, bounds=ref_file.bounds,
+                                          resampling=resampling_method, method=mosaicing_method,
+                                          nodata=nodata)
+
+    else:  # will use input resolution
+        merged_arr, out_transform = merge(raster_list, bounds=ref_file.bounds, res=(resolution, resolution),
+                                          resampling=resampling_method, method=mosaicing_method, nodata=nodata)
+
+    # nodata operation
+    # merged_arr = np.where(ref_arr == 0, merged_arr, ref_arr)
     merged_arr = merged_arr.squeeze()
 
     makedirs([output_dir])
@@ -169,17 +191,21 @@ def mosaic_rasters_from_directory(input_dir, output_dir, raster_name, ref_raster
 
 
 def mosaic_rasters_list(input_raster_list, output_dir, raster_name, ref_raster=WestUS_raster, dtype=None,
-                        mosaicing_method='first', resolution=model_res, nodata=no_data_value):
+                        resampling_method='nearest', mosaicing_method='first', resolution=None,
+                        nodata=no_data_value):
     """
     Mosaics a list of input rasters.
+
 
     :param input_raster_list: A list of input rasters to merge/mosaic.
     :param output_dir: Output raster directory.
     :param raster_name: Output raster name.
     :param ref_raster: Reference raster filepath. Set default to WestUS_raster.
     :param dtype: Output raster data type. Default set to None.
+    :param resampling_method: Resampling method. Default set to 'nearest'. Can also take 'bilinear'. Currently can use
+                              only these two resampling methods.
     :param mosaicing_method: Mosaicing method. Can be 'first' or 'max' or 'min'. Default set to 'first'.
-    :param resolution: Resolution of the output raster. Default set to 0.02000000000000000389 deg (2 km).
+    :param resolution: Resolution of the output raster. Default set to None to use the first input raster's resolution.
     :param nodata: no_data_value set as -9999.
 
     :return: Mosaiced raster array and filepath of mosaiced raster.
@@ -189,13 +215,30 @@ def mosaic_rasters_list(input_raster_list, output_dir, raster_name, ref_raster=W
         arr, file = read_raster_arr_object(raster)
         raster_file_list.append(file)
 
-    ref_arr, ref_file = read_raster_arr_object(ref_raster)
-    merged_arr, out_transform = merge(raster_file_list, bounds=ref_file.bounds, res=(resolution, resolution),
-                                      method=mosaicing_method, nodata=nodata)
+    # setting resampling method
+    if resampling_method == 'nearest':
+        resampling_method = Resampling.nearest
+    elif resampling_method == 'bilinear':
+        resampling_method = Resampling.bilinear
 
+    # reference raster
+    ref_arr, ref_file = read_raster_arr_object(ref_raster)
+
+    # merging
+    if resolution is None:  # will use first input raster's resolution
+        merged_arr, out_transform = merge(raster_file_list, bounds=ref_file.bounds,
+                                          resampling=resampling_method, method=mosaicing_method,
+                                          nodata=nodata)
+
+    else:  # will use input resolution
+        merged_arr, out_transform = merge(raster_file_list, bounds=ref_file.bounds, res=(resolution, resolution),
+                                          resampling=resampling_method, method=mosaicing_method, nodata=nodata)
+
+    # nodata operation
     merged_arr = np.where(ref_arr == 0, merged_arr, ref_arr)
     merged_arr = merged_arr.squeeze()
 
+    # saving output
     makedirs([output_dir])
     out_raster = os.path.join(output_dir, raster_name)
     write_array_to_raster(raster_arr=merged_arr, raster_file=ref_file, transform=ref_file.transform,
@@ -261,13 +304,7 @@ def clip_resample_reproject_raster(input_raster, input_shape, output_raster_dir,
 
     if clip:  # set resample, clip_and_resample = False
         # resolution argument can be None in clip operation
-        if not use_ref_width_height:
-            _, xres, _, _, _, yres = raster_file.GetGeoTransform()
-            processed_data = gdal.Warp(destNameOrDestDS=output_filepath, srcDSOrSrcDSTab=raster_file, dstSRS=crs,
-                                       targetAlignedPixels=targetaligned, xRes=xres, yRes=yres,
-                                       cutlineDSName=input_shape, cropToCutline=True, dstNodata=no_data_value,
-                                       outputType=output_datatype)
-        else:
+        if use_ref_width_height:
             # have to provide a reference raster
             # resolution can be set to None
             ref_arr = read_raster_arr_object(ref_raster, get_file=False)
@@ -276,40 +313,46 @@ def clip_resample_reproject_raster(input_raster, input_shape, output_raster_dir,
                                        targetAlignedPixels=False, width=width, height=height,
                                        cutlineDSName=input_shape,
                                        cropToCutline=True, dstNodata=no_data_value, outputType=output_datatype)
+        else:
+            _, xres, _, _, _, yres = raster_file.GetGeoTransform()
+            processed_data = gdal.Warp(destNameOrDestDS=output_filepath, srcDSOrSrcDSTab=raster_file, dstSRS=crs,
+                                       targetAlignedPixels=targetaligned, xRes=xres, yRes=yres,
+                                       cutlineDSName=input_shape, cropToCutline=True, dstNodata=no_data_value,
+                                       outputType=output_datatype)
 
     elif resample:  # set clip, clip_and_resample = False
-        if not use_ref_width_height:
+        if use_ref_width_height:
+            # have to provide a reference raster
+            # resolution can be set to None
+            # input_shape can be set to None
+            ref_arr = read_raster_arr_object(ref_raster, get_file=False)
+            height, width = ref_arr.shape
+            processed_data = gdal.Warp(destNameOrDestDS=output_filepath, srcDSOrSrcDSTab=raster_file, dstSRS=crs,
+                                       targetAlignedPixels=False, width=width, height=height,
+                                       dstNodata=no_data_value, resampleAlg=resample_algorithm,
+                                       outputType=output_datatype)
+        else:
             # have to provide a resolution value in argument
             # input_shape can be set to None
             processed_data = gdal.Warp(destNameOrDestDS=output_filepath, srcDSOrSrcDSTab=raster_file, dstSRS=crs,
                                        targetAlignedPixels=targetaligned, xRes=resolution, yRes=resolution,
                                        dstNodata=no_data_value, resampleAlg=resample_algorithm,
                                        outputType=output_datatype)
-        else:
+
+    elif clip_and_resample:  # set clip=False, resample = False
+        if use_ref_width_height:
             # have to provide a reference raster
             # resolution can be set to None
-            # input_shape can be set to None
             ref_arr = read_raster_arr_object(ref_raster, get_file=False)
             height, width = ref_arr.shape
             processed_data = gdal.Warp(destNameOrDestDS=output_filepath, srcDSOrSrcDSTab=raster_file, dstSRS=crs,
                                        targetAlignedPixels=False, width=width, height=height,
-                                       dstNodata=no_data_value, resampleAlg=resample_algorithm,
-                                       outputType=output_datatype)
-
-    elif clip_and_resample:  # set clip=False, resample = False
-        if not use_ref_width_height:
-            # argument must have input_shape and resolution value
-            processed_data = gdal.Warp(destNameOrDestDS=output_filepath, srcDSOrSrcDSTab=raster_file, dstSRS=crs,
-                                       targetAlignedPixels=targetaligned, xRes=resolution, yRes=resolution,
                                        cutlineDSName=input_shape, cropToCutline=True, dstNodata=no_data_value,
                                        resampleAlg=resample_algorithm, outputType=output_datatype)
         else:
-            # have to provide a reference raster
-            # resolution can be set to None
-            ref_arr = read_raster_arr_object(ref_raster, get_file=False)
-            height, width = ref_arr.shape
+            # argument must have input_shape and resolution value
             processed_data = gdal.Warp(destNameOrDestDS=output_filepath, srcDSOrSrcDSTab=raster_file, dstSRS=crs,
-                                       targetAlignedPixels=False, width=width, height=height,
+                                       targetAlignedPixels=targetaligned, xRes=resolution, yRes=resolution,
                                        cutlineDSName=input_shape, cropToCutline=True, dstNodata=no_data_value,
                                        resampleAlg=resample_algorithm, outputType=output_datatype)
     del processed_data
@@ -515,3 +558,5 @@ def make_lat_lon_array_from_raster(input_raster, nodata=-9999):
     lat_arr[raster_arr == nodata] = nodata
 
     return lon_arr, lat_arr
+
+

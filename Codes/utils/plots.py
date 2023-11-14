@@ -117,3 +117,43 @@ def density_grid_plot_of_same_vars(Y_pred, Y_obsv, x_label, y_label, plot_name, 
 
     fig_loc = os.path.join(savedir, plot_name)
     fig.savefig(fig_loc, dpi=300)
+
+
+def scatter_plot(X, Y, x_label, y_label, plot_name, savedir, alpha=0.03,
+                  color_format='o', marker_size=0.5, title=None):
+    """
+    Makes scatter plot between 2 variables.
+
+    :param X: Variable array in x axis.
+    :param Y: Variable array in y axis.
+    :param x_label: Str of x label.
+    :param y_label: Str of y label.
+    :param plot_name: Str of plot name.
+    :param savedir: filepath to save the plot.
+    :param alpha: plot/scatter dots transparency level.
+    :param marker_size: (float or int) Marker size.
+    :param color_format: Color and plot type format. For example, for 'bo' 'b' means blue color and 'o' means dot plot.
+    :param title: Str of title. Default set to None.
+    :param axis_lim: A list of minimum and maximum values of x and y axis.
+                     Default set to None (will calculate and set xlim, ylim itself)
+
+    :return: A scatter plot of model prediction vs observed data.
+    """
+    plt.rcParams.update({'font.size': 16})
+    fig, ax = plt.subplots(figsize=(8, 6))
+    ax.plot(X, Y, color_format, alpha=alpha, markersize=marker_size)
+    ax.plot([0, 1], [0, 1], '-r', transform=ax.transAxes)
+    ax.set_xlabel(x_label)  # 'Observed'
+    ax.set_ylabel(y_label)  # 'Predicted'
+
+    if title is not None:
+        ax.set_title(title)
+
+    if savedir is not None:
+        makedirs([savedir])
+
+        if '.tif' not in plot_name:
+            plot_name = plot_name + '.tif'
+
+        fig_loc = os.path.join(savedir, plot_name)
+        fig.savefig(fig_loc, dpi=300)

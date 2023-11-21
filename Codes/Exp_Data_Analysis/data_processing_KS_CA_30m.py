@@ -1,5 +1,7 @@
 import os
 import sys
+import numpy as np
+import pandas as pd
 from glob import glob
 
 from os.path import dirname, abspath
@@ -7,9 +9,9 @@ from os.path import dirname, abspath
 sys.path.insert(0, dirname(dirname(dirname(abspath(__file__)))))
 
 from Codes.utils.system_ops import makedirs
-from Codes.utils.raster_ops import read_raster_arr_object, sum_rasters, \
-    mosaic_rasters_from_directory, clip_resample_reproject_raster
 from Codes.utils.ml_ops import create_train_test_dataframe
+from Codes.utils.raster_ops import read_raster_arr_object, write_array_to_raster, sum_rasters, \
+    mosaic_rasters_from_directory, clip_resample_reproject_raster
 
 # Reference resolution, shape, and rasters
 no_data_value = -9999
@@ -28,7 +30,7 @@ CV_shape = '../../Data_main/Data_Drivers_of_ET/ROIs/For_30m/ROI_CA_30m.shp'
 # ****** 30m data preprocessing
 def merge_gee_data_patches(data_name, years, input_dir, input_shape,
                            gee_merge_ref_raster, roi_clip_ref_raster,
-                           resolution, no_data, month_range=None):
+                           resolution, no_data, month_range=None, paste_on_ref_raster=False):
     output_dir = os.path.join(input_dir, 'merged')
     interim_output_dir = os.path.join(output_dir, 'gee_merged')
     makedirs([output_dir, interim_output_dir])
@@ -45,10 +47,29 @@ def merge_gee_data_patches(data_name, years, input_dir, input_shape,
                                               ref_raster=gee_merge_ref_raster,
                                               search_by=search_by, nodata=no_data)
 
-            clip_resample_reproject_raster(input_raster=merged_raster, input_shape=input_shape,
-                                           output_raster_dir=output_dir, clip_and_resample=True,
-                                           use_ref_width_height=False, resolution=resolution,
-                                           ref_raster=roi_clip_ref_raster)
+            if not paste_on_ref_raster:
+                clipped_raster = \
+                    clip_resample_reproject_raster(input_raster=merged_raster, input_shape=input_shape,
+                                                   output_raster_dir=output_dir, clip_and_resample=True,
+                                                   use_ref_width_height=False, resolution=resolution,
+                                                   ref_raster=roi_clip_ref_raster)
+
+            else:  # for replacing nan values with 0 values from reference raster
+                clipped_raster = \
+                    clip_resample_reproject_raster(input_raster=merged_raster, input_shape=input_shape,
+                                                   output_raster_dir=interim_output_dir, clip_and_resample=True,
+                                                   use_ref_width_height=False, resolution=resolution,
+                                                   ref_raster=roi_clip_ref_raster)
+
+                ref_arr = read_raster_arr_object(roi_clip_ref_raster, get_file=None)
+                clipped_arr, clipped_file = read_raster_arr_object(clipped_raster)
+
+                # replacing nan values in the raster with 0 (for rainfed and irrigated data)
+                clipped_arr = np.where(np.isnan(clipped_arr) & (ref_arr == 0), ref_arr, clipped_arr)
+
+                output_raster = os.path.join(output_dir, merge_name)
+                write_array_to_raster(raster_arr=clipped_arr, raster_file=clipped_file,
+                                      transform=clipped_file.transform, output_path=output_raster)
 
     else:  # for monthly datasets
         month_list = [m for m in range(month_range[0], month_range[1] + 1)]  # creating list of months
@@ -84,14 +105,16 @@ if not skip_process_data_for_CA:
                            input_dir='../../Data_main/Data_Drivers_of_ET/Raster_data/30m/CA/Irrigated_CA',
                            input_shape=CV_shape, resolution=CA_res,
                            gee_merge_ref_raster=gee_merge_CA_30m_refraster,
-                           roi_clip_ref_raster=CA_ROI_30m_refraster, no_data=0, month_range=None)
+                           roi_clip_ref_raster=CA_ROI_30m_refraster, no_data=0,
+                           month_range=None, paste_on_ref_raster=True)
 
     # Merging Rainfed Cropland data
     merge_gee_data_patches(data_name='Rainfed', years=years_to_process_data_for,
                            input_dir='../../Data_main/Data_Drivers_of_ET/Raster_data/30m/CA/Rainfed_CA',
                            input_shape=CV_shape, resolution=CA_res,
                            gee_merge_ref_raster=gee_merge_CA_30m_refraster,
-                           roi_clip_ref_raster=CA_ROI_30m_refraster, no_data=0, month_range=None)
+                           roi_clip_ref_raster=CA_ROI_30m_refraster, no_data=0,
+                           month_range=None, paste_on_ref_raster=True)
 
     # Merging USDA CDL data
     merge_gee_data_patches(data_name='CDL', years=years_to_process_data_for,
@@ -185,21 +208,24 @@ if not skip_process_data_for_KS:
                            input_dir='../../Data_main/Data_Drivers_of_ET/Raster_data/30m/KS/Irrigated_KS',
                            input_shape=KS_shape, resolution=KS_res,
                            gee_merge_ref_raster=gee_merge_KS_30m_refraster,
-                           roi_clip_ref_raster=KS_ROI_30m_refraster, no_data=0, month_range=None)
+                           roi_clip_ref_raster=KS_ROI_30m_refraster, no_data=0,
+                           month_range=None, paste_on_ref_raster=True)
 
     # Merging Rainefed Cropland data
     merge_gee_data_patches(data_name='Rainfed', years=years_to_process_data_for,
                            input_dir='../../Data_main/Data_Drivers_of_ET/Raster_data/30m/KS/Rainfed_KS',
                            input_shape=KS_shape, resolution=KS_res,
                            gee_merge_ref_raster=gee_merge_KS_30m_refraster,
-                           roi_clip_ref_raster=KS_ROI_30m_refraster, no_data=0, month_range=None)
+                           roi_clip_ref_raster=KS_ROI_30m_refraster, no_data=0,
+                           month_range=None, paste_on_ref_raster=True)
 
     # Merging USDA CDL data
     merge_gee_data_patches(data_name='CDL', years=years_to_process_data_for,
                            input_dir='../../Data_main/Data_Drivers_of_ET/Raster_data/30m/KS/CDL_KS',
                            input_shape=KS_shape, resolution=KS_res,
                            gee_merge_ref_raster=gee_merge_KS_30m_refraster,
-                           roi_clip_ref_raster=KS_ROI_30m_refraster, no_data=0, month_range=None)
+                           roi_clip_ref_raster=KS_ROI_30m_refraster, no_data=0,
+                           month_range=None, paste_on_ref_raster=True)
 
     # Merging OpenET Ensemble data
     merge_gee_data_patches(data_name='OpenET_ensemble', years=years_to_process_data_for,
@@ -324,7 +350,6 @@ if not skip_compile_df_for_CA_monthly:
                                     skip_processing=skip_df_creation,
                                     n_partitions=5)
 
-
 # ####### Compiling dataframe for Kansas (inside and outside GMD) at monthly scale
 if not skip_compile_df_for_CA_yearly:
     # yearly data dir
@@ -362,7 +387,6 @@ if not skip_compile_df_for_CA_yearly:
                                 output_parquet=dataframe_path,
                                 skip_processing=skip_df_creation,
                                 n_partitions=5)
-
 
 # ##############################################################
 # # # Process switches for monthly dataframe creation for Kansas
@@ -410,7 +434,6 @@ if not skip_compile_df_for_KS_monthly:
                                     skip_processing=skip_df_creation,
                                     n_partitions=5)
 
-
 # ####### Compiling dataframe for Kansas (inside and outside GMD) at monthly scale
 if not skip_compile_df_for_KS_yearly:
     # yearly data dir
@@ -448,4 +471,6 @@ if not skip_compile_df_for_KS_yearly:
                                 output_parquet=dataframe_path,
                                 skip_processing=skip_df_creation,
                                 n_partitions=5)
+
+
 

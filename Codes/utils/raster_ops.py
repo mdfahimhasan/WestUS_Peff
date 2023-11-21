@@ -560,3 +560,20 @@ def make_lat_lon_array_from_raster(input_raster, nodata=-9999):
     return lon_arr, lat_arr
 
 
+def create_ref_rater(input_raster, output_ref_raster):
+    """
+    create reference raster (all valid value locatons are zero) from an input raster.
+
+    :param input_raster: Filepath of input raster.
+    :param output_ref_raster: Filepath of output reference raster.
+
+    :return: None.
+    """
+    input_arr, input_file = read_raster_arr_object(input_raster)
+
+    # assign 0 where the value isn't nan (-9999) in the input raster
+    input_arr = np.where(np.isnan(input_arr), -9999, 0)
+    write_array_to_raster(raster_arr=input_arr, raster_file=input_file, transform=input_file.transform,
+                          output_path=output_ref_raster)
+
+

@@ -470,7 +470,7 @@ CA_download_dir = '../../Data_main/Data_Drivers_of_ET/Raster_data/30m/CA'
 
 years_to_download_data_for = [2016, 2017, 2018, 2019, 2020]
 
-# Downloading data for Kansas ROI (County: Cheyenne, Rawlins, Sherman, Decatur, Thomas, Sheridan, Graham, Logan, Gove)
+# Downloading data for Kansas ROI GMD4 (County: Cheyenne, Rawlins, Sherman, Decatur, Thomas, Sheridan, Graham, Logan, Gove)
 # download_openET_30m(data_name='OpenET_ensemble', years=years_to_download_data_for, months=(1, 12),
 #                     grid_shape=KS_30m_grids, download_dir=KS_download_dir)
 #
@@ -498,3 +498,21 @@ years_to_download_data_for = [2016, 2017, 2018, 2019, 2020]
 # download_cdl_30m(data_name='CDL_CA', years=years_to_download_data_for,
 #                  grid_shape=CA_30m_grids, download_dir=CA_download_dir)
 #
+
+# Downloading data for Kansas ROI GMD2
+KS_30m_grids_gmd2 = '../../Data_main/Data_Drivers_of_ET/ROIs/GEE_shapefiles/KS_grids_30m_GMD2.shp'
+KS_download_dir2 = '../../Data_main/Data_Drivers_of_ET/Raster_data/30m/KS_2'
+
+
+# download_openET_30m(data_name='OpenET_ensemble', years=years_to_download_data_for, months=(1, 12),
+#                     grid_shape=KS_30m_grids_gmd2, download_dir=KS_download_dir2)
+#
+# download_irrigated_cropland_30m(data_name='Irrigated_KS', years=years_to_download_data_for,
+#                                 grid_shape=KS_30m_grids_gmd2, download_dir=KS_download_dir2)
+#
+# download_rainfed_cropland_30m(data_name='Rainfed_KS', years=years_to_download_data_for,
+#                                 grid_shape=KS_30m_grids_gmd2, download_dir=KS_download_dir2)
+#
+#
+# download_cdl_30m(data_name='CDL_KS', years=years_to_download_data_for,
+#                  grid_shape=KS_30m_grids_gmd2, download_dir=KS_download_dir2)

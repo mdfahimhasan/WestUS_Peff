@@ -99,7 +99,7 @@ def get_gee_dict(data_name):
         'MODIS_Terra_EVI': 'MODIS/006/MOD13Q1',  # cloudcover mask added later
         'MODIS_NDWI': 'MODIS/006/MOD09A1',  # cloudcover mask added later
         'MODIS_NDVI': 'MODIS/006/MOD09A1',  # cloudcover mask added later
-        'MODIS_LAI': 'MODIS/006/MCD15A3H',
+        'MODIS_LAI': 'MODIS/061/MOD15A2H',
         'MODIS_ET': 'MODIS/006/MOD16A2',  # unit in kg/m2
         'TERRACLIMATE_ET': 'IDAHO_EPSCOR/TERRACLIMATE',
         'OpenET_ensemble': 'OpenET/ENSEMBLE/CONUS/GRIDMET/MONTHLY/v2_0',
@@ -145,7 +145,7 @@ def get_gee_dict(data_name):
         'MODIS_Terra_EVI': 'EVI',
         'MODIS_NDWI': ['sur_refl_b02', 'sur_refl_b06'],  # bands for NIR and SWIR, respectively
         'MODIS_NDVI': ['sur_refl_b02', 'sur_refl_b01'],  # bands for NIR and SWIR, respectively
-        'MODIS_LAI': 'Lai',
+        'MODIS_LAI': 'Lai_500m',
         'MODIS_ET': 'ET',
         'TERRACLIMATE_ET': 'aet',  # unit in mm, monthly total
         'OpenET_ensemble': 'et_ensemble_mad',  # unit in mm, monthly total
@@ -288,7 +288,7 @@ def get_gee_dict(data_name):
         'MODIS_Terra_EVI': datetime(2000, 2, 1),
         'MODIS_NDWI': datetime(2000, 2, 1),
         'MODIS_NDVI': datetime(2000, 2, 1),
-        'MODIS_LAI': datetime(2002, 7, 1),
+        'MODIS_LAI': datetime(2000, 2, 1),
         'MODIS_ET': datetime(2001, 1, 1),
         'TERRACLIMATE_ET': datetime(1958, 1, 1),
         'OpenET_ensemble': datetime(2016, 1, 1),
@@ -334,7 +334,7 @@ def get_gee_dict(data_name):
         'MODIS_Terra_EVI': datetime(2023, 8, 13),
         'MODIS_NDWI': datetime(2023, 8, 29),
         'MODIS_NDVI': datetime(2023, 8, 29),
-        'MODIS_LAI': datetime(2023, 9, 6),
+        'MODIS_LAI': datetime(2023, 11, 9),
         'MODIS_ET': datetime(2023, 8, 29),
         'TERRACLIMATE_ET': datetime(2022, 12, 1),
         'OpenET_ensemble': datetime(2022, 12, 1),
@@ -380,7 +380,7 @@ def get_gee_dict(data_name):
         'MODIS_Terra_EVI': datetime(2000, 1, 1),
         'MODIS_NDWI': datetime(2000, 1, 1),
         'MODIS_NDVI': datetime(2000, 1, 1),
-        'MODIS_LAI': datetime(2002, 1, 1),
+        'MODIS_LAI': datetime(2000, 1, 1),
         'MODIS_ET': datetime(2001, 1, 1),
         'TERRACLIMATE_ET': datetime(1958, 1, 1),
         'OpenET_ensemble': datetime(2016, 1, 1),
@@ -618,7 +618,7 @@ def cloud_cover_filter(data_name, start_date, end_date, from_bit, to_bit, geomet
 #         mosaic_name = f'{data_name}_{year}.tif'
 #         mosaic_dir = os.path.join(download_dir, f'{merge_keyword}')
 #         makedirs([mosaic_dir])
-#         downloaded_arr, downloaded_raster = mosaic_rasters_from_directory(download_dir, mosaic_dir, mosaic_name, ref_raster=refraster_westUS,
+#         downloaded_arr, downloaded_raster = mosaic_rasters_from_directory(download_dir, mosaic_dir, mosaic_name, left_zone_ref_raster=refraster_westUS,
 #                                                            search_by=f'*{year}*.tif', nodata=no_data_value)
 #         print('Downloaded Data Merged')
 #         downloaded_raster_dict[mosaic_name] = downloaded_raster

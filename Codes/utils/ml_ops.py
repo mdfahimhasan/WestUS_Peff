@@ -11,15 +11,15 @@ from lightgbm import LGBMRegressor
 from sklearn.preprocessing import OneHotEncoder
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.model_selection import train_test_split
+from sklearn.inspection import permutation_importance
 from sklearn.inspection import PartialDependenceDisplay as PDisp
 from sklearn.model_selection import RandomizedSearchCV, GridSearchCV, KFold, RepeatedKFold
-import numpy as np
 from os.path import dirname, abspath
 sys.path.insert(0, dirname(dirname(dirname(abspath(__file__)))))
 
 from Codes.utils.system_ops import makedirs
-from Codes.utils.raster_ops import read_raster_arr_object
 from Codes.utils.stats_ops import calculate_rmse, calculate_r2
+from Codes.utils.raster_ops import read_raster_arr_object, write_array_to_raster
 
 no_data_value = -9999
 model_res = 0.02000000000000000389  # in deg, 2 km
@@ -92,7 +92,7 @@ def create_train_test_dataframe(years_list, month_range, monthly_data_path_dict,
 
                     for year in years_list:
                         for month_count, month in enumerate(month_list):
-                            monthly_data = glob(os.path.join(monthly_data_path_dict[var], f'*{year}_{month}*.tif'))[0]
+                            monthly_data = glob(os.path.join(monthly_data_path_dict[var], f'*{year}_{month}.tif*'))[0]
 
                             data_arr = read_raster_arr_object(monthly_data, get_file=False).flatten()
                             len_arr = len(list(data_arr))
@@ -169,9 +169,11 @@ def create_train_test_dataframe(years_list, month_range, monthly_data_path_dict,
 
 def split_train_val_test_set(input_csv, pred_attr, exclude_columns, output_dir, model_version,
                              month_range=None, test_perc=0.3, validation_perc=0,
-                             random_state=0, verbose=True, skip_processing=False):
+                             random_state=0, verbose=True,  remove_outlier=False,
+                             outlier_upper_val=None, skip_processing=False):
     """
     Split dataset into train, validation, and test data based on a train/test/validation ratio.
+
 
     :param input_csv : Input csv file (with filepath) containing all the predictors.
     :param pred_attr : Variable name which will be predicted. Defaults to 'Subsidence'.
@@ -184,6 +186,8 @@ def split_train_val_test_set(input_csv, pred_attr, exclude_columns, output_dir, 
     :param random_state : Seed value. Defaults to 0.
     :param verbose : Set to True if want to print which columns are being dropped and which will be included
                      in the model.
+    :param remove_outlier: Set to True if we want to consider outlier removal while making the train-test split.
+    :param outlier_upper_val: The upper outlier detection range from IQR or MAD.
     :param skip_processing: Set to True if want to skip merging IrrMapper and LANID extent data patches.
 
     returns: X_train, X_val, X_test, y_train, y_val, y_test arrays.
@@ -196,6 +200,9 @@ def split_train_val_test_set(input_csv, pred_attr, exclude_columns, output_dir, 
         if month_range is not None: # filter for specific month ranges
             month_list = [m for m in range(month_range[0], month_range[1] + 1)]  # creating list of months
             input_df = input_df[input_df['month'].isin(month_list)]
+
+        if remove_outlier:  # removing outliers. detected by EDA
+            input_df = input_df[input_df[pred_attr] <= outlier_upper_val]
 
         # dropping columns that has been specified to not include
         drop_columns = exclude_columns + [
@@ -599,52 +606,115 @@ def train_model(x_train, y_train, params_dict, model='rf', n_jobs=-1,
     return trained_model
 
 
-def create_pdplots(trained_model, x_train, features_to_include, output_dir, plot_name):
+def create_pdplots(trained_model, x_train, features_to_include, output_dir, plot_name, skip_processing=False):
     """
 
-    :param trained_model:
-    :param x_train:
-    :param features_to_include:
-    :param output_dir:
-    :param plot_name:
-    :return:
+    :param trained_model: Trained model object.
+    :param x_train: x_train dataframe (if the model was trained with a x_train as dataframe) or array.
+    :param features_to_include: List of features for which PDP plots will be made. If set to 'All', then PDP plot for
+                                all input variables will be created.
+    :param output_dir: Filepath of output directory to save the PDP plot.
+    :param plot_name: str of plot name. Must include '.jpeg' or 'png'.
+    :param skip_processing: Set to True to skip this process.
+
+    :return: None.
     """
-    makedirs([output_dir])
+    if not skip_processing:
+        makedirs([output_dir])
 
-    # creating variables for unit degree and degree celcius
-    deg_unit = r'$^\circ$'
-    deg_cel_unit = r'$^\circ$C'
+        # creating variables for unit degree and degree celcius
+        deg_unit = r'$^\circ$'
+        deg_cel_unit = r'$^\circ$C'
 
-    # creating a dictionary to rename input variables in the PDP plot
-    feature_dict = {
-        'Cropland_Frac': '% Cropland',
-        'MODIS_Day_LST': 'MODIS Land Surface Temp (K)', 'MODIS_LAI': 'MODIS LAI',
-        'MODIS_NDVI': 'MODIS NDVI', 'MODIS_NDWI': 'MODIS NDWI', 'PRISM_Precip': 'PRISM Precipitation (mm)',
-        'PRISM_Tmax': f'PRISM Max Temp ({deg_cel_unit})', 'PRISM_Tmin': f'PRISM Min Temp ({deg_cel_unit})',
-        'Ssebop_ETa': 'SseBop ET (mm)', 'GRIDMET_Precip': 'GRIDMET Precipitation (mm)',
-        'GRIDMET_RET': 'GRIDMET Reference ET (mm)', 'GRIDMET_vap_pres_def': 'GRIDMET Mean Vapour Pressure Deficit (kpa)',
-        'GRIDMET_max_RH': 'GRIDMET Max Relative Humidity (%)', 'GRIDMET_min_RH': 'GRIDMET Min Relative Humidity (%)',
-        'GRIDMET_wind_vel': 'GRIDMET Wind Velocity (m/s)', 'GRIDMET_short_rad': 'GRIDMET Downward Shortwave Radiation W/m^2',
-        'DAYMET_sun_hr': 'DAYMET Daylight Duration (hr)', 'Bulk_density': 'Bulk Density (kg/m^3)',
-        'Clay_content': 'Clay Content (%)', 'Field_capacity': 'Field Capacity (%)', 'Sand_content': 'Sand Content (%)',
-        'Slope': 'Slope (%)', 'Latitude': f'Latitude ({deg_unit})', 'Longitude': f'Longitude ({deg_unit})'
-    }
+        # creating a dictionary to rename input variables in the PDP plot
+        feature_dict = {
+            'Cropland_Frac': '% Cropland',
+            'MODIS_Day_LST': 'MODIS Land Surface Temp (K)', 'MODIS_LAI': 'MODIS LAI',
+            'MODIS_NDVI': 'MODIS NDVI', 'MODIS_NDWI': 'MODIS NDWI', 'PRISM_Precip': 'PRISM Precipitation (mm)',
+            'PRISM_Tmax': f'PRISM Max Temp ({deg_cel_unit})', 'PRISM_Tmin': f'PRISM Min Temp ({deg_cel_unit})',
+            'Ssebop_ETa': 'SseBop ET (mm)', 'GRIDMET_Precip': 'GRIDMET Precipitation (mm)',
+            'GRIDMET_RET': 'GRIDMET Reference ET (mm)', 'GRIDMET_vap_pres_def': 'GRIDMET Mean Vapour Pressure Deficit (kpa)',
+            'GRIDMET_max_RH': 'GRIDMET Max Relative Humidity (%)', 'GRIDMET_min_RH': 'GRIDMET Min Relative Humidity (%)',
+            'GRIDMET_wind_vel': 'GRIDMET Wind Velocity (m/s)', 'GRIDMET_short_rad': 'GRIDMET Downward Shortwave Radiation (W/m^2)',
+            'DAYMET_sun_hr': 'DAYMET Daylight Duration (hr)', 'Bulk_density': 'Bulk Density (kg/m^3)',
+            'Clay_content': 'Clay Content (%)', 'Field_capacity': 'Field Capacity (%)', 'Sand_content': 'Sand Content (%)',
+            'Slope': 'Slope (%)', 'AWC': 'Available Water Capacity (mm)',
+            'Latitude': f'Latitude ({deg_unit})', 'Longitude': f'Longitude ({deg_unit})'
+        }
 
-    # renaming columns
-    x_train = x_train.rename(columns=feature_dict)
+        # renaming columns
+        x_train = x_train.rename(columns=feature_dict)
 
-    # plotting
-    if features_to_include == 'All':  # to plot PDP for all attributes
-        features_to_include = list(x_train.columns)
+        # plotting
+        if features_to_include == 'All':  # to plot PDP for all attributes
+            features_to_include = list(x_train.columns)
 
-    pdisp = PDisp.from_estimator(trained_model, x_train, features=features_to_include,
-                                 percentiles=(0.05, 0.95), subsample=0.8, grid_resolution=20,
-                                 n_jobs=-1, random_state=0)
-    # replacing Y axis labels
-    for row_idx in range(0, pdisp.axes_.shape[0]):
-        pdisp.axes_[row_idx][0].set_ylabel('Effective Precipitation')
+        pdisp = PDisp.from_estimator(trained_model, x_train, features=features_to_include,
+                                     percentiles=(0.05, 1), subsample=0.8, grid_resolution=20,
+                                     n_jobs=-1, random_state=0)
+        # replacing Y axis labels
+        for row_idx in range(0, pdisp.axes_.shape[0]):
+            pdisp.axes_[row_idx][0].set_ylabel('Effective Precipitation')
 
-    fig = plt.gcf()
-    fig.set_size_inches(30, 25)
-    fig.tight_layout(rect=[0, 0.05, 1, 0.95])
-    fig.savefig(os.path.join(output_dir, plot_name), dpi=300, bbox_inches='tight')
+        fig = plt.gcf()
+        fig.set_size_inches(30, 25)
+        fig.tight_layout(rect=[0, 0.05, 1, 0.95])
+        fig.savefig(os.path.join(output_dir, plot_name), dpi=100, bbox_inches='tight')
+    else:
+        pass
+
+
+def plot_permutation_importance(trained_model, x_test, y_test, output_dir, plot_name,
+                                exclude_columns=None, skip_processing=False):
+    """
+    Plot permutation importance for model predictors.
+
+    :param trained_model: Trained ML model object.
+    :param x_test: Filepath of x_test csv or dataframe. In case of dataframe, it has to come directly from the
+                    split_train_val_test_set() function.
+    :param y_test: Filepath of y_test csv or dataframe.
+    :param exclude_columns: List of predictors to be excluded.
+                            Exclude the same predictors for which model wasn't trained. In case the x_test comes as a
+                            dataframe from the split_train_val_test_set() function, set exclude_columns to None.
+    :param output_dir: Output directory filepath to save the plot.
+    :param plot_name: Plot name. Must contain 'png', 'jpeg'.
+    :param skip_processing: Set to True to skip this process.
+
+    :return: None
+    """
+    if not skip_processing:
+        makedirs([output_dir])
+
+        if '.csv' in x_test:
+            # Loading x_test and y_test
+            x_test_df = pd.read_csv(x_test)
+            x_test_df = x_test_df.drop(columns=exclude_columns)
+            x_test_df = reindex_df(x_test_df)
+
+            y_test_df = pd.read_csv(y_test)
+        else:
+            x_test_df = x_test
+            y_test_df = y_test
+
+        # generating permutation importance score on test set
+        result_test = permutation_importance(trained_model, x_test_df, y_test_df,
+                                             n_repeats=30, random_state=0, n_jobs=-1, scoring='r2')
+
+        sorted_importances_idx = result_test.importances_mean.argsort()
+        predictor_cols = x_test_df.columns
+        importances = pd.DataFrame(result_test.importances[sorted_importances_idx].T,
+                                   columns=predictor_cols[sorted_importances_idx])
+
+        # plotting
+        plt.figure(figsize=(10, 8))
+        plt.rcParams.update({'font.size': 12})
+
+        ax = importances.plot.box(vert=False, whis=10)
+        ax.set_title('Permutation Importance (test set)')
+        ax.axvline(x=0, color='k', linestyle='--')
+        ax.set_xlabel('Relative change in accuracy')
+        ax.figure.tight_layout()
+
+        plt.savefig(os.path.join(output_dir, plot_name), dpi=100)
+    else:
+        pass

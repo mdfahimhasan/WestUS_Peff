@@ -32,6 +32,8 @@ def scatter_plot_of_same_vars(Y_pred, Y_obsv, x_label, y_label, plot_name, saved
 
     plt.rcParams.update({'font.size': 16})
     fig, ax = plt.subplots(figsize=(8, 6))
+    fig.set_facecolor('none')
+
     ax.plot(Y_obsv, Y_pred, color_format, alpha=alpha, markersize=marker_size)
     ax.plot([0, 1], [0, 1], '-r', transform=ax.transAxes)
     ax.set_xlabel(x_label)  # 'Observed'
@@ -88,14 +90,19 @@ def density_grid_plot_of_same_vars(Y_pred, Y_obsv, x_label, y_label, plot_name, 
 
     plt.rcParams.update({'font.size': 16})
     fig, ax = plt.subplots(figsize=(8, 6))
+    fig.set_facecolor('none')
 
     # Plot the density grid as a heatmap
     density_plot = ax.imshow(heatmap, origin='lower', extent=[min_value, max_value, min_value, max_value],
                              cmap='RdYlBu_r')
-    ax.set_xlabel(x_label)  # 'Observed'
-    ax.set_ylabel(y_label)  # 'Predicted'
+    ax.set_xlabel(x_label, fontsize=22)  # 'Observed'
+    ax.set_ylabel(y_label, fontsize=22)  # 'Predicted'
     ax.plot([0, 1], [0, 1], '-r', transform=ax.transAxes)
-    fig.colorbar(label='Number of samples in each bin', mappable=density_plot)
+    ax.tick_params(axis='both', labelsize=22)
+    cbar = fig.colorbar(mappable=density_plot)
+    cbar.ax.tick_params(labelsize=22)
+    cbar.set_label('Number of samples in each bin', size=22)
+    plt.tight_layout()
 
     if axis_lim:
         ax.set_xlim(axis_lim)
@@ -108,7 +115,7 @@ def density_grid_plot_of_same_vars(Y_pred, Y_obsv, x_label, y_label, plot_name, 
         ax.set_title(title)
 
     r2_val = round(calculate_r2(Y_pred, Y_obsv), 4)
-    ax.text(0.1, 0.9, s=f'R2={r2_val}', transform=ax.transAxes)
+    ax.text(0.1, 0.9, s=f'R2={r2_val}', transform=ax.transAxes, color='white')
 
     makedirs([savedir])
 

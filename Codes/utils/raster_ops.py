@@ -87,9 +87,9 @@ def write_array_to_raster(raster_arr, raster_file, transform, output_path, dtype
 
 
 def mask_raster_by_extent(input_raster, ref_file, output_dir, raster_name, invert=False, crop=True,
-                          nodata=no_data_value):
+                           nodata=no_data_value):
     """
-    Crop/mask a raster with a given shapefile/raster 's extent. Only use to crop to extent.
+    Crop/mask a raster with a given shapefile/raster's extent. Only use to crop to extent.
     Cannot perform cropping to exact shapefile.
 
     :param input_raster: Filepath of input raster.
@@ -257,7 +257,7 @@ def clip_resample_reproject_raster(input_raster, input_shape, output_raster_dir,
     """
     Clips, resamples, reprojects a given raster using input shapefile, resolution, and crs.
 
-    ** If resolution is None, must provide a ref_raster. One of resolution and ref_raster must be available.
+    ** If resolution is None, must provide a left_zone_ref_raster. One of resolution and left_zone_ref_raster must be available.
 
     :param input_raster: Input raster filepath.
     :param input_shape: Input shape filepath. Set to None when resample=True.
@@ -388,7 +388,7 @@ def shapefile_to_raster(input_shape, output_dir, raster_name, burnvalue=None, us
     if use_attr:
         if add is not None:
             minx, miny, maxx, maxy = total_bounds
-            layer_name = input_shape[input_shape.rfind('/') + 1: input_shape.rfind('.')]
+            layer_name = os.path.basename(input_shape).split('.')[0]
             args = ['-l', layer_name, '-a', attribute, '-tr', str(resolution), str(resolution), '-te', str(minx),
                     str(miny), str(maxx), str(maxy), '-init', str(0.0), '-add', '-ot', 'Float32', '-of', 'GTiff',
                     '-a_nodata', str(no_data_value), input_shape, output_raster]

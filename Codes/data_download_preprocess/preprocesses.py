@@ -182,16 +182,16 @@ def classify_irrigated_rainfed_cropland(rainfed_fraction_dir, irrigated_fraction
                   interim_dir_for_maximum_occurrence_rainfed_cropland])
 
         ############################
+        # Rainfed
         # Criteria of irrigated and rainfed cropland classification
-        # More than 0.30 (30%) rainfed and less than 0.10 (10%) irrigated 30m pixels in a 2km pixel will be classified
+        # More than 0.20 (30%) rainfed and less than 0.02 (2%) irrigated 30m pixels in a 2km pixel will be classified
         # as "Rainfed cropland". Also, it should have <6% tree cover.
-        # More than 0.20 (20%) rainfed 30m pixels in a 2km pixel will be classified as "Irrigated cropland"
+        # Irrigated
+        # More than 0.02 (2%) irrigated 30m pixels in a 2km pixel will be classified as "Irrigated cropland"
         # These classifications are exclusive. This means a certain pixel can only be irrigated or rainfed
 
         rainfed_frac_threshold = 0.30
-        rainfed_irrig_frac_threshold = 0.10  # irrig fraction in nodata
-
-        irrigated_frac_threshold = 0.20
+        irrigated_frac_threshold = 0.02
         tree_threshold = 6  # unit in %
 
         # list of years when there are both irrigated and rainfed fraction datasets derived from
@@ -213,7 +213,7 @@ def classify_irrigated_rainfed_cropland(rainfed_fraction_dir, irrigated_fraction
 
             # classification using defined rainfed and irrigated fraction threshold. -9999 is no data
             rainfed_cropland = np.where((rain_arr >= rainfed_frac_threshold) &
-                                        ((irrig_arr <= rainfed_irrig_frac_threshold) | (np.isnan(irrig_arr)))
+                                        ((irrig_arr <= irrigated_frac_threshold) | (np.isnan(irrig_arr)))
                                          & (tree_arr <= 6), 1, -9999)
 
             irrigated_cropland = np.where((irrig_arr >= irrigated_frac_threshold) & (tree_arr <= 6), 1, -9999)
@@ -307,7 +307,7 @@ def filter_rainfed_irrigated_cropET_with_rainfed_irrigated_cropland(rainfed_crop
             print(f'Filtering cropET data for year {year}...')
 
             # pure rainfed cropland filtered previously by using rainfed and irrigated fraction threshold
-            # (rainfed frac > 0.30 and irrig frac < 0.10)
+            # (rainfed frac > 0.20 and irrig frac < 0.02). In both cases, tree cover was less than 6%
             rainfed_cropland_data = glob(os.path.join(rainfed_cropland_dir, f'*{year}*.tif'))[0]
             rainfed_cropland_arr = read_raster_arr_object(rainfed_cropland_data, get_file=False)
 
@@ -711,15 +711,40 @@ def create_slope_raster(input_raster, output_dir, raster_name, skip_processing=F
         pass
 
 
-def compare_yearly_precip_grow_season_ET(yearly_precip_dir, yearly_ET_dir, output_dir, skip_processing=False):
+def process_AWC_data(input_dir, westUS_shape, output_dir, ref_raster=WestUS_raster, resolution=model_res,
+                     skip_processing=False):
     """
-    Developing a yearly filter for rainfed cropET (effective precip) training data. Using this filter, we will pixels
-    where total ET (openET ensemble) in a growing season is higher than total precipitation from last year. These
-    filtered out pixels are using more water from storage than precipitation. But we onlt want to consider pixels where
-    ET mostly comes from precipitation (values 1 in this processed dataset).
+    Process available water capacity (AWC) data for Western US
+
+    :param input_dir: Filepath of input directory.
+    :param westUS_shape: Filepath of Western US shapefile.
+    :param output_dir: Filepath of output directory.
+    :param ref_raster: Fileapth of Western US reference raster.
+    :param resolution: Model resolution.
+    :param skip_processing: Set to True to skip the process.
+
+    :return: None
+    """
+    if not skip_processing:
+        makedirs([output_dir])
+
+        AWC_raster = glob(os.path.join(input_dir, '*.tif'))[0]
+
+        clip_resample_reproject_raster(input_raster=AWC_raster, input_shape=westUS_shape, output_raster_dir=output_dir,
+                                       raster_name='AWC.tif', clip_and_resample=True, resolution=resolution,
+                                       ref_raster=ref_raster)
+
+
+def compare_prev_yearly_precip_current_grow_season_ET(yearly_precip_dir, grow_season_ET_dir, output_dir,
+                                                      skip_processing=False):
+    """
+    Developing a yearly filter for rainfed cropET (effective precip) training data. Using this filter, we will exclude
+    pixels where total ET (openET ensemble) in a growing season is higher than total precipitation from last year. These
+    filtered out pixels are using more water from storage than precipitation. But we only want to consider pixels where
+    ET mostly comes from precipitation (values 1 in this processed dataset) with some supplement from storage.
 
     :param yearly_precip_dir: Input directory of yearly total precipitation data.
-    :param yearly_ET_dir: Input directory of yearly total growing season ET data.
+    :param grow_season_ET_dir: Input directory of growing season ET data.
     :param output_dir: Filepath of output directory to save processed data.
     :param skip_processing: Set to True if want to skip processing this dataset.
 
@@ -736,7 +761,7 @@ def compare_yearly_precip_grow_season_ET(yearly_precip_dir, yearly_ET_dir, outpu
             print(f'procesing Excess_ET_filter data for year {et_yr}')
 
             precip_data = glob(os.path.join(yearly_precip_dir, f'*{precip_yr}*.tif'))[0]
-            et_data = glob(os.path.join(yearly_ET_dir, f'*{et_yr}*.tif'))[0]
+            et_data = glob(os.path.join(grow_season_ET_dir, f'*{et_yr}*.tif'))[0]
 
             precip_arr, file = read_raster_arr_object(precip_data)
             et_arr = read_raster_arr_object(et_data, get_file=False)
@@ -768,6 +793,7 @@ def run_all_preprocessing(skip_ssebop_processing=False,
                           skip_summing_rainfed_cropET=False,
                           skip_excess_ET_filter_processing=False,
                           skip_processing_slope_data=False,
+                          skip_process_AWC_data=False,
                           ref_raster=WestUS_raster):
     """
     Run all preprocessing steps.
@@ -789,6 +815,7 @@ def run_all_preprocessing(skip_ssebop_processing=False,
     :param skip_summing_rainfed_cropET: Set to True if want to skip summing rainfed cropET data summing for year/grow season.
     :param skip_excess_ET_filter_processing: Set to True if want to skip excess ET filter dataset processing.
     :param skip_processing_slope_data: Set to True if want to skip DEM to slope conversion.
+    :param skip_process_AWC_data: Set to True ti skip processing AWC data.
     :param ref_raster: Filepath of Western US reference raster to use in 2km pixel lat-lon raster creation and to use
                         as reference raster in other processing operations.
 
@@ -920,22 +947,29 @@ def run_all_preprocessing(skip_ssebop_processing=False,
                                 skip_processing=skip_gridmet_RET_precessing)
 
     # processing excess ET filter
-    compare_yearly_precip_grow_season_ET(yearly_precip_dir='../../Data_main/Raster_data/PRISM_Precip/WestUS',
-                                         yearly_ET_dir='../../Data_main/Raster_data/OpenET_ensemble/WestUS_grow_season',
-                                         output_dir='../../Data_main/Raster_data/Excess_ET_filter',
-                                         skip_processing=skip_excess_ET_filter_processing)
+    compare_prev_yearly_precip_current_grow_season_ET(yearly_precip_dir='../../Data_main/Raster_data/PRISM_Precip/WestUS',
+                                                      grow_season_ET_dir='../../Data_main/Raster_data/OpenET_ensemble/WestUS_grow_season',
+                                                      output_dir='../../Data_main/Raster_data/Excess_ET_filter',
+                                                      skip_processing=skip_excess_ET_filter_processing)
 
     # converting DEM data to slope
     create_slope_raster(input_raster='../../Data_main/Raster_data/DEM/WestUS/DEM.tif',
-                        output_dir='../../Data_main/Raster_data/Slope', raster_name='Slope.tif',
+                        output_dir='../../Data_main/Raster_data/Slope/WestUS', raster_name='Slope.tif',
                         skip_processing=skip_processing_slope_data)
+
+    # processing available water capacity (AWC) data
+    process_AWC_data(input_dir='../../Data_main/Raster_data/Available_water_capacity/awc_gNATSGO',
+                     westUS_shape=WestUS_shape,
+                     output_dir='../../Data_main/Raster_data/Available_water_capacity/WestUS',
+                     ref_raster=ref_raster, resolution=model_res,
+                     skip_processing=skip_process_AWC_data)
 
     # making a latitude longitude raster from reference raster
     ref_arr, ref_file = read_raster_arr_object(ref_raster)
     lon_arr, lat_arr = make_lat_lon_array_from_raster(ref_raster)
 
-    lon_dir = os.path.join('../../Data_main/Raster_data', 'Longitude')
-    lat_dir = os.path.join('../../Data_main/Raster_data', 'Latitude')
+    lon_dir = os.path.join('../../Data_main/Raster_data', 'Longitude/WestUS')
+    lat_dir = os.path.join('../../Data_main/Raster_data', 'Latitude/WestUS')
     makedirs([lon_dir, lat_dir])
 
     write_array_to_raster(raster_arr=lon_arr, raster_file=ref_file, transform=ref_file.transform,
@@ -972,6 +1006,6 @@ def run_all_preprocessing(skip_ssebop_processing=False,
 #
 #     summed_raster = os.path.join(download_dir, f'prism_precip_{prev_year}_{year}')
 #     sum_rasters(raster_list=monthly_raster_list_to_sum, output_raster=summed_raster, raster_dir=None, search_by='*.tif',
-#                 ref_raster=WestUS_raster, nodata=no_data_value)
+#                 left_zone_ref_raster=WestUS_raster, nodata=no_data_value)
 
 

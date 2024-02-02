@@ -657,6 +657,7 @@ def create_pdplots(trained_model, x_train, features_to_include, output_dir, plot
             pdisp.axes_[row_idx][0].set_ylabel('Effective Precipitation')
 
         fig = plt.gcf()
+        plt.rcParams['font.size'] = 20  # doesn't work
         fig.set_size_inches(30, 25)
         fig.tight_layout(rect=[0, 0.05, 1, 0.95])
         fig.savefig(os.path.join(output_dir, plot_name), dpi=100, bbox_inches='tight')

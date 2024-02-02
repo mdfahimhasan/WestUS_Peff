@@ -528,7 +528,7 @@ def process_prism_data(prism_bil_dir, prism_tif_dir, output_dir_prism_monthly, o
         pass
 
 
-def sum_gridmet_precip_yearly_data(input_gridmet_monthly_dir, output_dir_gridmet_yearly,
+def sum_gridmet_precip_yearly_data(input_gridmet_monthly_dir, output_dir_yearly, output_dir_grow_season,
                                    years=(2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011,
                                               2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020),
                                    skip_processing=False):
@@ -536,22 +536,31 @@ def sum_gridmet_precip_yearly_data(input_gridmet_monthly_dir, output_dir_gridmet
     Process (sum for Western US extent) GRIDMET Precipitation for a year.
 
     :param input_gridmet_monthly_dir: Directory file path of downloaded gridmet precip monthly datasets.
-    :param output_dir_gridmet_yearly: File path of directory to save summed precip for each year at Western US extent.
+    :param output_dir_yearly: File path of directory to save summed precip for each year at Western US extent.
+    :param output_dir_grow_season: File path of directory to save summed precip for growing season (4-10) of each year
+                                   at Western US extent.
     :param years: Tuple/list of years for which to process data.
     :param skip_processing: Set to True if want to skip processing.
 
     :return: None.
     """
     if not skip_processing:
-        makedirs([output_dir_gridmet_yearly])
+        makedirs([output_dir_yearly, output_dir_grow_season])
 
         for year in years:  # first loop for years
             print(f'summing GRIDMET precip data for year {year}...')
             gridmet_datasets = glob(os.path.join(input_gridmet_monthly_dir, f'*{year}*.tif'))
 
-            # Summing raster for each growing season
-            summed_output_for_year = os.path.join(output_dir_gridmet_yearly, f'GRIDMET_Precip_{year}.tif')
+            # Summing raster for each year
+            summed_output_for_year = os.path.join(output_dir_yearly, f'GRIDMET_Precip_{year}.tif')
             sum_rasters(raster_list=gridmet_datasets, raster_dir=None, output_raster=summed_output_for_year,
+                        ref_raster=gridmet_datasets[0])
+
+            # Summing raster for each year's growing season
+            gridmet_datasets = glob(os.path.join(input_gridmet_monthly_dir, f'*{year}_[4-9]*.tif')) + \
+                               glob(os.path.join(input_gridmet_monthly_dir, f'*{year}_10*.tif'))
+            summed_output_for_grow_season = os.path.join(output_dir_grow_season, f'GRIDMET_Precip_{year}.tif')
+            sum_rasters(raster_list=gridmet_datasets, raster_dir=None, output_raster=summed_output_for_grow_season,
                         ref_raster=gridmet_datasets[0])
 
     else:
@@ -927,7 +936,8 @@ def run_all_preprocessing(skip_ssebop_processing=False,
 
     # gridmet precip yearly data processing
     sum_gridmet_precip_yearly_data(input_gridmet_monthly_dir='../../Data_main/Raster_data/GRIDMET_Precip/WestUS_monthly',
-                                   output_dir_gridmet_yearly='../../Data_main/Raster_data/GRIDMET_Precip/WestUS',
+                                   output_dir_yearly='../../Data_main/Raster_data/GRIDMET_Precip/WestUS_yearly',
+                                   output_dir_grow_season = '../../Data_main/Raster_data/GRIDMET_Precip/WestUS_grow_season',
                                    years=(2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012,
                                        2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020),
                                    skip_processing=skip_gridmet_precip_processing)

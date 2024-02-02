@@ -26,7 +26,7 @@ GEE_merging_refraster_large_grids = '../../Data_main/reference_rasters/GEE_mergi
 # # filtering training data
 training_zone_shapefile = '../../Data_main/shapefiles/Training_zones/effective_precip_training_zone.shp'
 output_dir = '../../Data_main/Raster_data/Rainfed_cropET_filtered_training'
-skip_effective_precip_training_data_filtering = False  ######
+skip_effective_precip_training_data_filtering = True  ######
 
 filter_effective_precip_training_data(training_zone_shp=training_zone_shapefile,
                                       general_output_dir=output_dir,
@@ -80,7 +80,7 @@ datasets_to_include = ['Effective_precip_train',
                        'Bulk_density', 'Clay_content', 'Field_capacity', 'Sand_content',
                        'AWC', 'DEM', 'Slope', 'Latitude', 'Longitude']
 
-skip_train_test_df_creation = False ######
+skip_train_test_df_creation = True ######
 train_test_parquet_path = f'../../Eff_Precip_Model_Run/Model_csv/train_test.parquet'
 
 makedirs([os.path.dirname(train_test_parquet_path)])
@@ -110,7 +110,7 @@ exclude_columns = ['year', 'Longitude', 'Latitude',
 remove_outlier = False
 outlier_upper_range = None
 
-skip_train_test_split = False  ######
+skip_train_test_split = True  ######
 
 x_train, x_test, y_train, y_test = \
     split_train_val_test_set(input_csv=train_test_parquet_path, month_range=train_test_month_range,
@@ -140,8 +140,8 @@ lgbm_param_dict = {'n_estimators': 250,
 save_model_to_dir = '../../Eff_Precip_Model_Run/Model_trained'
 makedirs([save_model_to_dir])
 
-load_model = False
-save_model = True
+load_model = True
+save_model = False
 model_name = f'trial_effective_precip_{model_version}.joblib'
 
 lgbm_reg_trained = train_model(x_train=x_train, y_train=y_train, params_dict=lgbm_param_dict, model='lgbm', n_jobs=-1,
@@ -212,8 +212,11 @@ density_grid_plot_of_same_vars(Y_pred=y_pred_test, Y_obsv=y_test.to_numpy().rave
                                plot_name=density_plot_name, savedir=plot_dir, bins=80)
 
 skip_plot_pdp = False  ######
+features_in_pdp_plot = ['GRIDMET Precipitation (mm)', 'GRIDMET Reference ET (mm)', 'GRIDMET Mean Vapour Pressure Deficit (kpa)',
+                        'GRIDMET Max Relative Humidity (%)', 'GRIDMET Downward Shortwave Radiation (W/m^2)',
+                        'Field Capacity (%)', 'Sand Content (%)', 'DEM', 'month']
 create_pdplots(trained_model=lgbm_reg_trained, x_train=x_train,
-               features_to_include='All', output_dir=plot_dir,
+               features_to_include=features_in_pdp_plot, output_dir=plot_dir,
                plot_name=f'pdp_{model_version}.tif', skip_processing=skip_plot_pdp)
 
 skip_plot_perm_import = False  ######

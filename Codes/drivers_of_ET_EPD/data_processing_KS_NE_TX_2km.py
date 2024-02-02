@@ -122,7 +122,7 @@ if not skip_process_KS_data_monthly:
                                            raster_name=None, clip_and_resample=True, resolution=KS_res,
                                            ref_raster=GMD_KS_refraster)
 
-    # monthly precipitation data
+    # yearly precipitation data
     precip_datasets = glob(os.path.join(Prism_precip_yearly, '*.tif'))
     for ppt in precip_datasets:
         if any(str(i) in ppt for i in years_to_process):
@@ -280,6 +280,7 @@ if not skip_process_NE_data_monthly:
     Rainfed_cropland_output_dir = '../../Data_main/Data_Drivers_of_ET/Raster_data/2km/NE/Rainfed_cropland'
     Irrigated_cropET_grow_season_output_dir = '../../Data_main/Data_Drivers_of_ET/Raster_data/2km/NE/Irrigated_cropET/grow_season'
     Rainfed_cropET_grow_season_output_dir = '../../Data_main/Data_Drivers_of_ET/Raster_data/2km/NE/Rainfed_cropET/grow_season'
+    Prism_precip_yearly_output_dir = '../../Data_main/Data_Drivers_of_ET/Raster_data/2km/NE/PRISM_Precip/yearly'
 
     years_to_process = [2016, 2017, 2018, 2019, 2020]
 
@@ -339,6 +340,15 @@ if not skip_process_NE_data_monthly:
         if any(str(i) in ppt for i in years_to_process):
             clip_resample_reproject_raster(input_raster=ppt, input_shape=NE_ROI_shape,
                                            output_raster_dir=Prism_precip_monthly_output_dir,
+                                           raster_name=None, clip_and_resample=True, resolution=NE_res,
+                                           ref_raster=NE_ROI_refraster)
+
+    # yearly precipitation data
+    precip_datasets = glob(os.path.join(Prism_precip_yearly, '*.tif'))
+    for ppt in precip_datasets:
+        if any(str(i) in ppt for i in years_to_process):
+            clip_resample_reproject_raster(input_raster=ppt, input_shape=NE_ROI_shape,
+                                           output_raster_dir=Prism_precip_yearly_output_dir,
                                            raster_name=None, clip_and_resample=True, resolution=NE_res,
                                            ref_raster=NE_ROI_refraster)
 
@@ -454,9 +464,10 @@ if not skip_process_NE_data_monthly:
                              'Irrigated': Irrigated_cropland_output_dir,
                              'Rainfed': Rainfed_cropland_output_dir,
                              'Irrigated_cropET': Irrigated_cropET_grow_season_output_dir,
-                             'Rainfed_cropET': Rainfed_cropET_grow_season_output_dir}
+                             'Rainfed_cropET': Rainfed_cropET_grow_season_output_dir,
+                             'PRISM_PPT': Prism_precip_yearly_output_dir}
 
-    datasets_to_include = ['Irrigated_cropET', 'Rainfed_cropET', 'USDA_CDL', 'Irrigated', 'Rainfed']
+    datasets_to_include = ['Irrigated_cropET', 'Rainfed_cropET', 'USDA_CDL', 'Irrigated', 'Rainfed', 'PRISM_PPT']
 
     skip_df_creation = False  # #
     dataframe_path = '../../Data_main/Data_Drivers_of_ET/CSVs/2km/NE_yearly.csv'
@@ -491,6 +502,7 @@ if not skip_process_TX_data_monthly:
     Rainfed_cropland_output_dir = '../../Data_main/Data_Drivers_of_ET/Raster_data/2km/TX/Rainfed_cropland'
     Irrigated_cropET_grow_season_output_dir = '../../Data_main/Data_Drivers_of_ET/Raster_data/2km/TX/Irrigated_cropET/grow_season'
     Rainfed_cropET_grow_season_output_dir = '../../Data_main/Data_Drivers_of_ET/Raster_data/2km/TX/Rainfed_cropET/grow_season'
+    Prism_precip_yearly_output_dir = '../../Data_main/Data_Drivers_of_ET/Raster_data/2km/TX/PRISM_Precip/yearly'
 
     years_to_process = [2016, 2017, 2018, 2019, 2020]
 
@@ -550,6 +562,15 @@ if not skip_process_TX_data_monthly:
         if any(str(i) in ppt for i in years_to_process):
             clip_resample_reproject_raster(input_raster=ppt, input_shape=TX_ROI_shape,
                                            output_raster_dir=Prism_precip_monthly_output_dir,
+                                           raster_name=None, clip_and_resample=True, resolution=TX_res,
+                                           ref_raster=TX_ROI_refraster)
+
+    # yearly precipitation data
+    precip_datasets = glob(os.path.join(Prism_precip_yearly, '*.tif'))
+    for ppt in precip_datasets:
+        if any(str(i) in ppt for i in years_to_process):
+            clip_resample_reproject_raster(input_raster=ppt, input_shape=TX_ROI_shape,
+                                           output_raster_dir=Prism_precip_yearly_output_dir,
                                            raster_name=None, clip_and_resample=True, resolution=TX_res,
                                            ref_raster=TX_ROI_refraster)
 
@@ -665,9 +686,10 @@ if not skip_process_TX_data_monthly:
                              'Irrigated': Irrigated_cropland_output_dir,
                              'Rainfed': Rainfed_cropland_output_dir,
                              'Irrigated_cropET': Irrigated_cropET_grow_season_output_dir,
-                             'Rainfed_cropET': Rainfed_cropET_grow_season_output_dir}
+                             'Rainfed_cropET': Rainfed_cropET_grow_season_output_dir,
+                             'PRISM_PPT': Prism_precip_yearly_output_dir}
 
-    datasets_to_include = ['Irrigated_cropET', 'Rainfed_cropET', 'USDA_CDL', 'Irrigated', 'Rainfed']
+    datasets_to_include = ['Irrigated_cropET', 'Rainfed_cropET', 'USDA_CDL', 'Irrigated', 'Rainfed', 'PRISM_PPT']
 
     skip_df_creation = False  # #
     dataframe_path = '../../Data_main/Data_Drivers_of_ET/CSVs/2km/TX_yearly.csv'
@@ -727,6 +749,3 @@ if not skip_add_data_to_KS_annual:
 
     # saving the updated dataframe
     pumping_df_new.to_csv('../../Data_main/Data_Drivers_of_ET/CSVs/KS_GW_GMD4_updated.csv', index=False)
-
-# create_ref_rater(input_raster='F:/WestUS_NetGW/scratch/test.tif',
-#                  output_ref_raster='../../Data_main/Data_Drivers_of_ET/refrasters/2km/NE_ROI_refraster.tif')

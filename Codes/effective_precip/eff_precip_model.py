@@ -70,7 +70,7 @@ static_data_path_dict = {'Bulk_density': '../../Data_main/Raster_data/Bulk_densi
 train_test_years_list = [2016, 2017, 2018, 2019, 2020]
 total_month_range = (1, 12)  # considering all months for dataframe creation,
 # later will consider growing season for train-test split (4-10)
-model_version = 'v5'  ######
+model_version = 'v6'  ######
 
 datasets_to_include = ['Effective_precip_train',
                        'MODIS_Day_LST', 'MODIS_LAI', 'MODIS_NDVI', 'MODIS_NDWI',
@@ -107,10 +107,10 @@ exclude_columns = ['year', 'Longitude', 'Latitude',
                    'PRISM_Tmax', 'PRISM_Tmin', 'PRISM_Precip',
                    'Ssebop_ETa', 'GRIDMET_wind_vel', 'GRIDMET_min_RH',
                    'MODIS_LAI', 'MODIS_NDVI', 'MODIS_Day_LST']
-remove_outlier = False
-outlier_upper_range = None
+remove_outlier = True
+outlier_upper_range = 140
 
-skip_train_test_split = True  ######
+skip_train_test_split = False  ######
 
 x_train, x_test, y_train, y_test = \
     split_train_val_test_set(input_csv=train_test_parquet_path, month_range=train_test_month_range,
@@ -140,9 +140,9 @@ lgbm_param_dict = {'n_estimators': 250,
 save_model_to_dir = '../../Eff_Precip_Model_Run/Model_trained'
 makedirs([save_model_to_dir])
 
-load_model = True
-save_model = False
-model_name = f'trial_effective_precip_{model_version}.joblib'
+load_model = False
+save_model = True
+model_name = f'effective_precip_{model_version}.joblib'
 
 lgbm_reg_trained = train_model(x_train=x_train, y_train=y_train, params_dict=lgbm_param_dict, model='lgbm', n_jobs=-1,
                                load_model=load_model, save_model=save_model, save_folder=save_model_to_dir,

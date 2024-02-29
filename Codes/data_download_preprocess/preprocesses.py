@@ -627,12 +627,19 @@ def sum_cropET_yearly_data(input_cropET_monthly_dir, output_dir_cropET_yearly, o
         makedirs([output_dir_cropET_yearly, output_dir_cropET_growing_season])
 
         for year in years:  # first loop for years
+            output_name = None
+
             # # for total years
             print(f'summing cropET data for year {year}...')
             openet_datasets = glob(os.path.join(input_cropET_monthly_dir, f'*{year}*.tif'))
 
+            if 'Irrigated' in openet_datasets[0]:
+                output_name = f'Irrigated_cropET_{year}.tif'
+            elif 'Rainfed' in openet_datasets[0]:
+                output_name = f'Rainfed_cropET_{year}.tif'
+
             # Summing raster for each growing season
-            summed_output_for_year = os.path.join(output_dir_cropET_yearly, f'Irrigated_cropET_{year}.tif')
+            summed_output_for_year = os.path.join(output_dir_cropET_yearly, output_name)
             sum_rasters(raster_list=openet_datasets, raster_dir=None, output_raster=summed_output_for_year,
                         ref_raster=openet_datasets[0])
 
@@ -642,7 +649,7 @@ def sum_cropET_yearly_data(input_cropET_monthly_dir, output_dir_cropET_yearly, o
                               glob(os.path.join(input_cropET_monthly_dir, f'*{year}_10*.tif'))
 
             # Summing raster for each growing season
-            summed_output_for_grow_season = os.path.join(output_dir_cropET_growing_season, f'Irrigated_cropET_{year}.tif')
+            summed_output_for_grow_season = os.path.join(output_dir_cropET_growing_season, output_name)
             sum_rasters(raster_list=openet_datasets, raster_dir=None, output_raster=summed_output_for_grow_season,
                         ref_raster=openet_datasets[0])
 

@@ -296,6 +296,7 @@ def create_monthly_effective_precip_rasters(trained_model, input_csv_dir, exclud
 
 
 def sum_monthly_effective_precip_rasters(years_list, monthly_effective_precip_dir,
+                                         irrigated_cropET_dir,
                                          grow_season_effective_precip_output_dir,
                                          skip_processing=False):
     """
@@ -303,7 +304,10 @@ def sum_monthly_effective_precip_rasters(years_list, monthly_effective_precip_di
 
     :param years_list: A list of years to process the data.
     :param monthly_effective_precip_dir: Directory path of model-generated effective precipitation rasters.
-    :param grow_season_effective_precip_output_dir: Directory path of summed growing season effective precipitation rasters.
+    :param irrigated_cropET_dir: Directory path of growing season irrigated cropET. Will be used to set 0 and no data
+                                 values to effective precipitation dataset.
+    :param grow_season_effective_precip_output_dir: Directory path of summed growing season effective
+    precipitation rasters.
     :param skip_processing: Set to True to skip this process.
 
     :return: None.
@@ -325,13 +329,11 @@ def sum_monthly_effective_precip_rasters(years_list, monthly_effective_precip_di
                     arr = read_raster_arr_object(raster, get_file=False)
                     sum_arr = np.nansum(np.dstack((sum_arr, arr)), axis=2)
 
-            # setting no data to values with 0
-            sum_arr = np.where(sum_arr > 0, sum_arr, -9999)
+            # # setting values over non-irrigated croplands to 0
+            irrig_cropET = glob(os.path.join(irrigated_cropET_dir, f'*{year}*.tif'))[0]
+            irrig_cropET_arr = read_raster_arr_object(irrig_cropET, get_file=False)
 
-            # some no data values were generated in monthly predictions due to missing predictor vaues
-            # this lead to very low values of growing season effective precip compared to sorroundings
-            # filtering out those values
-            sum_arr = np.where(sum_arr > 100, sum_arr, -9999)
+            sum_arr = np.where(np.isnan(irrig_cropET_arr), -9999, sum_arr)
 
             summed_raster = os.path.join(grow_season_effective_precip_output_dir, f'effective_precip_{year}.tif')
             write_array_to_raster(raster_arr=sum_arr, raster_file=file, transform=file.transform,

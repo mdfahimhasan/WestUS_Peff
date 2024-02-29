@@ -537,7 +537,6 @@ def make_lat_lon_array_from_raster(input_raster, nodata=-9999):
 
     returns: Lat, lon array with nan value (-9999) applied.
     """
-
     raster_file = rio.open(input_raster)
     raster_arr = raster_file.read(1)
 

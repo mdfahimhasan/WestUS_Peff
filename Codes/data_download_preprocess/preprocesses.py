@@ -228,7 +228,7 @@ def classify_irrigated_rainfed_cropland(rainfed_fraction_dir, irrigated_fraction
                                   output_path=output_irrigated_cropland_raster, dtype=np.int32)  # linux can't save data properly if dtype isn't np.int32 in this case
 
         ############################
-        # irrigated fraction data is also for 2000-2007. Classifying those data to irrigated cropland with defined threshold
+        # irrigated fraction data is also available for 2000-2007. Classifying those data to irrigated cropland with defined threshold
         # Also, extending rainfed cropland data for 2000-2007 using "maximum occurrence approach"
         years_rest_irrigated_frac_data = [2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007]
 
@@ -993,36 +993,3 @@ def run_all_preprocessing(skip_ssebop_processing=False,
                           output_path=os.path.join(lon_dir, 'Longitude.tif'))
     write_array_to_raster(raster_arr=lat_arr, raster_file=ref_file, transform=ref_file.transform,
                           output_path=os.path.join(lat_dir, 'Latitude.tif'))
-
-
-
-
-
-# input_monthly_precip_dir = '../../Data_main/Raster_data/PRISM_Precip/WestUS_monthly'
-# monthly_datasets = glob(os.path.join(input_monthly_precip_dir, '*.tif'))
-#
-# download_dir = '../../Data_main/Raster_data/PRISM_Precip/WestUS_prev_year'
-# makedirs([download_dir])
-#
-# years = (2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012,
-#          2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020)
-# months = list(range(1, 13))
-#
-# for year in years:
-#     prev_year = year - 1
-#     prev_year_months = [f'{prev_year}_4', f'{prev_year}_5', f'{prev_year}_6', f'{prev_year}_7', f'{prev_year}_8',
-#                         f'{prev_year}_9', f'{prev_year}_10', f'{prev_year}_11', f'{prev_year}_12',
-#                         f'{year}_1', f'{year}_2', f'{year}_3', f'{year}_4']
-#
-#     # We will collect all monthly datasets from previous and this year (April-April) to sum in an empty list
-#     monthly_raster_list_to_sum = []
-#
-#     for i in monthly_datasets:
-#         if any(k in i for k in prev_year_months):
-#             monthly_raster_list_to_sum.append(i)
-#
-#     summed_raster = os.path.join(download_dir, f'prism_precip_{prev_year}_{year}')
-#     sum_rasters(raster_list=monthly_raster_list_to_sum, output_raster=summed_raster, raster_dir=None, search_by='*.tif',
-#                 left_zone_ref_raster=WestUS_raster, nodata=no_data_value)
-
-

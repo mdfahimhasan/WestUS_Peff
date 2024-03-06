@@ -26,7 +26,7 @@ GEE_merging_refraster_large_grids = '../../Data_main/reference_rasters/GEE_mergi
 # # filtering training data
 training_zone_shapefile = '../../Data_main/shapefiles/Training_zones/effective_precip_training_zone.shp'
 output_dir = '../../Data_main/Raster_data/Rainfed_cropET_filtered_training'
-skip_effective_precip_training_data_filtering = True  ######
+skip_effective_precip_training_data_filtering = False  ######
 
 filter_effective_precip_training_data(training_zone_shp=training_zone_shapefile,
                                       general_output_dir=output_dir,
@@ -68,9 +68,9 @@ static_data_path_dict = {'Bulk_density': '../../Data_main/Raster_data/Bulk_densi
                          'Longitude': '../../Data_main/Raster_data/Longitude/WestUS'}
 
 train_test_years_list = [2016, 2017, 2018, 2019, 2020]
-total_month_range = (1, 12)  # considering all months for dataframe creation,
+total_month_range = (4, 10)  # considering all months for dataframe creation,
 # later will consider growing season for train-test split (4-10)
-model_version = 'v6'  ######
+model_version = 'v7'  ######
 print(f'Running model version {model_version}...')
 
 datasets_to_include = ['Effective_precip_train',
@@ -81,8 +81,8 @@ datasets_to_include = ['Effective_precip_train',
                        'Bulk_density', 'Clay_content', 'Field_capacity', 'Sand_content',
                        'AWC', 'DEM', 'Slope', 'Latitude', 'Longitude']
 
-skip_train_test_df_creation = True ######
-train_test_parquet_path = f'../../Eff_Precip_Model_Run/Model_csv/train_test.parquet'
+skip_train_test_df_creation = False  ######
+train_test_parquet_path = f'../../Eff_Precip_Model_Run/Model_csv/train_test{model_version}.parquet'
 
 makedirs([os.path.dirname(train_test_parquet_path)])
 
@@ -110,7 +110,7 @@ exclude_columns = ['year', 'Bulk_density', 'Clay_content', 'Slope',
 remove_outlier = False
 outlier_upper_range = None
 
-skip_train_test_split = True  ######
+skip_train_test_split = False  ######
 
 x_train, x_test, y_train, y_test = \
     split_train_val_test_set(input_csv=train_test_parquet_path, month_range=train_test_month_range,
@@ -140,8 +140,8 @@ lgbm_param_dict = {'n_estimators': 250,
 save_model_to_dir = '../../Eff_Precip_Model_Run/Model_trained'
 makedirs([save_model_to_dir])
 
-load_model = True
-save_model = False
+load_model = False
+save_model = True
 model_name = f'effective_precip_{model_version}.joblib'
 
 lgbm_reg_trained = train_model(x_train=x_train, y_train=y_train, params_dict=lgbm_param_dict, model='lgbm', n_jobs=-1,
@@ -211,7 +211,7 @@ density_grid_plot_of_same_vars(Y_pred=y_pred_test, Y_obsv=y_test.to_numpy().rave
                                x_label='Eff. Precip. Observed (mm/month)', y_label='Eff. Precip. Predicted (mm/month)',
                                plot_name=density_plot_name, savedir=plot_dir, bins=80)
 
-skip_plot_pdp = True  ######
+skip_plot_pdp = False  ######
 deg_unit = r'$^\circ$'
 features_in_pdp_plot = ['GRIDMET Precipitation (mm)', 'GRIDMET Reference ET (mm)',
                         'GRIDMET Mean Vapour Pressure Deficit (kpa)',
@@ -224,7 +224,7 @@ create_pdplots(trained_model=lgbm_reg_trained, x_train=x_train,
                features_to_include=features_in_pdp_plot, output_dir=plot_dir,
                plot_name=f'pdp_{model_version}.tif', skip_processing=skip_plot_pdp)
 
-skip_plot_perm_import = True  ######
+skip_plot_perm_import = False  ######
 plot_permutation_importance(trained_model=lgbm_reg_trained, x_test=x_test, y_test=y_test,
                             exclude_columns=None, output_dir=plot_dir, plot_name=f'perm_import_{model_version}',
                             skip_processing=skip_plot_perm_import)
@@ -245,7 +245,7 @@ datasets_to_include_month_predictors = ['MODIS_Day_LST', 'MODIS_LAI', 'MODIS_NDV
 predictor_years = [2016, 2017, 2018, 2019, 2020]
 
 monthly_predictor_csv_dir = '../../Eff_Precip_Model_Run/Model_csv/monthly_predictors'
-skip_prcessing_monthly_predictor_dataframe = True
+skip_prcessing_monthly_predictor_dataframe = False
 create_monthly_dataframes_for_eff_precip_prediction(years_list=predictor_years,
                                                     month_range=(4, 10),
                                                     monthly_data_path_dict=monthly_data_path_dict,
@@ -258,7 +258,7 @@ create_monthly_dataframes_for_eff_precip_prediction(years_list=predictor_years,
 # # Creating nan position dict for irrigated cropET (westUS)
 irrigated_cropET_monthly_dir = '../../Data_main/Raster_data/Irrigated_cropET/WestUS_monthly'
 output_dir_nan_pos = '../../Eff_Precip_Model_Run/Model_csv/nan_pos_irrigated_cropET'
-skip_processing_nan_pos_irrig_cropET = True
+skip_processing_nan_pos_irrig_cropET = False
 
 create_nan_pos_dict_for_irrigated_cropET(irrigated_cropET_dir=irrigated_cropET_monthly_dir,
                                          output_dir=output_dir_nan_pos,
@@ -271,7 +271,7 @@ exclude_columns = ['Bulk_density', 'Clay_content',
                    'MODIS_LAI', 'MODIS_NDVI', 'MODIS_Day_LST']
 
 effective_precip_monthly_output_dir = f'../../Data_main/Raster_data/Effective_precip_prediction_WestUS/{model_version}_monthly'
-skip_estimate_monthly_eff_precip_WestUS = True
+skip_estimate_monthly_eff_precip_WestUS = False
 create_monthly_effective_precip_rasters(trained_model=lgbm_reg_trained, input_csv_dir=monthly_predictor_csv_dir,
                                         exclude_columns=exclude_columns,
                                         irrig_cropET_nan_pos_dir=output_dir_nan_pos, ref_raster=WestUS_raster,

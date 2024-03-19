@@ -49,7 +49,7 @@ print('# # # # #  STEP 3 # # # # #')
 HUC12_shapefile_with_tot_SW_irrigation = '../../Data_main/USGS_water_use_data/USGS_new_wateruse_data_HUC12/HUC12_WestUS_Annual_SW_irrig_cropET.shp'
 original_irrig_cropET_grow_season_dir = '../../Data_main/Raster_data/Canal_coverage/irrigated_cropET_with_canal_cover'
 sw_dist_outdir = '../../Data_main/Raster_data/SW_irrigation'
-skip_sw_dist = False  ######
+skip_sw_dist = True  ######
 
 distribute_SW_irrigation_to_pixels(years_list=years_list, HUC12_shapefile=HUC12_shapefile_with_tot_SW_irrigation,
                                    irrigated_CropET_with_canal_coverage_dir=original_irrig_cropET_grow_season_dir,

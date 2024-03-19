@@ -12,7 +12,7 @@ from os.path import dirname, abspath
 sys.path.insert(0, dirname(dirname(dirname(abspath(__file__)))))
 
 from Codes.utils.system_ops import makedirs
-from Codes.utils.raster_ops import read_raster_arr_object
+from Codes.utils.raster_ops import read_raster_arr_object, clip_resample_reproject_raster, mosaic_rasters_from_directory
 
 # ee.Authenticate()
 
@@ -35,6 +35,7 @@ def get_openet_gee_dict(data_name):
     ee.Initialize(opt_url='https://earthengine-highvolume.googleapis.com')
 
     gee_data_dict = {
+        'OpenET_ensemble': 'OpenET/ENSEMBLE/CONUS/GRIDMET/MONTHLY/v2_0',
         'Irrig_crop_OpenET_IrrMapper': 'OpenET/ENSEMBLE/CONUS/GRIDMET/MONTHLY/v2_0',
         'Irrig_crop_OpenET_LANID': 'OpenET/ENSEMBLE/CONUS/GRIDMET/MONTHLY/v2_0',
         'Rainfed_crop_OpenET_IrrMapper': 'OpenET/ENSEMBLE/CONUS/GRIDMET/MONTHLY/v2_0',
@@ -50,6 +51,7 @@ def get_openet_gee_dict(data_name):
     }
 
     gee_band_dict = {
+        'OpenET_ensemble': 'et_ensemble_mad',
         'Irrig_crop_OpenET_IrrMapper': 'et_ensemble_mad',  # unit in mm, monthly total
         'Irrig_crop_OpenET_LANID': 'et_ensemble_mad',  # unit in mm, monthly total
         'Rainfed_crop_OpenET_IrrMapper': 'et_ensemble_mad',  # unit in mm, monthly total
@@ -59,13 +61,13 @@ def get_openet_gee_dict(data_name):
         'LANID': None,  # The data holds annual datasets in separate band. Will process it out separately
         'Irrigation_Frac_IrrMapper': 'classification',
         'AIM-HPA': None,
-        'Irrigation_Frac_LANID': None,
-        # The data holds annual datasets in separate band. Will process it out separately
+        'Irrigation_Frac_LANID': None, # The data holds annual datasets in separate band. Will process it out separately
         'Rainfed_Frac_IrrMapper': 'classification',
         'Rainfed_Frac_LANID': None  # The data holds annual datasets in separate band. Will process it out separately
     }
 
     gee_scale_dict = {
+        'OpenET_ensemble': 1,
         'Irrig_crop_OpenET_IrrMapper': 1,
         'Irrig_crop_OpenET_LANID': 1,
         'Rainfed_crop_OpenET_IrrMapper': 1,
@@ -81,6 +83,7 @@ def get_openet_gee_dict(data_name):
     }
 
     aggregation_dict = {
+        'OpenET_ensemble': ee.Reducer.mean(), # monthly data; doesn't matter whether use mean()or sum() as reducer. Change for yearly data download if needed.
         'Irrig_crop_OpenET_IrrMapper': ee.Reducer.sum(),
         'Irrig_crop_OpenET_LANID': ee.Reducer.sum(),
         # as the data is downloaded at monthly resolution, setting mean/median/max as reducer won't make any difference. Setting it as sum() as it can be used for yearly aggregation
@@ -102,6 +105,7 @@ def get_openet_gee_dict(data_name):
     # In most cases the end date is shifted a month later to cover the end month's data
 
     month_start_date_dict = {
+        'OpenET_ensemble': datetime(2016, 1, 1),
         'Irrig_crop_OpenET_IrrMapper': datetime(2016, 1, 1),
         'Irrig_crop_OpenET_LANID': datetime(2016, 1, 1),
         'Rainfed_crop_OpenET_IrrMapper': datetime(2016, 1, 1),
@@ -117,21 +121,23 @@ def get_openet_gee_dict(data_name):
     }
 
     month_end_date_dict = {
-        'Irrig_crop_OpenET_IrrMapper': datetime(2021, 1, 1),
-        'Irrig_crop_OpenET_LANID': datetime(2021, 1, 1),
-        'Rainfed_crop_OpenET_IrrMapper': datetime(2021, 1, 1),
-        'Rainfed_crop_OpenET_LANID': datetime(2021, 1, 1),
-        'USDA_CDL': datetime(2022, 1, 1),
-        'IrrMapper': datetime(2020, 1, 1),
+        'OpenET_ensemble': datetime(2022, 12, 1),
+        'Irrig_crop_OpenET_IrrMapper': datetime(2023, 1, 1),
+        'Irrig_crop_OpenET_LANID': datetime(2023, 1, 1),
+        'Rainfed_crop_OpenET_IrrMapper': datetime(2023, 1, 1),
+        'Rainfed_crop_OpenET_LANID': datetime(2023, 1, 1),
+        'USDA_CDL': datetime(2023, 1, 1),
+        'IrrMapper': datetime(2024, 1, 1),
         'LANID': None,
         'AIM-HPA': None,
-        'Irrigation_Frac_IrrMapper': datetime(2020, 1, 1),
+        'Irrigation_Frac_IrrMapper': datetime(2024, 1, 1),
         'Irrigation_Frac_LANID': None,
-        'Rainfed_Frac_IrrMapper': datetime(2020, 1, 1),
+        'Rainfed_Frac_IrrMapper': datetime(2024, 1, 1),
         'Rainfed_Frac_LANID': None
     }
 
     year_start_date_dict = {
+        'OpenET_ensemble': datetime(2016, 1, 1),
         'Irrig_crop_OpenET_IrrMapper': datetime(2016, 1, 1),
         'Irrig_crop_OpenET_LANID': datetime(2016, 1, 1),
         'Rainfed_crop_OpenET_IrrMapper': datetime(2016, 1, 1),
@@ -147,17 +153,18 @@ def get_openet_gee_dict(data_name):
     }
 
     year_end_date_dict = {
-        'Irrig_crop_OpenET_IrrMapper': datetime(2021, 1, 1),
-        'Irrig_crop_OpenET_LANID': datetime(2021, 1, 1),
-        'Rainfed_crop_OpenET_IrrMapper': datetime(2021, 1, 1),
-        'Rainfed_crop_OpenET_LANID': datetime(2021, 1, 1),
-        'USDA_CDL': datetime(2022, 1, 1),
-        'IrrMapper': datetime(2021, 1, 1),
+        'OpenET_ensemble': datetime(2023, 1, 1),
+        'Irrig_crop_OpenET_IrrMapper': datetime(2023, 1, 1),
+        'Irrig_crop_OpenET_LANID': datetime(2023, 1, 1),
+        'Rainfed_crop_OpenET_IrrMapper': datetime(2023, 1, 1),
+        'Rainfed_crop_OpenET_LANID': datetime(2023, 1, 1),
+        'USDA_CDL': datetime(2023, 1, 1),
+        'IrrMapper': datetime(2024, 1, 1),
         'LANID': None,
         'AIM-HPA': None,
-        'Irrigation_Frac_IrrMapper': datetime(2021, 1, 1),
+        'Irrigation_Frac_IrrMapper': datetime(2024, 1, 1),
         'Irrigation_Frac_LANID': None,
-        'Rainfed_Frac_IrrMapper': datetime(2021, 1, 1),
+        'Rainfed_Frac_IrrMapper': datetime(2024, 1, 1),
         'Rainfed_Frac_LANID': None
     }
 
@@ -222,6 +229,142 @@ def download_data_from_GEE_by_multiprocess(download_urls_fp_list, use_cpu=2):
     pool.join()
 
 
+def download_openet_ensemble_monthly(download_dir, year_list, month_range, merge_keyword, grid_shape,
+                                     use_cpu_while_multidownloading=15, refraster_westUS=WestUS_raster,
+                                     refraster_gee_merge=GEE_merging_refraster_large_grids, westUS_shape=WestUS_shape):
+    """
+    Download openET ensemble data (at monthly scale) from GEE.
+
+    :param download_dir: File path of download directory.
+    :param year_list: List of year_list to download data for.
+    :param month_range: Tuple of month ranges to download data for, e.g., for months 1-12 use (1, 12).
+    :param merge_keyword: Keyword to use for merging downloaded data. Suggested 'WestUS'/'Conus'.
+    :param grid_shape: File path of grid shape for which data will be downloaded and mosaicked.
+    :param use_cpu_while_multidownloading: Number (Int) of CPU cores to use for multi-download by
+                                           multi-processing/multi-threading. Default set to 15.
+    :param refraster_westUS: Reference raster to clip/save data for WestUS extent.
+    :param refraster_gee_merge: Reference raster to use for merging downloaded datasets from GEE. The merged
+                                datasets have to be clipped for Western US ROI.
+    :param westUS_shape: Filepath of West US shapefile.
+
+    :return: None.
+    """
+    ee.Initialize(opt_url='https://earthengine-highvolume.googleapis.com')
+    download_dir = os.path.join(download_dir, 'OpenET_ensemble')
+    makedirs([download_dir])
+
+    # Extracting dataset information required for downloading from GEE
+    data, band, multiply_scale, reducer, month_start_range, month_end_range, \
+    year_start_range, year_end_range = get_openet_gee_dict('OpenET_ensemble')
+
+    # Loading grid files to be used for data download
+    grids = gpd.read_file(grid_shape)
+    grids = grids.sort_values(by='grid_no', ascending=True)
+    grid_geometry = grids['geometry']
+    grid_no = grids['grid_no']
+
+    month_list = [m for m in range(month_range[0], month_range[1] + 1)]  # creating list of months
+
+    for year in year_list:  # first loop for year_list
+        for month in month_list:  # second loop for months
+            print('********')
+            print(f'Getting data urls for year={year}, month={month}.....')
+
+            # Setting date ranges
+            start_date = ee.Date.fromYMD(year, month, 1)
+            start_date_dt = datetime(year, month, 1)
+
+            if month < 12:
+                end_date = ee.Date.fromYMD(year, month + 1, 1)
+                end_date_dt = datetime(year, month + 1, 1)
+
+            else:
+                end_date = ee.Date.fromYMD(year + 1, 1, 1)  # for month 12 moving end date to next year
+                end_date_dt = datetime(year + 1, 1, 1)
+
+            # a condition to check whether start and end date falls in the available data range in GEE
+            # if not the block will not be executed
+            if (start_date_dt >= month_start_range) & (end_date_dt <= month_end_range):
+                # will collect url and file name in url list and local_file_paths_list
+                data_url_list = []
+                local_file_paths_list = []
+
+                for i in range(len(grid_no)):  # third loop for grids
+                    # converting grid geometry info to a GEE extent
+                    grid_sr = grid_no[i]
+                    roi = grid_geometry[i].bounds
+                    gee_extent = ee.Geometry.Rectangle(roi)
+
+                    download_data = ee.ImageCollection(data).select(band).filterDate(start_date, end_date). \
+                            filterBounds(gee_extent).reduce(reducer).multiply(multiply_scale).toFloat()
+
+                    # Getting Data URl for each grid from GEE
+                    # The GEE connection gets disconnected sometimes, therefore, we adding the try-except block to
+                    # retry failed connections
+                    try:
+                        data_url = download_data.getDownloadURL({'name': 'OpenET_ensemble',
+                                                                 'crs': 'EPSG:4269',  # NAD83
+                                                                 'scale': 2200,  # in meter. equal to ~0.02 deg
+                                                                 'region': gee_extent,
+                                                                 'format': 'GEO_TIFF'})
+                    except:
+                        data_url = download_data.getDownloadURL({'name': 'OpenET_ensemble',
+                                                                 'crs': 'EPSG:4269',  # NAD83
+                                                                 'scale': 2200,  # in meter. equal to ~0.02 deg
+                                                                 'region': gee_extent,
+                                                                 'format': 'GEO_TIFF'})
+
+                    key_word = 'OpenET_ensemble'
+                    local_file_path = os.path.join(download_dir,
+                                                   f'{key_word}_{str(year)}_{str(month)}_{str(grid_sr)}.tif')
+
+                    # Appending data url and local file path (to save data) to a central list
+                    data_url_list.append(data_url)
+                    local_file_paths_list.append(local_file_path)
+
+                    # The GEE connection gets disconnected sometimes, therefore, we download the data in batches when
+                    # there is enough data url gathered for download.
+                    if (len(data_url_list) == 120) | (
+                            i == len(grid_no) - 1):  # downloads data when one of the conditions are met
+                        # Combining url and file paths together to pass in multiprocessing
+                        urls_to_file_paths_compile = []
+                        for j, k in zip(data_url_list, local_file_paths_list):
+                            urls_to_file_paths_compile.append([j, k])
+
+                        # Download data by multi-processing/multi-threading
+                        download_data_from_GEE_by_multiprocess(download_urls_fp_list=urls_to_file_paths_compile,
+                                                               use_cpu=use_cpu_while_multidownloading)
+
+                        # After downloading some data in a batch, we empty the data_utl_list and local_file_paths_list.
+                        # The empty lists will gather some new urls and file paths, and download a new batch of datasets
+                        data_url_list = []
+                        local_file_paths_list = []
+
+                mosaic_name = f'OpenET_ensemble_{year}_{month}.tif'
+                mosaic_dir = os.path.join(download_dir, f'{merge_keyword}', 'merged')
+                clip_dir = os.path.join(download_dir, f'{merge_keyword}')
+
+                makedirs([clip_dir, mosaic_dir])
+                search_by = f'*{year}_{month}*.tif'
+                merged_arr, merged_raster = mosaic_rasters_from_directory(input_dir=download_dir,
+                                                                          output_dir=mosaic_dir,
+                                                                          raster_name=mosaic_name,
+                                                                          ref_raster=refraster_gee_merge,
+                                                                          search_by=search_by,
+                                                                          nodata=no_data_value)
+
+                clip_resample_reproject_raster(input_raster=merged_raster, input_shape=westUS_shape,
+                                               output_raster_dir=clip_dir, clip_and_resample=True,
+                                               use_ref_width_height=False, resolution=model_res,
+                                               ref_raster=refraster_westUS)
+
+                print('OpenET_ensemble monthly data downloaded and merged')
+
+            else:
+                print(f'Data for year {year}, month {month} is out of range. Skipping query')
+                pass
+
+
 def download_Irr_frac_from_IrrMapper_yearly(data_name, download_dir, year_list, grid_shape,
                                             use_cpu_while_multidownloading=15):
     """
@@ -232,20 +375,19 @@ def download_Irr_frac_from_IrrMapper_yearly(data_name, download_dir, year_list, 
 
     ########################
     # READ ME (for Irrigation Data)
-    IrrMapper Data is available for WA, OR, CA, ID, NV, UT, AZ, MT, WY, CO, and NM (11 states) for 2000-2020,
-    whereas LANID data consists datasets of these 11 states and ND, SD, OK, KS, NE, and TX (06 states) for 1997-2017.
-    Our target year is 2000-2020. As LANID data isn't available for all the years we are using IrrMapper data as
-    irrigated cropland data for 2000-2020 for the available 11 states' data (also it's available in GEE already).
-    For the other 06 states, we clipped LANID data and compiled them as a GEE asset for 2000-2020 (2018-2020 data
-    considered the same as 2017 data to fill the missing values). In summary, for WA, OR, CA, ID, NV, UT, AZ, MT, WY,
-    CO, and NM (11 states) the irrigated field data comes from IrrMapper and for ND, SD, OK, KS, NE, and TX the
-    irrigated field data comes from LANID.
+    IrrMapper Data is available for WA, OR, CA, ID, NV, UT, AZ, MT, WY, CO, and NM (11 states) for 2000-2023,
+    whereas LANID data consists datasets these 11 states and of ND, SD, OK, KS, NE, and TX (06 states) for 1997-2020.
+    Our target year is 2000-2020. We are using IrrMapper data as irrigated cropland data for 2000-2020 for the available
+    11 states' data (also it's available in GEE already). For the other 06 states, we clipped LANID data and compiled
+    them as a GEE asset for 2000-2020. In summary, for WA, OR, CA, ID, NV, UT, AZ, MT, WY, CO, and NM (11 states)
+    the irrigated field data comes from IrrMapper and for ND, SD, OK, KS, NE, and TX the irrigated field data comes from
+    LANID. Also, adding AIM-HPA data with LANID to pick up irrigated fields that are unseen/undetected in LANID data.
     ########################
 .
     :param data_name: Data name which will be used to extract GEE path, band, reducer, valid date range info from
                      get_gee_dict() function. Current valid data name is - ['Irrigation_Frac_IrrMapper']
     :param download_dir: File path of download directory.
-    :param year_list: List of years to download data for.
+    :param year_list: List of year_list to download data for.
     :param grid_shape: File path of grid shape for which data will be downloaded and mosaicked.
     :param use_cpu_while_multidownloading: Number (Int) of CPU cores to use for multi-download by
                                            multi-processing/multi-threading. Default set to 15.
@@ -265,7 +407,7 @@ def download_Irr_frac_from_IrrMapper_yearly(data_name, download_dir, year_list, 
     grid_geometry = grids['geometry']
     grid_no = grids['grid_no']
 
-    for year in year_list:  # first loop for years
+    for year in year_list:  # first loop for year_list
         print('********')
         print(f'Getting data urls for year={year}.....')
         start_date_dt = datetime(year, 1, 1)
@@ -358,27 +500,25 @@ def download_Irr_frac_from_LANID_yearly(data_name, download_dir, year_list, grid
                                         use_cpu_while_multidownloading=2):
     """
     Download LANID + AIM-HPA Irrigated fraction data (at 2km scale) at yearly scale from GEE for 6 states in
-    the Western US ND, SD, OK, KS, NE, and TX for 2000-2020.
+    the Western US ND, SD, OK, KS, NE, and TX for 2000-2023.
     *** For downloading irrigated fraction data for WA, OR, CA, ID, NV, UT, AZ, MT, WY, CO, and NM use
     download_Irr_frac_from_IrrMapper_yearly() function.
 
     ########################
     # READ ME (for Irrigation Data)
-    IrrMapper Data is available for WA, OR, CA, ID, NV, UT, AZ, MT, WY, CO, and NM (11 states) for 2000-2020,
-    whereas LANID data consists datasets of these 11 states and ND, SD, OK, KS, NE, and TX (06 states) for 1997-2017.
-    Our target year is 2000-2020. As LANID data isn't available for all the years we are using IrrMapper data as
-    irrigated cropland data for 2000-2020 for the available 11 states' data (also it's available in GEE already).
-    For the other 06 states, we clipped LANID data and compiled them as a GEE asset for 2000-2020 (2018-2020 data
-    considered the same as 2017 data to fill the missing values). In summary, for WA, OR, CA, ID, NV, UT, AZ, MT, WY,
-    CO, and NM (11 states) the irrigated field data comes from IrrMapper and for ND, SD, OK, KS, NE, and TX the
-    irrigated field data comes from LANID. Also, adding AIM-HPA data with LANID to pick up irrigated fields that are
-    unseen/undetected in LANID data.
+    IrrMapper Data is available for WA, OR, CA, ID, NV, UT, AZ, MT, WY, CO, and NM (11 states) for 2000-2023,
+    whereas LANID data consists datasets these 11 states and of ND, SD, OK, KS, NE, and TX (06 states) for 1997-2020.
+    Our target year is 2000-2020. We are using IrrMapper data as irrigated cropland data for 2000-2020 for the available
+    11 states' data (also it's available in GEE already). For the other 06 states, we clipped LANID data and compiled
+    them as a GEE asset for 2000-2020. In summary, for WA, OR, CA, ID, NV, UT, AZ, MT, WY, CO, and NM (11 states)
+    the irrigated field data comes from IrrMapper and for ND, SD, OK, KS, NE, and TX the irrigated field data comes from
+    LANID. Also, adding AIM-HPA data with LANID to pick up irrigated fields that are unseen/undetected in LANID data.
     ########################
 .
     :param data_name: Data name which will be used to extract GEE path, band, reducer, valid date range info from
                      get_gee_dict() function. Current valid data name is - ['Irrigation_Frac_LANID']
     :param download_dir: File path of download directory.
-    :param year_list: List of years to download data for.
+    :param year_list: List of year_list to download data for.
     :param grid_shape: File path of grid shape for which data will be downloaded and mosaicked.
     :param use_cpu_while_multidownloading: Number (Int) of CPU cores to use for multi-download by
                                            multi-processing/multi-threading. Default set to 15.
@@ -412,7 +552,7 @@ def download_Irr_frac_from_LANID_yearly(data_name, download_dir, year_list, grid
     grid_geometry = grids['geometry']
     grid_no = grids['grid_no']
 
-    for year in year_list:  # first loop for years
+    for year in year_list:  # first loop for year_list
         print('********')
         print(f'Getting data urls for year={year}.....')
 
@@ -511,20 +651,20 @@ def download_CropET_from_OpenET_IrrMapper_monthly(data_name, download_dir, year_
 
     ########################
     # READ ME (for Irrigation Data)
-    IrrMapper Data is available for WA, OR, CA, ID, NV, UT, AZ, MT, WY, CO, and NM (11 states) for 2000-2020,
-    whereas LANID data consists datasets of these 11 states and ND, SD, OK, KS, NE, and TX (06 states) for 1997-2017.
-    Our target year is 2000-2020. As LANID data isn't available for all the years we are using IrrMapper data as
-    irrigated cropland data for 2000-2020 for the available 11 states' data (also it's available in GEE already).
-    For the other 06 states, we clipped LANID data and compiled them as a GEE asset for 2000-2020 (2018-2020 data
-    considered the same as 2017 data to fill the missing values). In summary, for WA, OR, CA, ID, NV, UT, AZ, MT, WY,
-    CO, and NM (11 states) the irrigated field data comes from IrrMapper and for ND, SD, OK, KS, NE, and TX the
-    irrigated field data comes from LANID.
+    IrrMapper Data is available for WA, OR, CA, ID, NV, UT, AZ, MT, WY, CO, and NM (11 states) for 2000-2023,
+    whereas LANID data consists datasets these 11 states and of ND, SD, OK, KS, NE, and TX (06 states) for 1997-2020.
+    Our target year is 2000-2020. We are using IrrMapper data as irrigated cropland data for 2000-2020 for the available
+    11 states' data (also it's available in GEE already). For the other 06 states, we clipped LANID data and compiled
+    them as a GEE asset for 2000-2020. In summary, for WA, OR, CA, ID, NV, UT, AZ, MT, WY, CO, and NM (11 states)
+    the irrigated field data comes from IrrMapper and for ND, SD, OK, KS, NE, and TX the irrigated field data comes from
+    LANID. Also, adding AIM-HPA data with LANID to pick up irrigated fields that are unseen/undetected in LANID data.
+    As both LANID and AIM-HPA have data upto 2020, considering 2020 data as 2021-2020 datasets.
     ########################
 
     :param data_name: Data name which will be used to extract GEE path, band, reducer, valid date range info from
                      get_gee_dict() function. Current valid data name is - ['Irrig_crop_OpenET_IrrMapper']
     :param download_dir: File path of download directory.
-    :param year_list: List of years to download data for. Should be within 2016 to 2020.
+    :param year_list: List of year_list to download data for. Should be within 2016 to 2020.
     :param month_range: Tuple of month ranges to download data for, e.g., for months 1-12 use (1, 12).
     :param grid_shape: File path of grid shape for which data will be downloaded and mosaicked.
     :param scale: Resolution (in m) at which data will be downloaded from earth engine. Default set to 2200 m.
@@ -552,7 +692,7 @@ def download_CropET_from_OpenET_IrrMapper_monthly(data_name, download_dir, year_
     # creating list of months
     month_list = [m for m in range(month_range[0], month_range[1] + 1)]
 
-    for year in year_list:  # first loop for years
+    for year in year_list:  # first loop for year_list
         # # IrrMapper data for the year
         # In IrrMapper dataset irrigated fields are assigned as 0
         # Converting the irrigated values to 1 and setting others as nan
@@ -665,21 +805,20 @@ def download_CropET_from_OpenET_LANID_monthly(data_name, download_dir, year_list
 
     ########################
     # READ ME (for Irrigation Data)
-    IrrMapper Data is available for WA, OR, CA, ID, NV, UT, AZ, MT, WY, CO, and NM (11 states) for 2000-2020,
-    whereas LANID data consists datasets of these 11 states and ND, SD, OK, KS, NE, and TX (06 states) for 1997-2017.
-    Our target year is 2000-2020. As LANID data isn't available for all the years we are using IrrMapper data as
-    irrigated cropland data for 2000-2020 for the available 11 states' data (also it's available in GEE already).
-    For the other 06 states, we clipped LANID data and compiled them as a GEE asset for 2000-2020 (2018-2020 data
-    considered the same as 2017 data to fill the missing values). In summary, for WA, OR, CA, ID, NV, UT, AZ, MT, WY,
-    CO, and NM (11 states) the irrigated field data comes from IrrMapper and for ND, SD, OK, KS, NE, and TX the
-    irrigated field data comes from LANID.  Also, adding AIM-HPA data with LANID to pick up irrigated fields that are
-    unseen/undetected in LANID data.
+    IrrMapper Data is available for WA, OR, CA, ID, NV, UT, AZ, MT, WY, CO, and NM (11 states) for 2000-2023,
+    whereas LANID data consists datasets these 11 states and of ND, SD, OK, KS, NE, and TX (06 states) for 1997-2020.
+    Our target year is 2000-2020. We are using IrrMapper data as irrigated cropland data for 2000-2020 for the available
+    11 states' data (also it's available in GEE already). For the other 06 states, we clipped LANID data and compiled
+    them as a GEE asset for 2000-2020. In summary, for WA, OR, CA, ID, NV, UT, AZ, MT, WY, CO, and NM (11 states)
+    the irrigated field data comes from IrrMapper and for ND, SD, OK, KS, NE, and TX the irrigated field data comes from
+    LANID. Also, adding AIM-HPA data with LANID to pick up irrigated fields that are unseen/undetected in LANID data.
+    As both LANID and AIM-HPA have data upto 2020, considering 2020 data as 2021-2020 datasets.
     ########################
 
     :param data_name: Data name which will be used to extract GEE path, band, reducer, valid date range info from
                      get_gee_dict() function. Current valid data name is - ['Irrig_crop_OpenET_LANID']
     :param download_dir: File path of download directory.
-    :param year_list: List of years to download data for. Should be within 2016 to 2020.
+    :param year_list: List of year_list to download data for. Should be within 2016 to 2020.
     :param month_range: Tuple of month ranges to download data for, e.g., for months 1-12 use (1, 12).
     :param grid_shape: File path of grid shape for which data will be downloaded and mosaicked.
     :param scale: Resolution (in m) at which data will be downloaded from earth engine. Default set to 2200 m.
@@ -722,7 +861,7 @@ def download_CropET_from_OpenET_LANID_monthly(data_name, download_dir, year_list
     # creating list of months
     month_list = [m for m in range(month_range[0], month_range[1] + 1)]
 
-    for year in year_list:  # first loop for years
+    for year in year_list:  # first loop for year_list
         # # LANID data for the year
         # In LANID dataset irrigated fields are assigned as 1
         lanid_band = lanid_data_band_dict[year]
@@ -849,12 +988,12 @@ def download_Rainfed_frac_from_IrrMapper_yearly(data_name, download_dir, year_li
     ########################
     # READ ME (for Rainfed Data)
     The rainfed fields/pixels dataset has been created combining CDL cropland data with IrrMapper and LANID datasets.
-    IrrMapper data is available for WA, OR, CA, ID, NV, UT, AZ, MT, WY, CO, and NM (11 states) for 2000-2020, whereas,
-    LANID data consists datasets of these 11 states and ND, SD, OK, KS, NE, and TX (06 states) for 1997-2017
-    (extrapolated for 2018-2020 considering them the same as 2017 data). The CDL data for entire CONUS is available from
-     2008. Therefore, we have to create rainfed field/pixel data in multiple steps-
+    IrrMapper data is available for WA, OR, CA, ID, NV, UT, AZ, MT, WY, CO, and NM (11 states) for 2000-2023, whereas,
+    LANID data consists datasets of these 11 states and ND, SD, OK, KS, NE, and TX (06 states) for 1997-2020.
+    The CDL data for entire CONUS is available from 2008. Therefore, we have to create rainfed field/pixel data in
+    multiple steps-
         1. Combine CDL cropland and IrrMapper to get rainfed data for WA, OR, CA, ID, NV, UT, AZ, MT, WY, CO, and NM
-            (11 states) for 2008-2020
+            (11 states) for 2008-2020.
         2. Combine CDL cropland and LANID to get rainfed data for ND, SD, OK, KS, NE, and TX (06 states) for 2008-2020
         3. Download rainfed field data (or fraction of rainfed field in each 2km pixel) for 2008-2020 from GEE and do
             binary classification (1- rainfed, 0- irrigated/some other type)
@@ -863,7 +1002,7 @@ def download_Rainfed_frac_from_IrrMapper_yearly(data_name, download_dir, year_li
     :param data_name: Data name which will be used to extract GEE path, band, reducer, valid date range info from
                      get_gee_dict() function. Current valid data name is - ['Rainfed_Frac_IrrMapper']
     :param download_dir: File path of download directory.
-    :param year_list: List of years to download data for. Should be within 2016 to 2020.
+    :param year_list: List of year_list to download data for. Should be within 2016 to 2020.
     :param grid_shape: File path of grid shape for which data will be downloaded and mosaicked.
     :param scale: Resolution (in m) at which data will be downloaded from earth engine. Default set to 2200 m.
     :param use_cpu_while_multidownloading: Number (Int) of CPU cores to use for multi-download by
@@ -886,7 +1025,7 @@ def download_Rainfed_frac_from_IrrMapper_yearly(data_name, download_dir, year_li
     grid_geometry = grids['geometry'].tolist()
     grid_no = grids['grid_no'].tolist()
 
-    for year in year_list:  # first loop for years
+    for year in year_list:  # first loop for year_list
         print('********')
         print(f'Getting data urls for year={year}.....')
 
@@ -1012,14 +1151,14 @@ def download_Rainfed_frac_from_LANID_yearly(data_name, download_dir, year_list, 
 
     ########################
     # READ ME (for Rainfed Data)
-    The rainfed fields/pixels dataset has been created combining CDL cropland data with IrrMapper and LANID + AIM-HPA
-    datasets. IrrMapper data is available for WA, OR, CA, ID, NV, UT, AZ, MT, WY, CO, and NM (11 states) for 2000-2020,
-    whereas, LANID+AIM-HPA data consists datasets of ND, SD, OK, KS, NE, and TX (06 states) for 1997-2020. The CDL data
-    for entire CONUS is available from 2008. Therefore, we have to create rainfed field/pixel data in multiple steps.
+    The rainfed fields/pixels dataset has been created combining CDL cropland data with IrrMapper and LANID datasets.
+    IrrMapper data is available for WA, OR, CA, ID, NV, UT, AZ, MT, WY, CO, and NM (11 states) for 2000-2023, whereas,
+    LANID data consists datasets of these 11 states and ND, SD, OK, KS, NE, and TX (06 states) for 1997-2020.
+    The CDL data for entire CONUS is available from 2008. Therefore, we have to create rainfed field/pixel data in
+    multiple steps-
         1. Combine CDL cropland and IrrMapper to get rainfed data for WA, OR, CA, ID, NV, UT, AZ, MT, WY, CO, and NM
-            (11 states) for 2008-2020
-        2. Combine LANID+AIM-HPA data and compare with CDL cropland rainfed data for ND, SD, OK, KS, NE, and TX
-            (06 states) for 2008-2020
+            (11 states) for 2008-2020.
+        2. Combine CDL cropland and LANID to get rainfed data for ND, SD, OK, KS, NE, and TX (06 states) for 2008-2020
         3. Download rainfed field data (or fraction of rainfed field in each 2km pixel) for 2008-2020 from GEE and do
             binary classification (1- rainfed, 0- irrigated/some other type)
         4. Extend rainfed data for 2000-2007 by maximum occurrence approach.
@@ -1028,7 +1167,7 @@ def download_Rainfed_frac_from_LANID_yearly(data_name, download_dir, year_list, 
     :param data_name: Data name which will be used to extract GEE path, band, reducer, valid date range info from
                      get_gee_dict() function. Current valid data name is - ['Rainfed_Frac_LANID']
     :param download_dir: File path of download directory.
-    :param year_list: List of years to download data for. Should be within 2016 to 2020.
+    :param year_list: List of year_list to download data for. Should be within 2016 to 2020.
     :param grid_shape: File path of grid shape for which data will be downloaded and mosaicked.
     :param scale: Resolution (in m) at which data will be downloaded from earth engine. Default set to 2200 m.
     :param use_cpu_while_multidownloading: Number (Int) of CPU cores to use for multi-download by
@@ -1048,6 +1187,7 @@ def download_Rainfed_frac_from_LANID_yearly(data_name, download_dir, year_list, 
                             2012: 'lanid_2012', 2013: 'lanid_2013', 2014: 'lanid_2014', 2015: 'lanid_2015',
                             2016: 'lanid_2016', 2017: 'lanid_2017', 2018: 'lanid_2018', 2019: 'lanid_2019',
                             2020: 'lanid_2020'}
+
     aim_hpa_asset, _, _, _, _, _, _, _ = get_openet_gee_dict('AIM-HPA')
     aim_hpa_band_dict = {2000: 'b2000', 2001: 'b2001', 2002: 'b2002', 2003: 'b2003',
                          2004: 'b2004', 2005: 'b2005', 2006: 'b2006', 2007: 'b2007',
@@ -1066,7 +1206,7 @@ def download_Rainfed_frac_from_LANID_yearly(data_name, download_dir, year_list, 
     grid_geometry = grids['geometry'].tolist()
     grid_no = grids['grid_no'].tolist()
 
-    for year in year_list:  # first loop for years
+    for year in year_list:  # first loop for year_list
         print('********')
         print(f'Getting data urls for year={year}.....')
 
@@ -1199,13 +1339,13 @@ def download_Rainfed_CropET_from_OpenET_IrrMapper_monthly(data_name, download_di
 
     ########################
     # READ ME (for Rainfed Data)
-    The rainfed fields/pixels dataset has been created combining CDL cropland data with IrrMapper and LANID datasets.
-    IrrMapper data is available for WA, OR, CA, ID, NV, UT, AZ, MT, WY, CO, and NM (11 states) for 2000-2020, whereas,
-    LANID data consists datasets of these 11 states and ND, SD, OK, KS, NE, and TX (06 states) for 1997-2017
-    (extrapolated for 2018-2020 considering them the same as 2017 data). The CDL data for entire CONUS is available from
-     2008. Therefore, we have to create rainfed field/pixel data in multiple steps-
+        The rainfed fields/pixels dataset has been created combining CDL cropland data with IrrMapper and LANID datasets.
+    IrrMapper data is available for WA, OR, CA, ID, NV, UT, AZ, MT, WY, CO, and NM (11 states) for 2000-2023, whereas,
+    LANID data consists datasets of these 11 states and ND, SD, OK, KS, NE, and TX (06 states) for 1997-2020.
+    The CDL data for entire CONUS is available from 2008. Therefore, we have to create rainfed field/pixel data in
+    multiple steps-
         1. Combine CDL cropland and IrrMapper to get rainfed data for WA, OR, CA, ID, NV, UT, AZ, MT, WY, CO, and NM
-            (11 states) for 2008-2020
+            (11 states) for 2008-2020.
         2. Combine CDL cropland and LANID to get rainfed data for ND, SD, OK, KS, NE, and TX (06 states) for 2008-2020
         3. Download rainfed field data (or fraction of rainfed field in each 2km pixel) for 2008-2020 from GEE and do
             binary classification (1- rainfed, 0- irrigated/some other type)
@@ -1215,7 +1355,7 @@ def download_Rainfed_CropET_from_OpenET_IrrMapper_monthly(data_name, download_di
     :param data_name: Data name which will be used to extract GEE path, band, reducer, valid date range info from
                      get_gee_dict() function. Current valid data name is - ['Rainfed_crop_OpenET_IrrMapper']
     :param download_dir: File path of download directory.
-    :param year_list: List of years to download data for. Should be within 2016 to 2020.
+    :param year_list: List of year_list to download data for. Should be within 2016 to 2020.
     :param month_range: Tuple of month ranges to download data for, e.g., for months 1-12 use (1, 12).
     :param grid_shape: File path of grid shape for which data will be downloaded and mosaicked.
     :param scale: Resolution (in m) at which data will be downloaded from earth engine. Default set to 2200 m.
@@ -1244,7 +1384,7 @@ def download_Rainfed_CropET_from_OpenET_IrrMapper_monthly(data_name, download_di
     # creating list of months
     month_list = [m for m in range(month_range[0], month_range[1] + 1)]
 
-    for year in year_list:  # first loop for years
+    for year in year_list:  # first loop for year_list
         # # # # # # # # # Creating Rainfed dataset by combining IrrMapper and USDA CDL data
 
         # # IrrMapper data for the year
@@ -1380,14 +1520,14 @@ def download_Rainfed_CropET_from_OpenET_LANID_monthly(data_name, download_dir, y
 
     ########################
     # READ ME (for Rainfed Data)
-    The rainfed fields/pixels dataset has been created combining CDL cropland data with IrrMapper and LANID+AIM-HPA
-    datasets. IrrMapper data is available for WA, OR, CA, ID, NV, UT, AZ, MT, WY, CO, and NM (11 states) for 2000-2020,
-    whereas, LANID-AIM+HPA data consists datasets of ND, SD, OK, KS, NE, and TX (06 states) for 1997-2020. The CDL data
-    for entire CONUS is available from 2008. Therefore, we have to create rainfed field/pixel data in multiple steps.
+    The rainfed fields/pixels dataset has been created combining CDL cropland data with IrrMapper and LANID datasets.
+    IrrMapper data is available for WA, OR, CA, ID, NV, UT, AZ, MT, WY, CO, and NM (11 states) for 2000-2023, whereas,
+    LANID data consists datasets of these 11 states and ND, SD, OK, KS, NE, and TX (06 states) for 1997-2020.
+    The CDL data for entire CONUS is available from 2008. Therefore, we have to create rainfed field/pixel data in
+    multiple steps-
         1. Combine CDL cropland and IrrMapper to get rainfed data for WA, OR, CA, ID, NV, UT, AZ, MT, WY, CO, and NM
-            (11 states) for 2008-2020
-        2. Combine LANID+AIM-HPA data and compare with CDL cropland rainfed data for ND, SD, OK, KS, NE, and TX
-            (06 states) for 2008-2020
+            (11 states) for 2008-2020.
+        2. Combine CDL cropland and LANID to get rainfed data for ND, SD, OK, KS, NE, and TX (06 states) for 2008-2020
         3. Download rainfed field data (or fraction of rainfed field in each 2km pixel) for 2008-2020 from GEE and do
             binary classification (1- rainfed, 0- irrigated/some other type)
         4. Extend rainfed data for 2000-2007 by maximum occurrence approach.
@@ -1396,7 +1536,7 @@ def download_Rainfed_CropET_from_OpenET_LANID_monthly(data_name, download_dir, y
     :param data_name: Data name which will be used to extract GEE path, band, reducer, valid date range info from
                      get_gee_dict() function. Current valid data name is - ['Rainfed_crop_OpenET_LANID']
     :param download_dir: File path of download directory.
-    :param year_list: List of years to download data for. Should be within 2016 to 2020.
+    :param year_list: List of year_list to download data for. Should be within 2016 to 2020.
     :param month_range: Tuple of month ranges to download data for, e.g., for months 1-12 use (1, 12).
     :param grid_shape: File path of grid shape for which data will be downloaded and mosaicked.
     :param scale: Resolution (in m) at which data will be downloaded from earth engine. Default set to 2200 m.
@@ -1417,6 +1557,7 @@ def download_Rainfed_CropET_from_OpenET_LANID_monthly(data_name, download_dir, y
                             2012: 'lanid_2012', 2013: 'lanid_2013', 2014: 'lanid_2014', 2015: 'lanid_2015',
                             2016: 'lanid_2016', 2017: 'lanid_2017', 2018: 'lanid_2018', 2019: 'lanid_2019',
                             2020: 'lanid_2020'}
+
     aim_hpa_asset, _, _, _, _, _, _, _ = get_openet_gee_dict('AIM-HPA')
     aim_hpa_band_dict = {2000: 'b2000', 2001: 'b2001', 2002: 'b2002', 2003: 'b2003',
                          2004: 'b2004', 2005: 'b2005', 2006: 'b2006', 2007: 'b2007',
@@ -1440,7 +1581,7 @@ def download_Rainfed_CropET_from_OpenET_LANID_monthly(data_name, download_dir, y
     # creating list of months
     month_list = [m for m in range(month_range[0], month_range[1] + 1)]
 
-    for year in year_list:  # first loop for years
+    for year in year_list:  # first loop for year_list
         # # LANID data for the year
         # In LANID dataset irrigated fields are assigned as 1
         lanid_band = lanid_data_band_dict[year]
@@ -1576,28 +1717,35 @@ def download_Rainfed_CropET_from_OpenET_LANID_monthly(data_name, download_dir, y
 
 
 def download_openET_data(data_list, download_dir, year_list, month_range,
-                         grid_shape_for30m_irrmapper, grid_shape_for30m_lanid,
+                         grid_shape_for_2km_ensemble, grid_shape_for30m_irrmapper, grid_shape_for30m_lanid,
+                         GEE_merging_refraster=GEE_merging_refraster_large_grids,
+                         westUS_refraster=WestUS_raster, westUS_shape=WestUS_shape,
                          use_cpu_while_multidownloading=15, skip_download=False):
     """
     Used to download openET datasets from GEE.
 
     :param data_list: List of valid data names to download.
     Current valid data names are -
-        ['Irrig_crop_OpenET_IrrMapper', 'Irrig_crop_OpenET_LANID',
+        ['OpenET_ensemble',
+        'Irrig_crop_OpenET_IrrMapper', 'Irrig_crop_OpenET_LANID',
         'Irrigation_Frac_IrrMapper', 'Irrigation_Frac_LANID',
         'Rainfed_crop_OpenET_IrrMapper', 'Rainfed_crop_OpenET_LANID',
         'Rainfed_Frac_IrrMapper', 'Rainfed_Frac_LANID']
         ******************************
 
     :param download_dir: File path of main download directory. It will consist directory of individual dataset.
-    :param year_list: List of years to download data for.
+    :param year_list: List of year_list to download data for.
     :param month_range: Tuple of month ranges to download data for, e.g., for months 1-12 use (1, 12).
+    :param grid_shape_for_2km_ensemble: File path of larger grids to download data for Western US.
     :param grid_shape_for30m_irrmapper: File path of smaller grids to download data for IrrMapper extent and cropET from
                                         openET (this datasets are processed at 30m res in GEE, so smaller grids are
                                         required).
     :param grid_shape_for30m_lanid: File path of smaller grids to download data for LANID (for 6 central states) extent
                                     and cropET from openET (this datasets are processed at 30m res in GEE, so smaller
                                     grids are required).
+    :param GEE_merging_refraster: Reference raster to mosaic openET ensemble 2km dataset.
+    :param westUS_refraster: Western US reference raster.
+    :param westUS_shape: Western US shapefile.
     :param use_cpu_while_multidownloading: Number (Int) of CPU cores to use for multi-download by
                                            multi-processing/multi-threading. Default set to 15.
     :param skip_download: Set to True to skip download.
@@ -1606,6 +1754,14 @@ def download_openET_data(data_list, download_dir, year_list, month_range,
     """
     if not skip_download:
         for data_name in data_list:
+            if data_name == 'OpenET_ensemble':
+                download_openet_ensemble_monthly(download_dir=download_dir, year_list=year_list,
+                                                 month_range=month_range, merge_keyword='WestUS_monthly',
+                                                 grid_shape=grid_shape_for_2km_ensemble,
+                                                 use_cpu_while_multidownloading=15, refraster_westUS=westUS_refraster,
+                                                 refraster_gee_merge=GEE_merging_refraster,
+                                                 westUS_shape=westUS_shape)
+
             if data_name == 'Irrig_crop_OpenET_IrrMapper':
                 download_CropET_from_OpenET_IrrMapper_monthly(data_name=data_name, download_dir=download_dir,
                                                               year_list=year_list, month_range=month_range,
@@ -1655,15 +1811,19 @@ def download_openET_data(data_list, download_dir, year_list, month_range,
 
 
 def download_all_openET_datasets(year_list, month_range,
+                                 grid_shape_for_2km_ensemble,
                                  grid_shape_for30m_irrmapper, grid_shape_for30m_lanid,
                                  openET_data_list, data_download_dir,
+                                 GEE_merging_refraster=GEE_merging_refraster_large_grids,
+                                 westUS_refraster=WestUS_raster, westUS_shape=WestUS_shape,
                                  skip_download_OpenET_data=True,
                                  use_cpu_while_multidownloading=15):
     """
     Download all GEE datasets and ssebop data.
 
-    :param year_list: List of years to download data for. We will use data for [2010, 2015] in the model.
+    :param year_list: List of year_list to download data for. We will use data for [2010, 2015] in the model.
     :param month_range: Tuple of month ranges to download data for, e.g., for months 1-12 use (1, 12).
+    :param grid_shape_for_2km_ensemble: File path of larger grids to download data for Western US.
     :param grid_shape_for30m_irrmapper: File path of smaller grids to download data for IrrMapper extent and cropET from
                                         openET (this datasets are processed at 30m res in GEE, so smaller grids are
                                         required).
@@ -1672,12 +1832,15 @@ def download_all_openET_datasets(year_list, month_range,
                                     grids are required).
     :param openET_data_list: List of data to download by processing openET dataset.
                              Datasets currently downloaded by this code:
-                             ['Irrig_crop_OpenET_IrrMapper', 'Irrig_crop_OpenET_LANID',
+                            ['OpenET_ensemble',
+                            'Irrig_crop_OpenET_IrrMapper', 'Irrig_crop_OpenET_LANID',
                             'Irrigation_Frac_IrrMapper', 'Irrigation_Frac_LANID',
                             'Rainfed_crop_OpenET_IrrMapper', 'Rainfed_crop_OpenET_LANID',
-                            'Rainfed_Frac_IrrMapper', 'Rainfed_Frac_LANID',
-                            'Natural_OpenET_IrrMapper', 'Natural_OpenET_LANID']
+                            'Rainfed_Frac_IrrMapper', 'Rainfed_Frac_LANID']
     :param data_download_dir: Directory path to download and save data.
+    :param GEE_merging_refraster: Reference raster to mosaic openET ensemble 2km dataset.
+    :param westUS_refraster: Western US reference raster.
+    :param westUS_shape: Western US shapefile.
     :param skip_download_OpenET_data: Set to False if want to download listed data. Default set to True.
     :param use_cpu_while_multidownloading: Number (Int) of CPU cores to use for multi-download by
                                            multi-processing/multi-threading. Default set to 15.
@@ -1687,7 +1850,10 @@ def download_all_openET_datasets(year_list, month_range,
     # OpenET data download from GEE
     download_openET_data(openET_data_list, download_dir=data_download_dir,
                          year_list=year_list, month_range=month_range,
+                         grid_shape_for_2km_ensemble=grid_shape_for_2km_ensemble,
                          grid_shape_for30m_irrmapper=grid_shape_for30m_irrmapper,
                          grid_shape_for30m_lanid=grid_shape_for30m_lanid,
+                         GEE_merging_refraster=GEE_merging_refraster,
+                         westUS_refraster=westUS_refraster, westUS_shape=westUS_shape,
                          skip_download=skip_download_OpenET_data,
                          use_cpu_while_multidownloading=use_cpu_while_multidownloading)

@@ -36,8 +36,8 @@ def filter_effective_precip_training_data(training_zone_shp, general_output_dir,
     :return: None.
     """
     if not skip_processing:
-        # years and months to process over
-        years = [2016, 2017, 2018, 2019, 2020]
+        # year_list and months to process over
+        years = [2016, 2017, 2018, 2019, 2020, 2021, 2022]
         months = list(range(1, 13))
 
         # training zone bounding box gdf
@@ -158,7 +158,7 @@ def create_monthly_dataframes_for_eff_precip_prediction(years_list, month_range,
     """
     Create monthly dataframes of predictors to generate monthly effective prediction.
 
-    :param years_list: A list of years for which data to include in the dataframe.
+    :param years_list: A list of year_list for which data to include in the dataframe.
     :param month_range: A tuple of start and end month for which data to filter. Set to None if there is no monthly dataset.
     :param monthly_data_path_dict: A dictionary with monthly variables' names as keys and their paths as values.
     :param yearly_data_path_dict: A dictionary with static variables' names as keys and their paths as values.
@@ -176,7 +176,7 @@ def create_monthly_dataframes_for_eff_precip_prediction(years_list, month_range,
 
         month_list = [m for m in range(month_range[0], month_range[1] + 1)]  # creating list of months
 
-        for year in years_list:  # 1st loop controlling years
+        for year in years_list:  # 1st loop controlling year_list
             for month in month_list:  # 2nd loop controlling months
                 print(f'creating dataframe for prediction - year={year}, month={month}...')
 
@@ -302,7 +302,7 @@ def sum_monthly_effective_precip_rasters(years_list, monthly_effective_precip_di
     """
     Sum monthly effective precip predictions by the ML model to grow season effective precip.
 
-    :param years_list: A list of years to process the data.
+    :param years_list: A list of year_list to process the data.
     :param monthly_effective_precip_dir: Directory path of model-generated effective precipitation rasters.
     :param irrigated_cropET_dir: Directory path of growing season irrigated cropET. Will be used to set 0 and no data
                                  values to effective precipitation dataset.

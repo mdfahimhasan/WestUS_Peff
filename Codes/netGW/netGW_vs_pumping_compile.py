@@ -3,229 +3,339 @@ import sys
 from os.path import dirname, abspath
 sys.path.insert(0, dirname(dirname(dirname(abspath(__file__)))))
 
-from Codes.netGW.netGW_utils import clip_netGW_for_basin, pumping_AF_pts_to_mm_raster, \
-    compile_basin_df_for_netGW_pumping, extract_pumping_estimate_with_lat_lon
+from Codes.netGW.netGW_utils import clip_netGW_Irr_frac_for_basin, pumping_AF_pts_to_mm_raster, \
+    compile_basin_df_for_netGW_pumping, extract_pumping_estimate_with_lat_lon, aggregate_netGW_pumping_to_annual
 
 model_res = 0.01976293625031605786  # in deg, ~2 km
 WestUS_shape = '../../Data_main/shapefiles/Western_US_ref_shapes/WestUS_states.shp'
 WestUS_raster = '../../Data_main/reference_rasters/Western_US_refraster_2km.tif'
 
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-# # # For Groundwater Management District (GMD4), Kansas
-print('Processing netGW, pumping dataset and netGW-pumpign dataframe for GMD4, KS...')
+if __name__ == '__main__':
+    # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+    # boolean switches to process data for each region
+    skip_process_gmd4_data = False
+    skip_process_gmd3_data = False
+    skip_process_rpb_data = False
+    skip_process_hqr_data = False
+    skip_process_doug_data = False
+    skip_process_dv_data = False
 
-# # # # #  STEP 1 # # # # #
-# # Clip growing season netGW for GMD4, KS
-print('# # # # #  STEP 1 # # # # #')
+    # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+    # # # For Groundwater Management District 4 (GMD4), Kansas
+    if not skip_process_gmd4_data:
+        print('Processing netGW, pumping dataset and netGW-pumping dataframe for GMD4, KS...')
 
-years = [2016, 2017, 2018, 2019, 2020]
-GMD4_shp = '../../Data_main/shapefiles/Basins_of_interest/GMD4.shp'
-netGW_irrigation_dir = '../../Data_main/Raster_data/NetGW_irrigation/WesternUS'
-basin_netGW_output_dir = '../../Data_main/Raster_data/NetGW_irrigation/GMD4_KS/netGW_GMD4_KS'
+        # # # # #  STEP 1 # # # # #
+        # # Clip growing season netGW for GMD4, KS
+        print('# # # # #  STEP 1 # # # # #')
 
-skip_clip_GMD4_netGW = False #####
+        years = [2016, 2017, 2018, 2019, 2020]
+        GMD4_shp = '../../Data_main/shapefiles/Basins_of_interest/GMD4.shp'
+        netGW_irrigation_dir = '../../Data_main/Raster_data/NetGW_irrigation/WesternUS'
+        basin_netGW_output_dir = '../../Data_main/Raster_data/NetGW_irrigation/GMD4_KS/netGW_GMD4_KS'
+        irrig_fraction_dir = '../../Data_main/Raster_data/Irrigated_cropland/Irrigated_Frac'
+        basin_irrig_fraction_output_dir = '../../Data_main/Raster_data/NetGW_irrigation/GMD4_KS/irrig_frac'
 
-clip_netGW_for_basin(years=years, basin_shp=GMD4_shp,
-                     netGW_input_dir=netGW_irrigation_dir,
-                     basin_netGW_output_dir=basin_netGW_output_dir,
-                     resolution=model_res, skip_processing=skip_clip_GMD4_netGW)
+        clip_netGW_Irr_frac_for_basin(years=years, basin_shp=GMD4_shp,
+                                      netGW_input_dir=netGW_irrigation_dir,
+                                      basin_netGW_output_dir=basin_netGW_output_dir,
+                                      irr_frac_input_dir=irrig_fraction_dir,
+                                      basin_irr_frac_output_dir=basin_irrig_fraction_output_dir,
+                                      resolution=model_res, skip_processing=skip_process_gmd4_data)
 
-# # # # #  STEP 2 # # # # #
-# # Converting annual pumping shapefile (unit AF) to mm raster
-print('# # # # #  STEP 2 # # # # #')
+        # # # # #  STEP 2 # # # # #
+        # # Converting annual pumping shapefile (unit AF) to mm raster
+        print('# # # # #  STEP 2 # # # # #')
 
-years = [2016, 2017, 2018, 2019, 2020]
-pumping_shp = '../../Data_main/Pumping/Kansas/KS_GW_GMD4.shp'
-pumping_attr_AF = 'WU_AF'
-year_attr = 'Year'
-GMD4_shp = '../../Data_main/shapefiles/Basins_of_interest/GMD4.shp'
-GMD4_output_dir = '../../Data_main/Raster_data/NetGW_irrigation/GMD4_KS'
+        pumping_shp = '../../Data_main/Pumping/Kansas/KS_GW_GMD4.shp'
+        pumping_attr_AF = 'AF_pumped'
+        year_attr = 'Year'
+        GMD4_output_dir = '../../Data_main/Raster_data/NetGW_irrigation/GMD4_KS'
 
-skip_pump_dataset_processing_GMD4 = False  #####
+        pumping_AF_pts_to_mm_raster(years=years, irrigated_fraction_dir=irrig_fraction_dir,
+                                    pumping_pts_shp=pumping_shp, pumping_attr_AF=pumping_attr_AF,
+                                    year_attr=year_attr,
+                                    output_dir=GMD4_output_dir, basin_shp=GMD4_shp, ref_raster=WestUS_raster,
+                                    resolution=model_res, skip_processing=skip_process_gmd4_data)
 
-pumping_AF_pts_to_mm_raster(years=years, pumping_pts_shp=pumping_shp, pumping_attr_AF=pumping_attr_AF,
-                            year_attr=year_attr, output_dir=GMD4_output_dir, basin_shp=GMD4_shp, ref_raster=WestUS_raster,
-                            resolution=model_res, skip_processing=skip_pump_dataset_processing_GMD4)
+        # # # # #  STEP 3 # # # # #
+        # # Compile growing season netGW and annual pumping in a dataframe
+        print('# # # # #  STEP 3 # # # # #')
 
-# # # # #  STEP 3 # # # # #
-# # Compile growing season netGW and annual pumping in a dataframe
-print('# # # # #  STEP 3 # # # # #')
+        basin_pumping_mm_dir = '../../Data_main/Raster_data/NetGW_irrigation/GMD4_KS/pumping_mm'
+        basin_pumping_AF_dir = '../../Data_main/Raster_data/NetGW_irrigation/GMD4_KS/pumping_AF_raster'
+        GMD4_csv = '../../Data_main/Raster_data/NetGW_irrigation/GMD4_KS/KS_GMD4_netGW_pumping.csv'
 
-years = [2016, 2017, 2018, 2019, 2020]
-basin_netGW_dir = '../../Data_main/Raster_data/NetGW_irrigation/GMD4_KS/netGW_GMD4_KS'
-basin_pumping_dir = '../../Data_main/Raster_data/NetGW_irrigation/GMD4_KS/pumping_mm'
-GMD4_csv = '../../Data_main/Raster_data/NetGW_irrigation/GMD4_KS/KS_GMD4_netGW_pumping.csv'
+        compile_basin_df_for_netGW_pumping(years=years, basin_netGW_dir=basin_netGW_output_dir,
+                                           basin_pumping_mm_dir=basin_pumping_mm_dir,
+                                           basin_pumping_AF_dir=basin_pumping_AF_dir,
+                                           output_csv=GMD4_csv, skip_processing=skip_process_gmd4_data)
 
-skip_compile_GMD4_df = False  #####
+    # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+    # # # For Groundwater Management District 3 (GMD3), Kansas
+    if not skip_process_gmd3_data:
+        # # # # #  STEP 1 # # # # #
+        # # Clip growing season netGW for GMD3, KS
+        print('Processing netGW, pumping dataset and netGW-pumping dataframe for GMD3, KS...')
+        print('# # # # #  STEP 1 # # # # #')
 
-compile_basin_df_for_netGW_pumping(years=years, basin_netGW_dir=basin_netGW_dir,
-                                   basin_pumping_dir=basin_pumping_dir,
-                                   output_csv=GMD4_csv, skip_processing=skip_compile_GMD4_df)
+        years = [2016, 2017, 2018, 2019, 2020]
+        GMD3_shp = '../../Data_main/shapefiles/Basins_of_interest/GMD3.shp'
+        netGW_irrigation_dir = '../../Data_main/Raster_data/NetGW_irrigation/WesternUS'
+        basin_netGW_output_dir = '../../Data_main/Raster_data/NetGW_irrigation/GMD3_KS/netGW_GMD3_KS'
+        irrig_fraction_dir = '../../Data_main/Raster_data/Irrigated_cropland/Irrigated_Frac'
+        basin_irrig_fraction_output_dir = '../../Data_main/Raster_data/NetGW_irrigation/GMD3_KS/irrig_frac'
 
-# # # # #  STEP 1 # # # # #
-# # Clip growing season netGW for GMD3, KS
-print('Processing netGW, pumping dataset and netGW-pumpign dataframe for GMD3, KS...')
-print('# # # # #  STEP 1 # # # # #')
+        clip_netGW_Irr_frac_for_basin(years=years, basin_shp=GMD3_shp,
+                                      netGW_input_dir=netGW_irrigation_dir,
+                                      basin_netGW_output_dir=basin_netGW_output_dir,
+                                      irr_frac_input_dir=irrig_fraction_dir,
+                                      basin_irr_frac_output_dir=basin_irrig_fraction_output_dir,
+                                      resolution=model_res, skip_processing=skip_process_gmd3_data)
 
-years = [2016, 2017, 2018, 2019, 2020]
-GMD3_shp = '../../Data_main/shapefiles/Basins_of_interest/GMD3.shp'
-netGW_irrigation_dir = '../../Data_main/Raster_data/NetGW_irrigation/WesternUS'
-basin_netGW_output_dir = '../../Data_main/Raster_data/NetGW_irrigation/GMD3_KS/netGW_GMD3_KS'
+        # # # # #  STEP 2 # # # # #
+        # # Converting annual pumping shapefile (unit AF) to mm raster
+        print('# # # # #  STEP 2 # # # # #')
 
-skip_clip_GMD3_netGW = False  #####
+        pumping_shp = '../../Data_main/Pumping/Kansas/KS_GW_GMD3.shp'
+        pumping_attr_AF = 'AF_pumped'
+        year_attr = 'Year'
+        GMD3_output_dir = '../../Data_main/Raster_data/NetGW_irrigation/GMD3_KS'
 
-clip_netGW_for_basin(years=years, basin_shp=GMD3_shp,
-                     netGW_input_dir=netGW_irrigation_dir,
-                     basin_netGW_output_dir=basin_netGW_output_dir,
-                     resolution=model_res, skip_processing=skip_clip_GMD3_netGW)
+        pumping_AF_pts_to_mm_raster(years=years, irrigated_fraction_dir=irrig_fraction_dir,
+                                    pumping_pts_shp=pumping_shp, pumping_attr_AF=pumping_attr_AF,
+                                    year_attr=year_attr, output_dir=GMD3_output_dir, basin_shp=GMD3_shp,
+                                    ref_raster=WestUS_raster, resolution=model_res,
+                                    skip_processing=skip_process_gmd3_data)
 
-# # # # #  STEP 2 # # # # #
-# # Converting annual pumping shapefile (unit AF) to mm raster
-print('# # # # #  STEP 2 # # # # #')
+        # # # # #  STEP 3 # # # # #
+        # # Compile growing season netGW and annual pumping in a dataframe
+        print('# # # # #  STEP 3 # # # # #')
 
-years = [2016, 2017, 2018, 2019, 2020]
-pumping_shp = '../../Data_main/Pumping/Kansas/KS_GW_GMD3.shp'
-pumping_attr_AF = 'AF_pumped'
-year_attr = 'Year'
-GMD3_shp = '../../Data_main/shapefiles/Basins_of_interest/GMD3.shp'
-GMD3_output_dir = '../../Data_main/Raster_data/NetGW_irrigation/GMD3_KS'
+        basin_pumping_mm_dir = '../../Data_main/Raster_data/NetGW_irrigation/GMD3_KS/pumping_mm'
+        basin_pumping_AF_dir = '../../Data_main/Raster_data/NetGW_irrigation/GMD3_KS/pumping_AF_raster'
+        GMD3_csv = '../../Data_main/Raster_data/NetGW_irrigation/GMD3_KS/KS_GMD3_netGW_pumping.csv'
 
-skip_pump_dataset_processing_GMD3 = False  #####
+        compile_basin_df_for_netGW_pumping(years=years, basin_netGW_dir=basin_netGW_output_dir,
+                                           basin_pumping_mm_dir=basin_pumping_mm_dir,
+                                           basin_pumping_AF_dir=basin_pumping_AF_dir,
+                                           output_csv=GMD3_csv, skip_processing=skip_process_gmd3_data)
 
-pumping_AF_pts_to_mm_raster(years=years, pumping_pts_shp=pumping_shp, pumping_attr_AF=pumping_attr_AF,
-                            year_attr=year_attr, output_dir=GMD3_output_dir, basin_shp=GMD3_shp, ref_raster=WestUS_raster,
-                            resolution=model_res, skip_processing=skip_pump_dataset_processing_GMD3)
+    # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+    # # # For Republican River Basin (RPB), Colorado
+    if not skip_process_rpb_data:
+        print('Processing netGW, pumping dataset and netGW-pumping dataframe for RPB, CO...')
 
-# # # # #  STEP 3 # # # # #
-# # Compile growing season netGW and annual pumping in a dataframe
-print('# # # # #  STEP 3 # # # # #')
+        # # # # #  STEP 1 # # # # #
+        # # Clip growing season netGW for RPB, CO
+        print('# # # # #  STEP 1 # # # # #')
 
-years = [2016, 2017, 2018, 2019, 2020]
-basin_netGW_dir = '../../Data_main/Raster_data/NetGW_irrigation/GMD3_KS/netGW_GMD3_KS'
-basin_pumping_dir = '../../Data_main/Raster_data/NetGW_irrigation/GMD3_KS/pumping_mm'
-GMD3_csv = '../../Data_main/Raster_data/NetGW_irrigation/GMD3_KS/KS_GMD3_netGW_pumping.csv'
+        years = [2016, 2017, 2018, 2019, 2020]
+        RPB_shp = '../../Data_main/shapefiles/Basins_of_interest/Republican_Basin.shp'
+        netGW_irrigation_dir = '../../Data_main/Raster_data/NetGW_irrigation/WesternUS'
+        basin_netGW_output_dir = '../../Data_main/Raster_data/NetGW_irrigation/RPB_CO/netGW_RPB_CO'
+        irrig_fraction_dir = '../../Data_main/Raster_data/Irrigated_cropland/Irrigated_Frac'
+        basin_irrig_fraction_output_dir = '../../Data_main/Raster_data/NetGW_irrigation/GMD3_KS/irrig_frac'
 
-skip_compile_GMD3_df = False  #####
+        clip_netGW_Irr_frac_for_basin(years=years, basin_shp=RPB_shp,
+                                      netGW_input_dir=netGW_irrigation_dir,
+                                      basin_netGW_output_dir=basin_netGW_output_dir,
+                                      irr_frac_input_dir=irrig_fraction_dir,
+                                      basin_irr_frac_output_dir=basin_irrig_fraction_output_dir,
+                                      resolution=model_res, skip_processing=skip_process_rpb_data)
 
-compile_basin_df_for_netGW_pumping(years=years, basin_netGW_dir=basin_netGW_dir,
-                                   basin_pumping_dir=basin_pumping_dir,
-                                   output_csv=GMD3_csv, skip_processing=skip_compile_GMD3_df)
+        # # # # #  STEP 2 # # # # #
+        # # Converting annual pumping shapefile (unit AF) to mm raster
+        print('# # # # #  STEP 2 # # # # #')
 
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-# # # For Republican River Basin (RPB), Colorado
-print('Processing netGW, pumping dataset and netGW-pumpign dataframe for RPB, CO...')
+        pumping_shp = '../../Data_main/Pumping/Colorado/CO_GW_RPB.shp'
+        pumping_attr_AF = 'ann_amt'
+        year_attr = 'irr_year'
+        RPB_output_dir = '../../Data_main/Raster_data/NetGW_irrigation/RPB_CO'
 
-# # # # #  STEP 1 # # # # #
-# # Clip growing season netGW for RPB, CO
-print('# # # # #  STEP 1 # # # # #')
+        pumping_AF_pts_to_mm_raster(years=years, irrigated_fraction_dir=irrig_fraction_dir,
+                                    pumping_pts_shp=pumping_shp, pumping_attr_AF=pumping_attr_AF,
+                                    year_attr=year_attr, output_dir=RPB_output_dir, basin_shp=RPB_shp,
+                                    ref_raster=WestUS_raster, resolution=model_res,
+                                    skip_processing=skip_process_rpb_data)
 
-years = [2016, 2017, 2018, 2019, 2020]
-RPB_shp = '../../Data_main/shapefiles/Basins_of_interest/Republican_Basin.shp'
-netGW_irrigation_dir = '../../Data_main/Raster_data/NetGW_irrigation/WesternUS'
-basin_netGW_output_dir = '../../Data_main/Raster_data/NetGW_irrigation/RPB_CO/netGW_RPB_CO'
+        # # # # #  STEP 3 # # # # #
+        # # Compile growing season netGW and annual pumping in a dataframe
+        print('# # # # #  STEP 3 # # # # #')
 
-skip_clip_RPB_netGW = False  #####
+        basin_pumping_mm_dir = '../../Data_main/Raster_data/NetGW_irrigation/RPB_CO/pumping_mm'
+        basin_pumping_AF_dir = '../../Data_main/Raster_data/NetGW_irrigation/RPB_CO/pumping_AF_raster'
+        RPB_csv = '../../Data_main/Raster_data/NetGW_irrigation/RPB_CO/CO_RPB_netGW_pumping.csv'
 
-clip_netGW_for_basin(years=years, basin_shp=RPB_shp,
-                     netGW_input_dir=netGW_irrigation_dir,
-                     basin_netGW_output_dir=basin_netGW_output_dir,
-                     resolution=model_res, skip_processing=skip_clip_RPB_netGW)
+        compile_basin_df_for_netGW_pumping(years=years, basin_netGW_dir=basin_netGW_output_dir,
+                                           basin_pumping_mm_dir=basin_pumping_mm_dir,
+                                           basin_pumping_AF_dir=basin_pumping_AF_dir,
+                                           output_csv=RPB_csv, skip_processing=skip_process_rpb_data)
 
-# # # # #  STEP 2 # # # # #
-# # Converting annual pumping shapefile (unit AF) to mm raster
-print('# # # # #  STEP 2 # # # # #')
+    # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+    # # # For Harquahala INA, Arizona
+    if not skip_process_hqr_data:
+        print('Processing netGW, pumping dataset and netGW-pumping dataframe for Harquahala_INA, AZ...')
 
-years = [2016, 2017, 2018, 2019, 2020]
-pumping_shp = '../../Data_main/Pumping/Colorado/CO_GW_RPB.shp'
-pumping_attr_AF = 'ann_amt'
-year_attr = 'irr_year'
-RPB_shp = '../../Data_main/shapefiles/Basins_of_interest/Republican_Basin.shp'
-RPB_output_dir = '../../Data_main/Raster_data/NetGW_irrigation/RPB_CO'
+        # # # # #  STEP 1 # # # # #
+        # # Clip growing season netGW for Harquahala_INA
+        print('# # # # #  STEP 1 # # # # #')
 
-skip_pump_dataset_processing_RPB = False  #####
+        years = [2016, 2017, 2018, 2019, 2020]
+        Harquahala_INA_shp = '../../Data_main/shapefiles/Basins_of_interest/Harquahala_INA.shp'
+        netGW_irrigation_dir = '../../Data_main/Raster_data/NetGW_irrigation/WesternUS'
+        basin_netGW_output_dir = '../../Data_main/Raster_data/NetGW_irrigation/Harquahala_INA_AZ/netGW_Harquahala_INA_AZ'
+        irrig_fraction_dir = '../../Data_main/Raster_data/Irrigated_cropland/Irrigated_Frac'
+        basin_irrig_fraction_output_dir = '../../Data_main/Raster_data/NetGW_irrigation/GMD3_KS/irrig_frac'
 
-pumping_AF_pts_to_mm_raster(years=years, pumping_pts_shp=pumping_shp, pumping_attr_AF=pumping_attr_AF,
-                            year_attr=year_attr, output_dir=RPB_output_dir, basin_shp=RPB_shp, ref_raster=WestUS_raster,
-                            resolution=model_res, skip_processing=skip_pump_dataset_processing_RPB)
+        clip_netGW_Irr_frac_for_basin(years=years, basin_shp=Harquahala_INA_shp,
+                                      netGW_input_dir=netGW_irrigation_dir,
+                                      basin_netGW_output_dir=basin_netGW_output_dir,
+                                      irr_frac_input_dir=irrig_fraction_dir,
+                                      basin_irr_frac_output_dir=basin_irrig_fraction_output_dir,
+                                      resolution=model_res, skip_processing=skip_process_hqr_data)
 
-# # # # #  STEP 3 # # # # #
-# # Compile growing season netGW and annual pumping in a dataframe
-print('# # # # #  STEP 3 # # # # #')
+        # # # # #  STEP 2 # # # # #
+        # # Converting annual pumping shapefile (unit AF) to mm raster
+        print('# # # # #  STEP 2 # # # # #')
 
-years = [2016, 2017, 2018, 2019, 2020]
-basin_netGW_dir = '../../Data_main/Raster_data/NetGW_irrigation/RPB_CO/netGW_RPB_CO'
-basin_pumping_dir = '../../Data_main/Raster_data/NetGW_irrigation/RPB_CO/pumping_mm'
-RPB_csv = '../../Data_main/Raster_data/NetGW_irrigation/RPB_CO/CO_RPB_netGW_pumping.csv'
+        pumping_shp = '../../Data_main/Pumping/Arizona/AZ_GW_Harquahala.shp'
+        pumping_attr_AF = 'AF_pumped'
+        year_attr = 'Year'
+        Harquahala_INA_output_dir = '../../Data_main/Raster_data/NetGW_irrigation/Harquahala_INA_AZ'
 
-skip_compile_RPB_df = False  #####
+        pumping_AF_pts_to_mm_raster(years=years, irrigated_fraction_dir=irrig_fraction_dir,
+                                    pumping_pts_shp=pumping_shp, pumping_attr_AF=pumping_attr_AF,
+                                    year_attr=year_attr, output_dir=Harquahala_INA_output_dir, basin_shp=Harquahala_INA_shp,
+                                    ref_raster=WestUS_raster, resolution=model_res,
+                                    skip_processing=skip_process_hqr_data)
 
-compile_basin_df_for_netGW_pumping(years=years, basin_netGW_dir=basin_netGW_dir,
-                                   basin_pumping_dir=basin_pumping_dir,
-                                   output_csv=RPB_csv, skip_processing=skip_compile_RPB_df)
+        # # # # #  STEP 3 # # # # #
+        # # Compile growing season netGW and annual pumping in a dataframe
+        print('# # # # #  STEP 3 # # # # #')
 
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-# # # For Harquahala INA (Harquahala_INA), Arizona
-print('Processing netGW, pumping dataset and netGW-pumpign dataframe for Harquahala_INA, AZ...')
+        basin_pumping_mm_dir = '../../Data_main/Raster_data/NetGW_irrigation/Harquahala_INA_AZ/pumping_mm'
+        basin_pumping_AF_dir = '../../Data_main/Raster_data/NetGW_irrigation/Harquahala_INA_AZ/pumping_AF_raster'
+        Harquahala_INA_csv = '../../Data_main/Raster_data/NetGW_irrigation/Harquahala_INA_AZ/AZ_Harquahala_INA_netGW_pumping.csv'
 
-# # # # #  STEP 1 # # # # #
-# # Clip growing season netGW for Harquahala_INA
-print('# # # # #  STEP 1 # # # # #')
+        compiled_csv = compile_basin_df_for_netGW_pumping(years=years, basin_netGW_dir=basin_netGW_output_dir,
+                                                          basin_pumping_mm_dir=basin_pumping_mm_dir,
+                                                          output_csv=Harquahala_INA_csv,
+                                                          basin_pumping_AF_dir=basin_pumping_AF_dir,
+                                                          skip_processing=skip_process_hqr_data)
 
-years = [2016, 2017, 2018, 2019, 2020]
-Harquahala_INA_shp = '../../Data_main/shapefiles/Basins_of_interest/Harquahala_INA.shp'
-netGW_irrigation_dir = '../../Data_main/Raster_data/NetGW_irrigation/WesternUS'
-basin_netGW_output_dir = '../../Data_main/Raster_data/NetGW_irrigation/Harquahala_INA_AZ/netGW_Harquahala_INA_AZ'
+        # # # # #  STEP 4 # # # # #
+        # # Extracting predicted pumping from Majumdar et al. 2022
+        print('# # # # #  STEP 4 # # # # #')
+        AZ_pumping_Majumadar_2022_dir = '../../Data_main/Raster_data/AZ_predictions_Majumdar et al. 2022/Postprocessed'
+        AZ_pumping_Majumadar_2022_resampled_dir = '../../Data_main/Raster_data/AZ_predictions_Majumdar et al. 2022/Postprocessed_resampled'
+        Harquahala_INA_csv_updated = '../../Data_main/Raster_data/NetGW_irrigation/Harquahala_INA_AZ/AZ_Harquahala_INA_netGW_pumping_updated.csv'
 
-skip_clip_Harquahala_INA_netGW = False  #####
+        extract_pumping_estimate_with_lat_lon(years, input_csv=compiled_csv,
+                                              input_data_dir=AZ_pumping_Majumadar_2022_dir,
+                                              resampled_output_dir=AZ_pumping_Majumadar_2022_resampled_dir,
+                                              output_csv=Harquahala_INA_csv_updated,
+                                              ref_rater=WestUS_raster, resolution=model_res,
+                                              skip_processing=skip_process_hqr_data)
 
-clip_netGW_for_basin(years=years, basin_shp=Harquahala_INA_shp,
-                     netGW_input_dir=netGW_irrigation_dir,
-                     basin_netGW_output_dir=basin_netGW_output_dir,
-                     resolution=model_res, skip_processing=skip_clip_Harquahala_INA_netGW)
+    # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+    # # # For Douglas INA, Arizona
+    if not skip_process_doug_data:
+        print('Processing netGW, pumping dataset and netGW-pumping dataframe for Douglas_INA, AZ...')
 
-# # # # #  STEP 2 # # # # #
-# # Converting annual pumping shapefile (unit AF) to mm raster
-print('# # # # #  STEP 2 # # # # #')
+        # # # # #  STEP 1 # # # # #
+        # # Clip growing season netGW for Douglas_INA
+        print('# # # # #  STEP 1 # # # # #')
 
-years = [2016, 2017, 2018, 2019, 2020]
-pumping_shp = '../../Data_main/Pumping/Arizona/AZ_GW_Harquahala.shp'
-pumping_attr_AF = 'AF_pumped'
-year_attr = 'Year'
-Harquahala_INA_shp = '../../Data_main/shapefiles/Basins_of_interest/Harquahala_INA.shp'
-Harquahala_INA_output_dir = '../../Data_main/Raster_data/NetGW_irrigation/Harquahala_INA_AZ'
+        years = [2016, 2017, 2018, 2019, 2020]
+        Douglas_INA_shp = '../../Data_main/shapefiles/Basins_of_interest/Douglas_INA.shp'
+        netGW_irrigation_dir = '../../Data_main/Raster_data/NetGW_irrigation/WesternUS'
+        basin_netGW_output_dir = '../../Data_main/Raster_data/NetGW_irrigation/Douglas_INA_AZ/netGW_Douglas_INA_AZ'
+        irrig_fraction_dir = '../../Data_main/Raster_data/Irrigated_cropland/Irrigated_Frac'
+        basin_irrig_fraction_output_dir = '../../Data_main/Raster_data/NetGW_irrigation/GMD3_KS/irrig_frac'
 
-skip_pump_dataset_processing_Harquahala_INA = False  #####
+        clip_netGW_Irr_frac_for_basin(years=years, basin_shp=Douglas_INA_shp,
+                                      netGW_input_dir=netGW_irrigation_dir,
+                                      basin_netGW_output_dir=basin_netGW_output_dir,
+                                      irr_frac_input_dir=irrig_fraction_dir,
+                                      basin_irr_frac_output_dir=basin_irrig_fraction_output_dir,
+                                      resolution=model_res, skip_processing=skip_process_doug_data)
 
-pumping_AF_pts_to_mm_raster(years=years, pumping_pts_shp=pumping_shp, pumping_attr_AF=pumping_attr_AF,
-                            year_attr=year_attr, output_dir=Harquahala_INA_output_dir, basin_shp=Harquahala_INA_shp,
-                            ref_raster=WestUS_raster, resolution=model_res,
-                            skip_processing=skip_pump_dataset_processing_Harquahala_INA)
+        # # # # #  STEP 2 # # # # #
+        # # Converting annual pumping shapefile (unit AF) to mm raster
+        print('# # # # #  STEP 2 # # # # #')
 
-# # # # #  STEP 3 # # # # #
-# # Compile growing season netGW and annual pumping in a dataframe
-print('# # # # #  STEP 3 # # # # #')
+        pumping_shp = '../../Data_main/Pumping/Arizona/AZ_GW_Douglas.shp'
+        pumping_attr_AF = 'AF_pumped'
+        year_attr = 'Year'
+        Douglas_INA_output_dir = '../../Data_main/Raster_data/NetGW_irrigation/Douglas_INA_AZ'
 
-years = [2016, 2017, 2018, 2019, 2020]
-basin_netGW_dir = '../../Data_main/Raster_data/NetGW_irrigation/Harquahala_INA_AZ/netGW_Harquahala_INA_AZ'
-basin_pumping_dir = '../../Data_main/Raster_data/NetGW_irrigation/Harquahala_INA_AZ/pumping_mm'
-Harquahala_INA_csv = '../../Data_main/Raster_data/NetGW_irrigation/Harquahala_INA_AZ/AZ_Harquahala_INA_netGW_pumping.csv'
+        pumping_AF_pts_to_mm_raster(years=years, irrigated_fraction_dir=irrig_fraction_dir,
+                                    pumping_pts_shp=pumping_shp, pumping_attr_AF=pumping_attr_AF,
+                                    year_attr=year_attr, output_dir=Douglas_INA_output_dir, basin_shp=Douglas_INA_shp,
+                                    ref_raster=WestUS_raster, resolution=model_res,
+                                    skip_processing=skip_process_doug_data)
 
-skip_compile_Harquahala_INA_df = False  #####
+        # # # # #  STEP 3 # # # # #
+        # # Compile growing season netGW and annual pumping in a dataframe
+        print('# # # # #  STEP 3 # # # # #')
 
-compiled_csv = compile_basin_df_for_netGW_pumping(years=years, basin_netGW_dir=basin_netGW_dir,
-                                                  basin_pumping_dir=basin_pumping_dir,
-                                                  output_csv=Harquahala_INA_csv,
-                                                  skip_processing=skip_compile_Harquahala_INA_df)
+        basin_pumping_mm_dir = '../../Data_main/Raster_data/NetGW_irrigation/Douglas_INA_AZ/pumping_mm'
+        basin_pumping_AF_dir = '../../Data_main/Raster_data/NetGW_irrigation/Douglas_INA_AZ/pumping_AF_raster'
+        Douglas_INA_csv = '../../Data_main/Raster_data/NetGW_irrigation/Douglas_INA_AZ/AZ_Douglas_INA_netGW_pumping.csv'
 
-AZ_pumping_Majumadar_2022_dir = '../../Data_main/Raster_data/AZ_predictions_Majumdar et al. 2022/Postprocessed'
-AZ_pumping_Majumadar_2022_resampled_dir = '../../Data_main/Raster_data/AZ_predictions_Majumdar et al. 2022/Postprocessed_resampled'
-Harquahala_INA_csv_updated = '../../Data_main/Raster_data/NetGW_irrigation/Harquahala_INA_AZ/AZ_Harquahala_INA_netGW_pumping_updated.csv'
+        compiled_csv = compile_basin_df_for_netGW_pumping(years=years, basin_netGW_dir=basin_netGW_output_dir,
+                                                          basin_pumping_mm_dir=basin_pumping_mm_dir,
+                                                          basin_pumping_AF_dir=basin_pumping_AF_dir,
+                                                          output_csv=Douglas_INA_csv,
+                                                          skip_processing=skip_process_doug_data)
 
-skip_extract_Majumdar_estimate = False  #####
+        # # # # #  STEP 4 # # # # #
+        # # Extracting predicted pumping from Majumdar et al. 2022
+        print('# # # # #  STEP 4 # # # # #')
 
-extract_pumping_estimate_with_lat_lon(years, input_csv=compiled_csv,
-                                      input_data_dir=AZ_pumping_Majumadar_2022_dir,
-                                      resampled_output_dir=AZ_pumping_Majumadar_2022_resampled_dir,
-                                      output_csv=Harquahala_INA_csv_updated,
-                                      ref_rater=WestUS_raster, resolution=model_res,
-                                      skip_processing=skip_extract_Majumdar_estimate)
+        AZ_pumping_Majumadar_2022_dir = '../../Data_main/Raster_data/AZ_predictions_Majumdar et al. 2022/Postprocessed'
+        AZ_pumping_Majumadar_2022_resampled_dir = '../../Data_main/Raster_data/AZ_predictions_Majumdar et al. 2022/Postprocessed_resampled'
+        Douglas_INA_csv_updated = '../../Data_main/Raster_data/NetGW_irrigation/Douglas_INA_AZ/AZ_Douglas_INA_netGW_pumping_updated.csv'
+
+        extract_pumping_estimate_with_lat_lon(years, input_csv=compiled_csv,
+                                              input_data_dir=AZ_pumping_Majumadar_2022_dir,
+                                              resampled_output_dir=AZ_pumping_Majumadar_2022_resampled_dir,
+                                              output_csv=Douglas_INA_csv_updated,
+                                              ref_rater=WestUS_raster, resolution=model_res,
+                                              skip_processing=skip_process_doug_data)
+
+    # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+    # # # For Diamond Valley, Nevada
+    if not skip_process_dv_data:
+        print('Processing netGW, pumping dataset and netGW-pumping dataframe for Diamond Valley, NV...')
+
+        # # # # #  STEP 1 # # # # #
+        # # Clip growing season netGW for Diamond Valley
+        print('# # # # #  STEP 1 # # # # #')
+
+        years = [2016, 2017, 2018, 2019, 2020]
+        Diamond_Valley_shp = '../../Data_main/shapefiles/Basins_of_interest/Diamond_Valley_Basin.shp'
+        netGW_irrigation_dir = '../../Data_main/Raster_data/NetGW_irrigation/WesternUS'
+        basin_netGW_output_dir = '../../Data_main/Raster_data/NetGW_irrigation/Diamond_Valley_NV/netGW_Diamond_Valley_NV'
+        irrig_fraction_dir = '../../Data_main/Raster_data/Irrigated_cropland/Irrigated_Frac'
+        basin_irrig_fraction_output_dir = '../../Data_main/Raster_data/NetGW_irrigation/GMD3_KS/irrig_frac'
+
+        clip_netGW_Irr_frac_for_basin(years=years, basin_shp=Diamond_Valley_shp,
+                                      netGW_input_dir=netGW_irrigation_dir,
+                                      basin_netGW_output_dir=basin_netGW_output_dir,
+                                      irr_frac_input_dir=irrig_fraction_dir,
+                                      basin_irr_frac_output_dir=basin_irrig_fraction_output_dir,
+                                      resolution=model_res, skip_processing=skip_process_dv_data)
+
+        # # # # #  STEP 2 # # # # #
+        # # Aggregating netGW and pumping data annually
+        print('# # # # #  STEP 2 # # # # #')
+
+        pumping_data = '../../Data_main/Pumping/Nevada/joined_data/dv_joined_et_pumping_data_all.csv'
+        Diamond_Valley_csv = '../../Data_main/Raster_data/NetGW_irrigation/Diamond_Valley_NV/NV_Diamond_Valley_netGW_pumping_annual.csv'
+
+        aggregate_netGW_pumping_to_annual(years=years, basin_netGW_dir=basin_netGW_output_dir,
+                                          pumping_csv=pumping_data, pump_attr='pumping_AF',
+                                          output_csv=Diamond_Valley_csv,
+                                          skip_processing=skip_process_dv_data)

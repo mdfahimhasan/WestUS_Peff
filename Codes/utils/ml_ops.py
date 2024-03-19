@@ -57,7 +57,7 @@ def create_train_test_dataframe(years_list, month_range, monthly_data_path_dict,
     *** if there is no yearly dataset, set yearly_data_path_dict to None.
     *** if there is no static data, set static_data_path_dict to None.
 
-    :param years_list: A list of years for which data to include in the dataframe.
+    :param years_list: A list of year_list for which data to include in the dataframe.
     :param month_range: A tuple of start and end month for which data to filter. Set to None if there is no monthly dataset.
     :param monthly_data_path_dict: A dictionary with monthly variables' names as keys and their paths as values.
                                    Set to None if there is no monthly dataset.
@@ -279,7 +279,7 @@ def split_train_val_test_set_by_year(input_csv, pred_attr, exclude_columns,
     :param input_csv : Input csv file (with filepath) containing all the predictors.
     :param pred_attr : Variable name which will be predicted. Defaults to 'Subsidence'.
     :param exclude_columns : Tuple of columns that will not be included in training the fitted_model.
-    :param years_in_train: List of years to keep as train dataset. Input multiple years.
+    :param years_in_train: List of year_list to keep as train dataset. Input multiple year_list.
     :param year_in_test: List of year to keep as test dataset. Input single year.
     :param output_dir : Set a output directory if training and test dataset need to be saved. Defaults to None.
     :param verbose : Set to True if want to print which columns are being dropped and which will be included
@@ -290,14 +290,14 @@ def split_train_val_test_set_by_year(input_csv, pred_attr, exclude_columns,
     """
     if not skip_processing:
         print(f'Making train-test split with...', '\n',
-              f'years {years_in_train} in train set', '\n',
+              f'year_list {years_in_train} in train set', '\n',
               f'year {year_in_test} in test set')
 
         input_df = pd.read_parquet(input_csv)
         drop_columns = exclude_columns + [
             pred_attr]  # dropping unwanted columns/columns that will not be used in model training
 
-        # making train-test split based on provided years
+        # making train-test split based on provided year_list
         train_df = input_df[input_df['year'].isin(years_in_train)]
         test_df = input_df[input_df['year'].isin(year_in_test)]
 

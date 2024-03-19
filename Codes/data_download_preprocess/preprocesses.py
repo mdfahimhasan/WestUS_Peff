@@ -7,7 +7,7 @@ from osgeo import gdal
 from os.path import dirname, abspath
 sys.path.insert(0, dirname(dirname(dirname(abspath(__file__)))))
 
-from Codes.utils.system_ops import makedirs
+from Codes.utils.system_ops import makedirs, copy_file
 from Codes.utils.raster_ops import read_raster_arr_object, write_array_to_raster, mosaic_rasters_list, \
         clip_resample_reproject_raster, sum_rasters, mean_rasters, make_lat_lon_array_from_raster
 
@@ -53,7 +53,7 @@ def apply_maximum_occurrence_approach(input_rasters_list, output_dir, raster_nam
     array_list = [arr for arr in input_raster_dict.values()]
     max_arr = np.stack(array_list, axis=0)
 
-    # creating an empty array to assign cropland (1) if most years between 2008-2011 are cropland
+    # creating an empty array to assign cropland (1) if most year_list between 2008-2011 are cropland
     new_arr = np.zeros(array_list[0].shape, dtype=np.int8)  # this is a flatten shape array
 
     # this loop takes each column of stacked array. np.bincount() counts the number of occurrence of each value
@@ -83,12 +83,13 @@ def apply_maximum_occurrence_approach(input_rasters_list, output_dir, raster_nam
     return output_raster
 
 
-def merge_GEE_data_patches_IrrMapper_LANID_extents(input_dir_irrmapper, input_dir_lanid, merged_output_dir,
+def merge_GEE_data_patches_IrrMapper_LANID_extents(year_list, input_dir_irrmapper, input_dir_lanid, merged_output_dir,
                                                    merge_keyword, monthly_data=True, ref_raster=WestUS_raster,
                                                    skip_processing=False):
     """
     Merge/mosaic downloaded GEE data for IrrMapper and LANID extent.
 
+    :param year_list: Tuple/list of year_list for which data will be processed.
     :param input_dir_irrmapper: Input directory filepath of datasets at IrrMapper extent.
     :param input_dir_lanid: Input directory filepath of datasets at LANID extent.
     :param merged_output_dir: Output directory filepath to save merged data.
@@ -102,9 +103,6 @@ def merge_GEE_data_patches_IrrMapper_LANID_extents(input_dir_irrmapper, input_di
     """
     if not skip_processing:
         makedirs([merged_output_dir])
-
-        year_list = (2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012,
-                     2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020)
 
         if monthly_data:  # for datasets that are monthly
             month_list = list(range(1, 13))
@@ -120,7 +118,7 @@ def merge_GEE_data_patches_IrrMapper_LANID_extents(input_dir_irrmapper, input_di
 
                     total_raster_list = irrmapper_raster_list
 
-                    if len(total_raster_list) > 0:  # to only merge for years and months when data is available
+                    if len(total_raster_list) > 0:  # to only merge for year_list and months when data is available
                         merged_raster_name = f'{merge_keyword}_{year}_{month}.tif'
                         mosaic_rasters_list(input_raster_list=total_raster_list, output_dir=merged_output_dir,
                                             raster_name=merged_raster_name, ref_raster=ref_raster, dtype=None,
@@ -141,7 +139,7 @@ def merge_GEE_data_patches_IrrMapper_LANID_extents(input_dir_irrmapper, input_di
 
                 total_raster_list = irrmapper_raster_list
 
-                if len(total_raster_list) > 0:  # to only merge for years and months when data is available
+                if len(total_raster_list) > 0:  # to only merge for year_list and months when data is available
                     merged_raster_name = f'{merge_keyword}_{year}.tif'
                     mosaic_rasters_list(input_raster_list=total_raster_list, output_dir=merged_output_dir,
                                         raster_name=merged_raster_name, ref_raster=ref_raster, dtype=None,
@@ -194,7 +192,7 @@ def classify_irrigated_rainfed_cropland(rainfed_fraction_dir, irrigated_fraction
         irrigated_frac_threshold = 0.02
         tree_threshold = 6  # unit in %
 
-        # list of years when there are both irrigated and rainfed fraction datasets derived from
+        # list of year_list when there are both irrigated and rainfed fraction datasets derived from
         # IrrMapper/LANID and USDA CDL. Classifying those data with defined threshold
         years_with_both_irrigated_rainfed_frac_data = [2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016,
                                                        2017, 2018, 2019, 2020]
@@ -214,9 +212,9 @@ def classify_irrigated_rainfed_cropland(rainfed_fraction_dir, irrigated_fraction
             # classification using defined rainfed and irrigated fraction threshold. -9999 is no data
             rainfed_cropland = np.where((rain_arr >= rainfed_frac_threshold) &
                                         ((irrig_arr <= irrigated_frac_threshold) | (np.isnan(irrig_arr)))
-                                         & (tree_arr <= 6), 1, -9999)
+                                         & (tree_arr <= tree_threshold), 1, -9999)
 
-            irrigated_cropland = np.where((irrig_arr >= irrigated_frac_threshold) & (tree_arr <= 6), 1, -9999)
+            irrigated_cropland = np.where((irrig_arr >= irrigated_frac_threshold) & (tree_arr <= tree_threshold), 1, -9999)
 
             # saving classified data
             output_rainfed_cropland_raster = os.path.join(rainfed_cropland_output_dir, f'Rainfed_cropland_{year}.tif')
@@ -240,7 +238,7 @@ def classify_irrigated_rainfed_cropland(rainfed_fraction_dir, irrigated_fraction
             irrig_arr, irrig_file = read_raster_arr_object(irrigated_frac_data)
 
             # classification using defined rainfed and irrigated fraction threshold. -9999 is no data
-            irrigated_cropland = np.where((irrig_arr >= irrigated_frac_threshold) & (tree_arr <= 6), 1, -9999)
+            irrigated_cropland = np.where((irrig_arr >= irrigated_frac_threshold) & (tree_arr <= tree_threshold), 1, -9999)
 
             # saving classified data
             output_irrigated_cropland_raster = os.path.join(irrigated_cropland_output_dir, f'Irrigated_cropland_{year}.tif')
@@ -249,7 +247,7 @@ def classify_irrigated_rainfed_cropland(rainfed_fraction_dir, irrigated_fraction
 
             # rainfed cropland fraction data is not available for 2000-2007 due to limited/no spatial coverage of USDA CDL
             # data. Applying maximum occurrence approach. It assigns rainfed cropland (value 1) for a pixel if that pixel
-            # is rainfed in most years between 2008-2012 (user defined years).
+            # is rainfed in most year_list between 2008-2012 (user defined year_list).
             max_occurrence_rainfed_input_rasters = glob(os.path.join(rainfed_cropland_output_dir, '*200[8-9]*.tif')) + \
                                                    glob(os.path.join(rainfed_cropland_output_dir, '*201[0-2]*.tif'))
 
@@ -263,7 +261,8 @@ def classify_irrigated_rainfed_cropland(rainfed_fraction_dir, irrigated_fraction
             # been classified as irrigated cropland (we classified irrigated cropland data from IrrMapper/LANID-derived
             # irrigated fraction data; therefore, have more confidence on these dataset)
             max_occur_arr, max_occur_file = read_raster_arr_object(max_occurrence_rainfed_raster)
-            filtered_rainfed_arr = np.where((max_occur_arr == 1) & (irrigated_cropland != 1) & (tree_arr <= 6) , 1, -9999)
+            filtered_rainfed_arr = np.where((max_occur_arr == 1) & (irrigated_cropland != 1) &
+                                            (tree_arr <= tree_threshold), 1, -9999)
 
             final_rainfed_raster = os.path.join(rainfed_cropland_output_dir, f'Rainfed_cropland_{year}.tif')
             write_array_to_raster(raster_arr=filtered_rainfed_arr, raster_file=max_occur_file,
@@ -299,7 +298,7 @@ def filter_rainfed_irrigated_cropET_with_rainfed_irrigated_cropland(rainfed_crop
     """
     if not skip_processing:
         makedirs([rainfed_cropET_output_dir, irrigated_cropET_output_dir])
-        # cropET datasets have been extracted from openET for the following years and months only
+        # cropET datasets have been extracted from openET for the following year_list and months only
         years_to_filter_cropET = [2016, 2017, 2018, 2019, 2020]
         months_to_filter_cropET = list(range(1, 13))
 
@@ -342,18 +341,16 @@ def filter_rainfed_irrigated_cropET_with_rainfed_irrigated_cropland(rainfed_crop
         pass
 
 
-def process_ssebop_data(input_ssebop_dir, output_dir_ssebop_monthly, output_dir_ssebop_yearly,
-                        years=(2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013,
-                               2014, 2015, 2016, 2017, 2018, 2019, 2020),
+def process_ssebop_data(year_list, input_ssebop_dir, output_dir_ssebop_monthly, output_dir_ssebop_yearly,
                         west_US_shape='../../Data_main/shapefiles/Western_US_ref_shapes/WestUS_states.shp',
                         ref_raster=WestUS_raster, resolution=model_res, skip_processing=False):
     """
     Process (sum and clip to Western US extent) Ssebop ET for growing seasons (April to October).
 
+    :param year_list: Tuple/list of year_list for which ssebop data was downloaded.
     :param input_ssebop_dir: Directory file path of downloaded ssebop datasets.
     :param output_dir_ssebop_monthly: File path of directory to save monthly SseBop ET at Western US extent.
     :param output_dir_ssebop_yearly: File path of directory to save summed ET for each year at Western US extent.
-    :param years: Tuple/list of years for which ssebop data was downloaded.
     :param west_US_shape: Filepath of Western US shapefile.
     :param ref_raster: Model reference raster filepath.
     :param resolution: Resolution used in the model. Default set to model_res = 0.02000000000000000736.
@@ -390,9 +387,9 @@ def process_ssebop_data(input_ssebop_dir, output_dir_ssebop_monthly, output_dir_
                                            resolution=resolution)
 
         #########
-        # # Code-block for summing monthly data for years by growing season (April-October) for the Western US
+        # # Code-block for summing monthly data for year_list by growing season (April-October) for the Western US
         #########
-        for year in years:  # first loop for years
+        for year in year_list:  # first loop for year_list
             print(f'summing Ssebop data for year {year}...')
             ssebop_datasets = glob(os.path.join(output_dir_ssebop_monthly, f'*{year}_[4-9]*.tif')) + \
                                 glob(os.path.join(output_dir_ssebop_monthly, f'*{year}_10*.tif'))   # monthly ssebop datasets for each year
@@ -430,8 +427,8 @@ def convert_prism_data_to_tif(input_dir, output_dir, keyword='prism_precip'):
 
 
 def process_prism_data(prism_bil_dir, prism_tif_dir, output_dir_prism_monthly, output_dir_prism_yearly,
-                       years=(1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011,
-                              2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020),
+                       year_list=(1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011,
+                                  2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020),
                        keyword='prism_precip',
                        west_US_shape='../../Data_main/shapefiles/Western_US_ref_shapes/WestUS_states.shp',
                        ref_raster=WestUS_raster, resolution=model_res, skip_processing=False):
@@ -445,7 +442,7 @@ def process_prism_data(prism_bil_dir, prism_tif_dir, output_dir_prism_monthly, o
                                      at Western US extent.
     :param output_dir_prism_yearly: File path of directory to save summed/mean prism precipitation/temperature data for
                                     each year at Western US extent.
-    :param years: Tuple/list of years for which prism data was downloaded.
+    :param year_list: Tuple/list of year_list for which prism data was downloaded.
     :param keyword: keyword to add before processed datasets. Can take 'prism_precip', 'prism_tmax', 'prism_tmin'.
                     Default set to 'prism_precip'.
     :param west_US_shape: Filepath of Western US shapefile.
@@ -501,9 +498,9 @@ def process_prism_data(prism_bil_dir, prism_tif_dir, output_dir_prism_monthly, o
                                            use_ref_width_height=False, ref_raster=ref_raster,
                                            resolution=resolution)
         #########
-        # # Code-block for summing monthly data for years by growing season for the Western US
+        # # Code-block for summing monthly data for year_list by growing season for the Western US
         #########
-        for year in years:  # first loop for years
+        for year in year_list:  # first loop for year_list
             print(f'Processing {keyword} data for {year}...')
 
             if 'precip' in keyword:
@@ -528,18 +525,16 @@ def process_prism_data(prism_bil_dir, prism_tif_dir, output_dir_prism_monthly, o
         pass
 
 
-def sum_gridmet_precip_yearly_data(input_gridmet_monthly_dir, output_dir_yearly, output_dir_grow_season,
-                                   years=(2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011,
-                                              2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020),
-                                   skip_processing=False):
+def sum_gridmet_precip_yearly_data(year_list, input_gridmet_monthly_dir, output_dir_yearly,
+                                   output_dir_grow_season, skip_processing=False):
     """
     Process (sum for Western US extent) GRIDMET Precipitation for a year.
 
+    :param year_list: Tuple/list of year_list for which data will be processed.
     :param input_gridmet_monthly_dir: Directory file path of downloaded gridmet precip monthly datasets.
     :param output_dir_yearly: File path of directory to save summed precip for each year at Western US extent.
     :param output_dir_grow_season: File path of directory to save summed precip for growing season (4-10) of each year
                                    at Western US extent.
-    :param years: Tuple/list of years for which to process data.
     :param skip_processing: Set to True if want to skip processing.
 
     :return: None.
@@ -547,7 +542,7 @@ def sum_gridmet_precip_yearly_data(input_gridmet_monthly_dir, output_dir_yearly,
     if not skip_processing:
         makedirs([output_dir_yearly, output_dir_grow_season])
 
-        for year in years:  # first loop for years
+        for year in year_list:  # first loop for year_list
             print(f'summing GRIDMET precip data for year {year}...')
             gridmet_datasets = glob(os.path.join(input_gridmet_monthly_dir, f'*{year}*.tif'))
 
@@ -567,17 +562,17 @@ def sum_gridmet_precip_yearly_data(input_gridmet_monthly_dir, output_dir_yearly,
         pass
 
 
-def sum_OpenET_yearly_data(input_OpenET_monthly_dir, output_dir_OpenET_yearly, output_dir_OpenET_growing_season,
-                           years=(2016, 2017, 2018, 2019, 2020),
+def sum_OpenET_yearly_data(year_list, input_OpenET_monthly_dir, output_dir_OpenET_yearly,
+                           output_dir_OpenET_growing_season,
                            skip_processing=False):
     """
     Process (sum for Western US extent) OpenET ET datasets for a year and the year's growing season (April to october).
 
+    :param year_list: Tuple/list of year_list for which to process data.
     :param input_OpenET_monthly_dir: Directory file path of downloaded OpenET ensemble monthly datasets.
     :param output_dir_OpenET_yearly: File path of directory to save summed openET data for each year.
     :param output_dir_OpenET_growing_season: File path of directory to save summed openET data for each year's
                                      growing season at Western US extent.
-    :param years: Tuple/list of years for which to process data.
     :param skip_processing: Set to True if want to skip processing.
 
     :return: None.
@@ -585,8 +580,8 @@ def sum_OpenET_yearly_data(input_OpenET_monthly_dir, output_dir_OpenET_yearly, o
     if not skip_processing:
         makedirs([output_dir_OpenET_yearly, output_dir_OpenET_growing_season])
 
-        for year in years:  # first loop for years
-            # # for total years
+        for year in year_list:  # first loop for year_list
+            # # for total year_list
             print(f'summing OpenET data for year {year}...')
             openet_datasets = glob(os.path.join(input_OpenET_monthly_dir, f'*{year}*.tif'))
 
@@ -609,16 +604,16 @@ def sum_OpenET_yearly_data(input_OpenET_monthly_dir, output_dir_OpenET_yearly, o
         pass
 
 
-def sum_cropET_yearly_data(input_cropET_monthly_dir, output_dir_cropET_yearly, output_dir_cropET_growing_season,
-                           years=(2016, 2017, 2018, 2019, 2020), skip_processing=False):
+def sum_cropET_yearly_data(year_list, input_cropET_monthly_dir, output_dir_cropET_yearly,
+                           output_dir_cropET_growing_season, skip_processing=False):
     """
     Process (sum for Western US extent) irrigated/rainfed cropET (extracted from openET) datasets for a year and the year's growing season (April to october).
 
+    :param year_list: Tuple/list of year_list for which to process data.
     :param input_cropET_monthly_dir: Directory file path of downloaded irrigated/rainfed cropET monthly datasets.
     :param output_dir_cropET_yearly: File path of directory to save summed irrigated/rainfed cropET data for each year.
     :param output_dir_cropET_growing_season: File path of directory to save summed irrigated/rainfed cropET data for each
                                              year's growing season at Western US extent.
-    :param years: Tuple/list of years for which to process data.
     :param skip_processing: Set to True if want to skip processing.
 
     :return: None.
@@ -626,10 +621,10 @@ def sum_cropET_yearly_data(input_cropET_monthly_dir, output_dir_cropET_yearly, o
     if not skip_processing:
         makedirs([output_dir_cropET_yearly, output_dir_cropET_growing_season])
 
-        for year in years:  # first loop for years
+        for year in year_list:  # first loop for year_list
             output_name = None
 
-            # # for total years
+            # # for total year_list
             print(f'summing cropET data for year {year}...')
             openet_datasets = glob(os.path.join(input_cropET_monthly_dir, f'*{year}*.tif'))
 
@@ -658,8 +653,8 @@ def sum_cropET_yearly_data(input_cropET_monthly_dir, output_dir_cropET_yearly, o
 
 
 def sum_GridMET_RET_yearly_data(input_RET_monthly_dir, output_dir_RET_yearly, output_dir_RET_growing_season,
-                                years=(2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011,
-                                            2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020),
+                                year_list=(2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011,
+                                           2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020),
                                 skip_processing=False):
     """
     Process (sum for Western US extent) GridMET RET datasets for for a year and the year's growing season
@@ -669,7 +664,7 @@ def sum_GridMET_RET_yearly_data(input_RET_monthly_dir, output_dir_RET_yearly, ou
     :param output_dir_RET_yearly: File path of directory to save summed GridMET RET data for each year.
     :param output_dir_RET_growing_season: File path of directory to save summed GridMET RET data for each year's
                                      growing season at Western US extent.
-    :param years: Tuple/list of years for which to process data.
+    :param year_list: Tuple/list of year_list for which to process data.
     :param skip_processing: Set to True if want to skip processing.
 
     :return: None.
@@ -677,8 +672,8 @@ def sum_GridMET_RET_yearly_data(input_RET_monthly_dir, output_dir_RET_yearly, ou
     if not skip_processing:
         makedirs([output_dir_RET_yearly, output_dir_RET_growing_season])
 
-        for year in years:  # first loop for years
-            # # for total years
+        for year in year_list:  # first loop for year_list
+            # # for total year_list
             print(f'summing GridMET RET data for year {year}...')
             openet_datasets = glob(os.path.join(input_RET_monthly_dir, f'*{year}*.tif'))
 
@@ -751,8 +746,8 @@ def process_AWC_data(input_dir, westUS_shape, output_dir, ref_raster=WestUS_rast
                                        ref_raster=ref_raster)
 
 
-def compare_prev_yearly_precip_current_grow_season_ET(yearly_precip_dir, grow_season_ET_dir, output_dir,
-                                                      skip_processing=False):
+def develop_excess_ET_filter(yearly_precip_dir, grow_season_ET_dir, output_dir,
+                             skip_processing=False):
     """
     Developing a yearly filter for rainfed cropET (effective precip) training data. Using this filter, we will exclude
     pixels where total ET (openET ensemble) in a growing season is higher than total precipitation from last year. These
@@ -770,7 +765,7 @@ def compare_prev_yearly_precip_current_grow_season_ET(yearly_precip_dir, grow_se
         makedirs([output_dir])
         # we will compare growing season ET for a year with previous year's total precip.
         # so, there is a year lag in precip_years list
-        precip_years = [2015, 2016, 2017, 2018, 2019]
+        precip_years = [2015, 2016, 2017, 2018, 2019, 2020, 2021]
         ET_years = [2016, 2017, 2018, 2019, 2020]
 
         for precip_yr, et_yr in zip(precip_years, ET_years):
@@ -794,10 +789,9 @@ def compare_prev_yearly_precip_current_grow_season_ET(yearly_precip_dir, grow_se
         pass
 
 
-def run_all_preprocessing(skip_ssebop_processing=False,
-                          skip_prism_processing=False,
+def run_all_preprocessing(skip_prism_processing=True,
                           skip_gridmet_precip_processing=False,
-                          skip_openET_processing=False,
+                          skip_openET_processing=True,
                           skip_gridmet_RET_precessing=False,
                           skip_merging_rainfed_frac=False,
                           skip_merging_rainfed_cropET=False,
@@ -814,7 +808,6 @@ def run_all_preprocessing(skip_ssebop_processing=False,
     """
     Run all preprocessing steps.
 
-    :param skip_ssebop_processing: Set True if want to skip ssebop data preprocessing.
     :param skip_prism_processing: Set True if want to skip prism (precipitation and temperature) data preprocessing.
     :param skip_gridmet_precip_processing: Set True to skip gridmet precip yearly data processing.
     :param skip_openET_processing: Set True to skip openET ensemble yearly data processing.
@@ -838,7 +831,9 @@ def run_all_preprocessing(skip_ssebop_processing=False,
     :return: None.
     """
     # merge rainfed fraction dataset
-    merge_GEE_data_patches_IrrMapper_LANID_extents(input_dir_irrmapper='../../Data_main/Raster_data/Rainfed_Frac_IrrMapper',
+    merge_GEE_data_patches_IrrMapper_LANID_extents(year_list=(2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012,
+                                                              2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020),
+                                                   input_dir_irrmapper='../../Data_main/Raster_data/Rainfed_Frac_IrrMapper',
                                                    input_dir_lanid='../../Data_main/Raster_data/Rainfed_Frac_LANID',
                                                    merged_output_dir='../../Data_main/Raster_data/Rainfed_cropland/Rainfed_Frac',
                                                    merge_keyword='Rainfed_Frac', monthly_data=False,
@@ -846,7 +841,8 @@ def run_all_preprocessing(skip_ssebop_processing=False,
                                                    skip_processing=skip_merging_rainfed_frac)
 
     # merge rainfed cropET dataset
-    merge_GEE_data_patches_IrrMapper_LANID_extents(input_dir_irrmapper='../../Data_main/Raster_data/Rainfed_crop_OpenET_IrrMapper',
+    merge_GEE_data_patches_IrrMapper_LANID_extents(year_list=(2016, 2017, 2018, 2019, 2020),
+                                                   input_dir_irrmapper='../../Data_main/Raster_data/Rainfed_crop_OpenET_IrrMapper',
                                                    input_dir_lanid='../../Data_main/Raster_data/Rainfed_crop_OpenET_LANID',
                                                    merged_output_dir='../../Data_main/Raster_data/Rainfed_cropET/WestUS_monthly_raw',
                                                    merge_keyword='Rainfed_cropET', monthly_data=True,
@@ -854,7 +850,9 @@ def run_all_preprocessing(skip_ssebop_processing=False,
                                                    skip_processing=skip_merging_rainfed_cropET)
 
     # merge irrigated fraction dataset
-    merge_GEE_data_patches_IrrMapper_LANID_extents(input_dir_irrmapper='../../Data_main/Raster_data/Irrigation_Frac_IrrMapper',
+    merge_GEE_data_patches_IrrMapper_LANID_extents(year_list=(2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012,
+                                                              2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020),
+                                                   input_dir_irrmapper='../../Data_main/Raster_data/Irrigation_Frac_IrrMapper',
                                                    input_dir_lanid='../../Data_main/Raster_data/Irrigation_Frac_LANID',
                                                    merged_output_dir='../../Data_main/Raster_data/Irrigated_cropland/Irrigated_Frac',
                                                    merge_keyword='Irrigated_Frac', monthly_data=False,
@@ -862,7 +860,8 @@ def run_all_preprocessing(skip_ssebop_processing=False,
                                                    skip_processing=skip_merging_irrigated_frac)
 
     # merge irrigated cropET dataset
-    merge_GEE_data_patches_IrrMapper_LANID_extents(input_dir_irrmapper='../../Data_main/Raster_data/Irrig_crop_OpenET_IrrMapper',
+    merge_GEE_data_patches_IrrMapper_LANID_extents(year_list=(2016, 2017, 2018, 2019, 2020),
+                                                   input_dir_irrmapper='../../Data_main/Raster_data/Irrig_crop_OpenET_IrrMapper',
                                                    input_dir_lanid='../../Data_main/Raster_data/Irrig_crop_OpenET_LANID',
                                                    merged_output_dir='../../Data_main/Raster_data/Irrigated_cropET/WestUS_monthly_raw',
                                                    merge_keyword='Irrigated_cropET', monthly_data=True,
@@ -873,7 +872,7 @@ def run_all_preprocessing(skip_ssebop_processing=False,
     classify_irrigated_rainfed_cropland(
         rainfed_fraction_dir='../../Data_main/Raster_data/Rainfed_cropland/Rainfed_Frac',
         irrigated_fraction_dir='../../Data_main/Raster_data/Irrigated_cropland/Irrigated_Frac',
-        tree_cover_dir= '../../Data_main/Raster_data/Tree_cover/WestUS',
+        tree_cover_dir='../../Data_main/Raster_data/Tree_cover/WestUS',
         rainfed_cropland_output_dir='../../Data_main/Raster_data/Rainfed_cropland',
         irrigated_cropland_output_dir='../../Data_main/Raster_data/Irrigated_cropland',
         interim_dir_for_maximum_occurrence_rainfed_cropland='../../Data_main/Raster_data/Rainfed_cropland/interim_dir_for_max_occurrence',
@@ -890,30 +889,22 @@ def run_all_preprocessing(skip_ssebop_processing=False,
         skip_processing=skip_filtering_irrigated_rainfed_cropET)
 
     # sum irrigated cropET dataset
-    sum_cropET_yearly_data(input_cropET_monthly_dir='../../Data_main/Raster_data/Irrigated_cropET/WestUS_monthly',
+    sum_cropET_yearly_data(year_list=(2016, 2017, 2018, 2019, 2020),
+                           input_cropET_monthly_dir='../../Data_main/Raster_data/Irrigated_cropET/WestUS_monthly',
                            output_dir_cropET_yearly='../../Data_main/Raster_data/Irrigated_cropET/WestUS_yearly',
                            output_dir_cropET_growing_season='../../Data_main/Raster_data/Irrigated_cropET/WestUS_grow_season',
-                           years=(2016, 2017, 2018, 2019, 2020),
                            skip_processing=skip_summing_irrigated_cropET)
 
     # sum rainfed cropET dataset
-    sum_cropET_yearly_data(input_cropET_monthly_dir='../../Data_main/Raster_data/Rainfed_cropET/WestUS_monthly',
+    sum_cropET_yearly_data(year_list=(2016, 2017, 2018, 2019, 2020),
+                           input_cropET_monthly_dir='../../Data_main/Raster_data/Rainfed_cropET/WestUS_monthly',
                            output_dir_cropET_yearly='../../Data_main/Raster_data/Rainfed_cropET/WestUS_yearly',
                            output_dir_cropET_growing_season='../../Data_main/Raster_data/Rainfed_cropET/WestUS_grow_season',
-                           years=(2016, 2017, 2018, 2019, 2020),
                            skip_processing=skip_summing_rainfed_cropET)
 
-    # ssebop ET data processing
-    process_ssebop_data(input_ssebop_dir='../../Data_main/Raster_data/Ssebop_ETa/raw_data',
-                        output_dir_ssebop_monthly='../../Data_main/Raster_data/Ssebop_ETa/WestUS_monthly',
-                        output_dir_ssebop_yearly='../../Data_main/Raster_data/Ssebop_ETa/WestUS',
-                        years=(2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012,
-                               2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020),
-                        ref_raster=WestUS_raster, skip_processing=skip_ssebop_processing)
-
     # prism precipitation data processing
-    process_prism_data(years=(1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011,
-                              2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020),
+    process_prism_data(year_list=(1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011,
+                                  2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020),
                        prism_bil_dir='../../Data_main/Raster_data/PRISM_Precip/bil_format',
                        prism_tif_dir='../../Data_main/Raster_data/PRISM_Precip/tif_format',
                        output_dir_prism_monthly='../../Data_main/Raster_data/PRISM_Precip/WestUS_monthly',
@@ -922,8 +913,8 @@ def run_all_preprocessing(skip_ssebop_processing=False,
                        keyword='prism_precip', skip_processing=skip_prism_processing)
 
     # prism maximum temperature data processing
-    process_prism_data(years=(1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011,
-                              2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020),
+    process_prism_data(year_list=(1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011,
+                                  2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020),
                        prism_bil_dir='../../Data_main/Raster_data/PRISM_Tmax/bil_format',
                        prism_tif_dir='../../Data_main/Raster_data/PRISM_Tmax/tif_format',
                        output_dir_prism_monthly='../../Data_main/Raster_data/PRISM_Tmax/WestUS_monthly',
@@ -932,8 +923,8 @@ def run_all_preprocessing(skip_ssebop_processing=False,
                        keyword='prism_tmax', skip_processing=skip_prism_processing)
 
     # prism minimum temperature data processing
-    process_prism_data(years=(1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011,
-                              2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020),
+    process_prism_data(year_list=(1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011,
+                                  2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020),
                        prism_bil_dir='../../Data_main/Raster_data/PRISM_Tmin/bil_format',
                        prism_tif_dir='../../Data_main/Raster_data/PRISM_Tmin/tif_format',
                        output_dir_prism_monthly='../../Data_main/Raster_data/PRISM_Tmin/WestUS_monthly',
@@ -942,32 +933,33 @@ def run_all_preprocessing(skip_ssebop_processing=False,
                        keyword='prism_tmin', skip_processing=skip_prism_processing)
 
     # gridmet precip yearly data processing
-    sum_gridmet_precip_yearly_data(input_gridmet_monthly_dir='../../Data_main/Raster_data/GRIDMET_Precip/WestUS_monthly',
+    sum_gridmet_precip_yearly_data(year_list=(2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011,
+                                              2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020),
+                                   input_gridmet_monthly_dir='../../Data_main/Raster_data/GRIDMET_Precip/WestUS_monthly',
                                    output_dir_yearly='../../Data_main/Raster_data/GRIDMET_Precip/WestUS_yearly',
                                    output_dir_grow_season = '../../Data_main/Raster_data/GRIDMET_Precip/WestUS_grow_season',
-                                   years=(2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012,
-                                       2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020),
                                    skip_processing=skip_gridmet_precip_processing)
 
     # OpenET ensemble yearly data processing
-    sum_OpenET_yearly_data(input_OpenET_monthly_dir='../../Data_main/Raster_data/OpenET_ensemble/WestUS_monthly',
+    sum_OpenET_yearly_data(year_list=(2016, 2017, 2018, 2019, 2020),
+                           input_OpenET_monthly_dir='../../Data_main/Raster_data/OpenET_ensemble/WestUS_monthly',
                            output_dir_OpenET_yearly='../../Data_main/Raster_data/OpenET_ensemble/WestUS_yearly',
                            output_dir_OpenET_growing_season='../../Data_main/Raster_data/OpenET_ensemble/WestUS_grow_season',
-                           years=(2016, 2017, 2018, 2019, 2020), skip_processing=skip_openET_processing)
+                           skip_processing=skip_openET_processing)
 
     # GridMET yearly data processing
-    sum_GridMET_RET_yearly_data(input_RET_monthly_dir='../../Data_main/Raster_data/GRIDMET_RET/WestUS_monthly',
+    sum_GridMET_RET_yearly_data(year_list=(2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011,
+                                           2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020),
+                                input_RET_monthly_dir='../../Data_main/Raster_data/GRIDMET_RET/WestUS_monthly',
                                 output_dir_RET_yearly='../../Data_main/Raster_data/GRIDMET_RET/WestUS_yearly',
                                 output_dir_RET_growing_season='../../Data_main/Raster_data/GRIDMET_RET/WestUS_grow_season',
-                                years=(2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011,
-                                           2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020),
                                 skip_processing=skip_gridmet_RET_precessing)
 
     # processing excess ET filter
-    compare_prev_yearly_precip_current_grow_season_ET(yearly_precip_dir='../../Data_main/Raster_data/PRISM_Precip/WestUS',
-                                                      grow_season_ET_dir='../../Data_main/Raster_data/OpenET_ensemble/WestUS_grow_season',
-                                                      output_dir='../../Data_main/Raster_data/Excess_ET_filter',
-                                                      skip_processing=skip_excess_ET_filter_processing)
+    develop_excess_ET_filter(yearly_precip_dir='../../Data_main/Raster_data/PRISM_Precip/WestUS',
+                             grow_season_ET_dir='../../Data_main/Raster_data/OpenET_ensemble/WestUS_grow_season',
+                             output_dir='../../Data_main/Raster_data/Excess_ET_filter',
+                             skip_processing=skip_excess_ET_filter_processing)
 
     # converting DEM data to slope
     create_slope_raster(input_raster='../../Data_main/Raster_data/DEM/WestUS/DEM.tif',

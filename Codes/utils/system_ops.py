@@ -29,7 +29,7 @@ def copy_file(input_dir_file, copy_dir, search_by='*.tif', rename=None):
     """
     makedirs([copy_dir])
     if '.tif' not in input_dir_file:
-        input_file = glob(os.path.join(input_dir_file, search_by))
+        input_file = glob(os.path.join(input_dir_file, search_by))[0]
         if rename is not None:
             copied_file = os.path.join(copy_dir, f'{rename}.tif')
         else:

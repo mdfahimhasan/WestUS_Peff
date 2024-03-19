@@ -19,14 +19,13 @@ no_data_value = -9999
 model_res = 0.01976293625031605786  # in deg, ~2 km
 WestUS_shape = '../../Data_main/shapefiles/Western_US_ref_shapes/WestUS_states.shp'
 WestUS_raster = '../../Data_main/reference_rasters/Western_US_refraster_2km.tif'
-GEE_merging_refraster_large_grids = '../../Data_main/reference_rasters/GEE_merging_refraster_larger_grids.tif'
 
 # ****************************** Filtering training data for effective precip (westUS) *********************************
 
 # # filtering training data
 training_zone_shapefile = '../../Data_main/shapefiles/Training_zones/effective_precip_training_zone.shp'
 output_dir = '../../Data_main/Raster_data/Rainfed_cropET_filtered_training'
-skip_effective_precip_training_data_filtering = False  ######
+skip_effective_precip_training_data_filtering = True  ######
 
 filter_effective_precip_training_data(training_zone_shp=training_zone_shapefile,
                                       general_output_dir=output_dir,
@@ -39,9 +38,6 @@ filter_effective_precip_training_data(training_zone_shp=training_zone_shapefile,
 # # create dataframe
 monthly_data_path_dict = {
     'Effective_precip_train': '../../Data_main/Raster_data/Rainfed_cropET_filtered_training/final_filtered_cropET_for_training',
-    'MODIS_Day_LST': '../../Data_main/Raster_data/MODIS_Day_LST/WestUS_monthly',
-    'MODIS_LAI': '../../Data_main/Raster_data/MODIS_LAI/WestUS_monthly',
-    'MODIS_NDVI': '../../Data_main/Raster_data/MODIS_NDVI/WestUS_monthly',
     'PRISM_Precip': '../../Data_main/Raster_data/PRISM_Precip/WestUS_monthly',
     'PRISM_Tmax': '../../Data_main/Raster_data/PRISM_Tmax/WestUS_monthly',
     'PRISM_Tmin': '../../Data_main/Raster_data/PRISM_Tmin/WestUS_monthly',
@@ -70,19 +66,18 @@ static_data_path_dict = {'Bulk_density': '../../Data_main/Raster_data/Bulk_densi
 train_test_years_list = [2016, 2017, 2018, 2019, 2020]
 total_month_range = (4, 10)  # considering all months for dataframe creation,
 # later will consider growing season for train-test split (4-10)
-model_version = 'v7'  ######
+model_version = 'v8'  ######
 print(f'Running model version {model_version}...')
 
 datasets_to_include = ['Effective_precip_train',
-                       'MODIS_Day_LST', 'MODIS_LAI', 'MODIS_NDVI', 'MODIS_NDWI',
                        'PRISM_Precip', 'PRISM_Tmax', 'PRISM_Tmin', 'Ssebop_ETa',
                        'GRIDMET_Precip', 'GRIDMET_RET', 'GRIDMET_vap_pres_def', 'GRIDMET_max_RH',
                        'GRIDMET_min_RH', 'GRIDMET_wind_vel', 'GRIDMET_short_rad', 'DAYMET_sun_hr',
                        'Bulk_density', 'Clay_content', 'Field_capacity', 'Sand_content',
                        'AWC', 'DEM', 'Slope', 'Latitude', 'Longitude']
 
-skip_train_test_df_creation = False  ######
-train_test_parquet_path = f'../../Eff_Precip_Model_Run/Model_csv/train_test{model_version}.parquet'
+skip_train_test_df_creation = True  ######
+train_test_parquet_path = f'../../Eff_Precip_Model_Run/Model_csv/train_test.parquet'
 
 makedirs([os.path.dirname(train_test_parquet_path)])
 
@@ -103,10 +98,10 @@ train_test_month_range = (4, 10)
 output_dir = '../../Eff_Precip_Model_Run/Model_csv'
 makedirs([output_dir])
 
-exclude_columns = ['year', 'Bulk_density', 'Clay_content', 'Slope',
+exclude_columns = ['year', 'Latitude', 'Longitude',
+                   'Bulk_density', 'Clay_content', 'Slope',
                    'PRISM_Tmax', 'PRISM_Tmin', 'PRISM_Precip',
-                   'Ssebop_ETa', 'GRIDMET_wind_vel', 'GRIDMET_min_RH',
-                   'MODIS_LAI', 'MODIS_NDVI', 'MODIS_Day_LST']
+                   'Ssebop_ETa', 'GRIDMET_wind_vel', 'GRIDMET_min_RH']
 remove_outlier = False
 outlier_upper_range = None
 
@@ -217,8 +212,7 @@ features_in_pdp_plot = ['GRIDMET Precipitation (mm)', 'GRIDMET Reference ET (mm)
                         'GRIDMET Mean Vapour Pressure Deficit (kpa)',
                         'GRIDMET Max Relative Humidity (%)',
                         'GRIDMET Downward Shortwave Radiation (W/m^2)',
-                        'Field Capacity (%)', 'DEM', 'month',
-                        f'Longitude ({deg_unit})', f'Latitude ({deg_unit})']
+                        'Field Capacity (%)', 'DEM', 'month']
 
 create_pdplots(trained_model=lgbm_reg_trained, x_train=x_train,
                features_to_include=features_in_pdp_plot, output_dir=plot_dir,
@@ -235,8 +229,7 @@ print('##################################')
 print('**********************************')
 
 # # Creating monthly predictor dataframe for model prediction
-datasets_to_include_month_predictors = ['MODIS_Day_LST', 'MODIS_LAI', 'MODIS_NDVI', 'MODIS_NDWI',
-                                        'PRISM_Precip', 'PRISM_Tmax', 'PRISM_Tmin', 'Ssebop_ETa',
+datasets_to_include_month_predictors = ['PRISM_Precip', 'PRISM_Tmax', 'PRISM_Tmin', 'Ssebop_ETa',
                                         'GRIDMET_Precip', 'GRIDMET_RET', 'GRIDMET_vap_pres_def', 'GRIDMET_max_RH',
                                         'GRIDMET_min_RH', 'GRIDMET_wind_vel', 'GRIDMET_short_rad', 'DAYMET_sun_hr',
                                         'Bulk_density', 'Clay_content', 'Field_capacity', 'Sand_content',
@@ -245,7 +238,7 @@ datasets_to_include_month_predictors = ['MODIS_Day_LST', 'MODIS_LAI', 'MODIS_NDV
 predictor_years = [2016, 2017, 2018, 2019, 2020]
 
 monthly_predictor_csv_dir = '../../Eff_Precip_Model_Run/Model_csv/monthly_predictors'
-skip_prcessing_monthly_predictor_dataframe = False
+skip_prcessing_monthly_predictor_dataframe = True
 create_monthly_dataframes_for_eff_precip_prediction(years_list=predictor_years,
                                                     month_range=(4, 10),
                                                     monthly_data_path_dict=monthly_data_path_dict,
@@ -258,17 +251,16 @@ create_monthly_dataframes_for_eff_precip_prediction(years_list=predictor_years,
 # # Creating nan position dict for irrigated cropET (westUS)
 irrigated_cropET_monthly_dir = '../../Data_main/Raster_data/Irrigated_cropET/WestUS_monthly'
 output_dir_nan_pos = '../../Eff_Precip_Model_Run/Model_csv/nan_pos_irrigated_cropET'
-skip_processing_nan_pos_irrig_cropET = False
+skip_processing_nan_pos_irrig_cropET = True
 
 create_nan_pos_dict_for_irrigated_cropET(irrigated_cropET_dir=irrigated_cropET_monthly_dir,
                                          output_dir=output_dir_nan_pos,
                                          skip_processing=skip_processing_nan_pos_irrig_cropET)
 
 # # Generating monthly predictions for 11 states
-exclude_columns = ['Bulk_density', 'Clay_content',
+exclude_columns = [ 'Latitude', 'Longitude', 'Bulk_density', 'Clay_content',
                    'Slope', 'PRISM_Tmax', 'PRISM_Tmin', 'PRISM_Precip',
-                   'Ssebop_ETa', 'GRIDMET_wind_vel', 'GRIDMET_min_RH',
-                   'MODIS_LAI', 'MODIS_NDVI', 'MODIS_Day_LST']
+                   'Ssebop_ETa', 'GRIDMET_wind_vel', 'GRIDMET_min_RH']
 
 effective_precip_monthly_output_dir = f'../../Data_main/Raster_data/Effective_precip_prediction_WestUS/{model_version}_monthly'
 skip_estimate_monthly_eff_precip_WestUS = False
@@ -291,70 +283,3 @@ sum_monthly_effective_precip_rasters(years_list=predictor_years,
                                      skip_processing=skip_sum_effective_precip)
 
 print('**********************************')
-
-# ########################################################################################################################
-# Yearly model performance check
-# skip_yearly_train_test_split = False
-#
-# year_available_for_train_test = [2016, 2017, 2018, 2019, 2020]
-#
-# for yr in year_available_for_train_test:
-#     train_years = [i for i in year_available_for_train_test if i != yr]
-#     test_year = [yr]
-#
-#     yearly_output_dir = os.path.join('../../Data_main/Model_csv/yearly_train_test_splits', f'test_year_{yr}')
-#     x_train, x_test, y_train, y_test = \
-#         split_train_val_test_set_by_year(input_csv=train_test_parquet_path,
-#                                          pred_attr='Rainfed_cropET', exclude_columns=exclude_columns,
-#                                          years_in_train=train_years, year_in_test=test_year,
-#                                          general_output_dir=yearly_output_dir, verbose=False,
-#                                          skip_processing=skip_yearly_train_test_split)
-#
-#     lgbm_param_dict = {'n_estimators': 250,
-#                        'max_depth': 13,
-#                        'learning_rate': 0.05,
-#                        'subsample': 0.7,
-#                        'colsample_bytree': 0.8,
-#                        'colsample_bynode': 0.7,
-#                        'path_smooth': 0.2,
-#                        'num_leaves': 70,
-#                        'min_child_samples': 40,
-#                        # 'data_sample_strategy': 'goss'
-#                        }
-#
-#     save_model_to_dir = '../../Eff_Precip_Model_Run/Model_trained'
-#     load_model = False
-#     save_model = True
-#
-#     lgbm_reg_trained = train_model(x_train=x_train, y_train=y_train, params_dict=lgbm_param_dict, model='lgbm', n_jobs=-1,
-#                                    load_model=load_model, save_model=save_model, save_folder=save_model_to_dir,
-#                                    model_save_name=f'trial_effective_precip_{yr}.joblib',
-#                                    tune_hyperparameters=False, repeated_Kfold=False, n_folds=5, n_iter=10, n_repeats=5)
-#
-#     print('**************************')
-#     # Train and Test accuracy for each year
-#     y_pred_train = lgbm_reg_trained.predict(x_train)
-#     train_rmse = calculate_rmse(Y_pred=y_pred_train, Y_obsv=y_train)
-#     train_r2 = calculate_r2(Y_pred=y_pred_train, Y_obsv=y_train)
-#
-#     print(f'For year = {yr} as test set, Train RMSE = {round(train_rmse, 4)}')
-#     print(f'For year = {yr} as test set, Train R2 = {round(train_r2, 4)}')
-#     print('\n')
-#
-#     y_pred_test = lgbm_reg_trained.predict(x_test)
-#     test_rmse = calculate_rmse(Y_pred=y_pred_test, Y_obsv=y_test)
-#     test_r2 = calculate_r2(Y_pred=y_pred_test, Y_obsv=y_test)
-#
-#     print(f'For year = {yr} as test set, Test RMSE = {round(test_rmse, 4)}')
-#     print(f'For year = {yr} as test set, Test R2 = {round(test_r2, 4)}')
-#     print('**************************')
-#
-#     scatter_plot_name = f'scatter_test_year_{yr}.tif'
-#     scatter_plot_dir = '../../Eff_Precip_Model_Run/Plots'
-#
-#     scatter_plot_of_same_vars(Y_pred=y_pred_test, Y_obsv=y_test.to_numpy(),
-#                  x_label='Eff. Precip. Observed (mm)', y_label='Eff. Precip. Predicted (mm)',
-#                  title=f'For test_year_{yr}',
-#                  plot_name=scatter_plot_name, savedir=scatter_plot_dir)
-
-# ########################################################################################################################

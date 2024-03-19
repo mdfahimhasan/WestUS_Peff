@@ -30,7 +30,7 @@ def download_openET_30m(data_name, years, months, grid_shape, download_dir):
     # getting imagecollection name, band names, reducer..
     data, band, multiply_scale, reducer, _, _, _, _ = get_gee_dict(data_name)
 
-    for year in years:  # first loop for years
+    for year in years:  # first loop for year_list
         for month in month_list:  # second loop for months
             print('********')
             print(f'Getting OpenET data for year={year}, month={month}.....')
@@ -108,7 +108,7 @@ def download_irrigated_cropland_30m(data_name, years, grid_shape, download_dir):
                                   2016: 'aim_2016', 2017: 'aim_2017', 2018: 'aim_2018', 2019: 'aim_2019',
                                   2020: 'aim_2020'}
 
-        for year in years:  # first loop for years
+        for year in years:  # first loop for year_list
             print('********')
             print(f'Getting Irrigated Cropland data for year={year}.....')
 
@@ -167,7 +167,7 @@ def download_irrigated_cropland_30m(data_name, years, grid_shape, download_dir):
         # Extracting dataset information required for downloading from GEE
         irrmapper_asset, irrmapper_band, multiply_scale, reducer, _, _, _, _= get_gee_dict('IrrMapper')
 
-        for year in years:  # first loop for years
+        for year in years:  # first loop for year_list
             print('********')
             print(f'Getting Irrigated Cropland data for year={year}.....')
 
@@ -244,7 +244,7 @@ def download_rainfed_cropland_30m(data_name, years, grid_shape, download_dir):
                                   2016: 'aim_2016', 2017: 'aim_2017', 2018: 'aim_2018', 2019: 'aim_2019',
                                   2020: 'aim_2020'}
 
-        for year in years:  # first loop for years
+        for year in years:  # first loop for year_list
             print('********')
             print(f'Getting Rainfed Cropland data for year={year}.....')
 
@@ -328,7 +328,7 @@ def download_rainfed_cropland_30m(data_name, years, grid_shape, download_dir):
         # Extracting dataset information required for downloading from GEE
         irrmapper_asset, irrmapper_band, multiply_scale, reducer, _, _, _, _= get_gee_dict('IrrMapper')
 
-        for year in years:  # first loop for years
+        for year in years:  # first loop for year_list
             print('********')
             print(f'Getting Irrigated Cropland data for year={year}.....')
 
@@ -407,7 +407,7 @@ def download_cdl_30m(data_name, years, grid_shape, download_dir):
     # CDL dataset information required for downloading from GEE
     cdl_data, cdl_band, cdl_multiply_scale, cdl_reducer, _, _, _, _ = get_gee_dict('USDA_CDL')
 
-    for year in years:  # first loop for years
+    for year in years:  # first loop for year_list
         print('********')
         print(f'Getting Rainfed Cropland data for year={year}.....')
 
@@ -471,31 +471,31 @@ CA_download_dir = '../../Data_main/Data_Drivers_of_ET/Raster_data/30m/CA'
 years_to_download_data_for = [2016, 2017, 2018, 2019, 2020]
 
 # Downloading data for Kansas ROI GMD4 (County: Cheyenne, Rawlins, Sherman, Decatur, Thomas, Sheridan, Graham, Logan, Gove)
-# download_openET_30m(data_name='OpenET_ensemble', years=years_to_download_data_for, months=(1, 12),
+# download_openET_30m(data_name='OpenET_ensemble', year_list=years_to_download_data_for, months=(1, 12),
 #                     grid_shape=KS_30m_grids, download_dir=KS_download_dir)
 #
-# download_irrigated_cropland_30m(data_name='Irrigated_KS', years=years_to_download_data_for,
+# download_irrigated_cropland_30m(data_name='Irrigated_KS', year_list=years_to_download_data_for,
 #                                 grid_shape=KS_30m_grids, download_dir=KS_download_dir)
 #
-# download_rainfed_cropland_30m(data_name='Rainfed_KS', years=years_to_download_data_for,
+# download_rainfed_cropland_30m(data_name='Rainfed_KS', year_list=years_to_download_data_for,
 #                                 grid_shape=KS_30m_grids, download_dir=KS_download_dir)
 #
 #
-# download_cdl_30m(data_name='CDL_KS', years=years_to_download_data_for,
+# download_cdl_30m(data_name='CDL_KS', year_list=years_to_download_data_for,
 #                  grid_shape=KS_30m_grids, download_dir=KS_download_dir)
 #
 #
 # # Downloading data for California ROI (County: Tehama, Glenn, Butte, Colusa, Sutter, Yuba)
-# download_openET_30m(data_name='OpenET_ensemble', years=years_to_download_data_for, months=(1, 12),
+# download_openET_30m(data_name='OpenET_ensemble', year_list=years_to_download_data_for, months=(1, 12),
 #                     grid_shape=CA_30m_grids, download_dir=CA_download_dir)
 #
-# download_irrigated_cropland_30m(data_name='Irrigated_CA', years=years_to_download_data_for,
+# download_irrigated_cropland_30m(data_name='Irrigated_CA', year_list=years_to_download_data_for,
 #                                 grid_shape=CA_30m_grids, download_dir=CA_download_dir)
 #
-# download_rainfed_cropland_30m(data_name='Rainfed_CA', years=years_to_download_data_for,
+# download_rainfed_cropland_30m(data_name='Rainfed_CA', year_list=years_to_download_data_for,
 #                                 grid_shape=CA_30m_grids, download_dir=CA_download_dir)
 #
-# download_cdl_30m(data_name='CDL_CA', years=years_to_download_data_for,
+# download_cdl_30m(data_name='CDL_CA', year_list=years_to_download_data_for,
 #                  grid_shape=CA_30m_grids, download_dir=CA_download_dir)
 #
 
@@ -504,15 +504,15 @@ KS_30m_grids_gmd2 = '../../Data_main/Data_Drivers_of_ET/ROIs/GEE_shapefiles/KS_g
 KS_download_dir2 = '../../Data_main/Data_Drivers_of_ET/Raster_data/30m/KS_2'
 
 
-# download_openET_30m(data_name='OpenET_ensemble', years=years_to_download_data_for, months=(1, 12),
+# download_openET_30m(data_name='OpenET_ensemble', year_list=years_to_download_data_for, months=(1, 12),
 #                     grid_shape=KS_30m_grids_gmd2, download_dir=KS_download_dir2)
 #
-# download_irrigated_cropland_30m(data_name='Irrigated_KS', years=years_to_download_data_for,
+# download_irrigated_cropland_30m(data_name='Irrigated_KS', year_list=years_to_download_data_for,
 #                                 grid_shape=KS_30m_grids_gmd2, download_dir=KS_download_dir2)
 #
-# download_rainfed_cropland_30m(data_name='Rainfed_KS', years=years_to_download_data_for,
+# download_rainfed_cropland_30m(data_name='Rainfed_KS', year_list=years_to_download_data_for,
 #                                 grid_shape=KS_30m_grids_gmd2, download_dir=KS_download_dir2)
 #
 #
-# download_cdl_30m(data_name='CDL_KS', years=years_to_download_data_for,
+# download_cdl_30m(data_name='CDL_KS', year_list=years_to_download_data_for,
 #                  grid_shape=KS_30m_grids_gmd2, download_dir=KS_download_dir2)

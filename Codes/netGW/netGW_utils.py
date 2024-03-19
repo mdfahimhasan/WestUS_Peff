@@ -28,7 +28,7 @@ def estimate_netGW_Irr(years_list, effective_precip_dir, irrigated_cropET_dir,
     the Western US compiling growing season irrigated cropET, growing season effective precipitation, and growing
     season surface water irrigation that has been distributed).
 
-    :param years_list: A list of years to process data for.
+    :param years_list: A list of year_list to process data for.
     :param effective_precip_dir: Directory path for growing season effective precipitation.
                                 (source: effective precipitation ML model)
     :param irrigated_cropET_dir: Directory path for growing season irrigated cropET.
@@ -67,7 +67,7 @@ def estimate_netGW_Irr(years_list, effective_precip_dir, irrigated_cropET_dir,
 
             # the processed net ET irrigation estimates are averaged over only irrigated areas in a pixel.
             # before subtracting sw irrigation from this value to get netGW_irrig, the net_et_irrig need to be area
-            # averaged. This will lead to area-averaged netGW estimate which can be compared area-averaged pumping.
+            # averaged. This will lead to area-averaged netGW estimate which can be compared to area-averaged pumping.
             # multiplying with irrigated fraction will give the 2km pixel averaged net et irrigation estimates
             net_et_irrig_aa = np.where(~np.isnan(net_et_irrig), net_et_irrig * irrigated_frac_arr, -9999)
 
@@ -81,18 +81,20 @@ def estimate_netGW_Irr(years_list, effective_precip_dir, irrigated_cropET_dir,
 
             # assigning 0 to all non-irrigated pixels inside the landmass of the Western US
             # using reference raster
-            net_gw_irrig = np.where((net_gw_irrig==-9999) & (ref_arr == 0), 0, net_gw_irrig)
+            net_gw_irrig = np.where((net_gw_irrig == -9999) & (ref_arr == 0), 0, net_gw_irrig)
 
             output_raster = os.path.join(output_dir, f'netGW_Irr_{year}.tif')
             write_array_to_raster(net_gw_irrig, ref_file, ref_file.transform, output_raster)
 
 
-def clip_netGW_for_basin(years, basin_shp, netGW_input_dir, basin_netGW_output_dir,
-                         resolution=model_res, skip_processing=False):
+def clip_netGW_Irr_frac_for_basin(years, basin_shp, netGW_input_dir, basin_netGW_output_dir,
+                                  irr_frac_input_dir, basin_irr_frac_output_dir,
+                                  resolution=model_res, skip_processing=False):
     if not skip_processing:
         for year in years:
-            print(f'Clip growing season netGW for {year}...')
+            print(f'Clip growing season netGW and Irrigated fraction for {year}...')
 
+            # net GW
             netGW_raster = glob(os.path.join(netGW_input_dir, f'*{year}*.tif'))[0]
 
             clip_resample_reproject_raster(input_raster=netGW_raster, input_shape=basin_shp,
@@ -104,17 +106,34 @@ def clip_netGW_for_basin(years, basin_shp, netGW_input_dir, basin_netGW_output_d
                                            crs='EPSG:4269', output_datatype=gdal.GDT_Float32,
                                            use_ref_width_height=False)
 
+            # irrigation fraction
+            irr_frac_raster = glob(os.path.join(irr_frac_input_dir, f'*{year}*.tif'))[0]
 
-def pumping_AF_pts_to_mm_raster(years, pumping_pts_shp, pumping_attr_AF, year_attr, output_dir,
-                                basin_shp, ref_raster=WestUS_raster, resolution=model_res,
-                                skip_processing=False):
+            clip_resample_reproject_raster(input_raster=irr_frac_raster, input_shape=basin_shp,
+                                           output_raster_dir=basin_irr_frac_output_dir,
+                                           keyword=' ', raster_name=f'Irr_frac_{year}.tif',
+                                           clip=True, resample=False, clip_and_resample=False,
+                                           targetaligned=True, resample_algorithm='near',
+                                           resolution=resolution,
+                                           crs='EPSG:4269', output_datatype=gdal.GDT_Float32,
+                                           use_ref_width_height=False)
+    else:
+        pass
+
+
+def pumping_AF_pts_to_mm_raster(years, irrigated_fraction_dir, pumping_pts_shp, pumping_attr_AF,
+                                year_attr, output_dir, basin_shp, ref_raster=WestUS_raster,
+                                resolution=model_res, skip_processing=False):
     if not skip_processing:
         # creating sub-directories
         annual_pump_shp_dir = os.path.join(output_dir, 'annual_pumping_shp')
         pumping_AF_dir = os.path.join(output_dir, 'pumping_AF_raster')
+        interim_pumping_AF_dir = os.path.join(pumping_AF_dir, 'interim')
         pumping_mm_dir = os.path.join(output_dir, 'pumping_mm')
+        interim_pumping_mm_dir = os.path.join(pumping_mm_dir, 'interim')
 
-        makedirs([annual_pump_shp_dir, pumping_AF_dir, pumping_mm_dir])
+        makedirs([annual_pump_shp_dir, pumping_AF_dir, interim_pumping_AF_dir,
+                  pumping_mm_dir, interim_pumping_mm_dir])
 
         # loading pumping shapefile
         pumping_gdf = gpd.read_file(pumping_pts_shp)
@@ -133,70 +152,95 @@ def pumping_AF_pts_to_mm_raster(years, pumping_pts_shp, pumping_attr_AF, year_at
             # the generated raster is for the whole Western US with 0 values outside the basin
             output_AF_raster = f'pumping_{year}_AF.tif'
             pumping_AF_raster = shapefile_to_raster(input_shape=annual_filtered_shp,
-                                                    output_dir=os.path.join(pumping_AF_dir, 'interim'),
+                                                    output_dir=interim_pumping_AF_dir,
                                                     raster_name=output_AF_raster, use_attr=True,
                                                     attribute=pumping_attr_AF, add=True,
                                                     ref_raster=ref_raster, resolution=resolution)
 
-            # clipping data only to required basin
-            pumping_AF_raster = \
-                clip_resample_reproject_raster(input_raster=pumping_AF_raster,
-                                               input_shape=basin_shp, output_raster_dir=pumping_AF_dir,
-                                               keyword=' ', raster_name=output_AF_raster,
-                                               clip=True, resample=False, clip_and_resample=False,
-                                               targetaligned=True, resample_algorithm='near',
-                                               resolution=model_res,
-                                               crs='EPSG:4269', output_datatype=gdal.GDT_Float32,
-                                               use_ref_width_height=False)
+            # irrigated fraction data processing
+            irrig_frac_data = glob(os.path.join(irrigated_fraction_dir, f'*{year}*.tif'))[0]
+            irrig_frac_arr, file = read_raster_arr_object(irrig_frac_data)
+
+            # converting pumping unit from AF to mm
+
+            # pixels with no pumping or zero pumping is assigned to 0 (need the no pumping info for GW models..)
+            pumping_AF_arr = read_raster_arr_object(pumping_AF_raster, get_file=None)
 
             # area of a 2 km pixel
             area_mm2_single_pixel = (2193 * 1000) * (2193 * 1000)  # unit in mm2
 
-            # converting pumping unit from AF to mm
-            # pixels with no pumping or zero pumping is assigned to 0 (need the no pumping info for GW models..)
-            pumping_AF_arr, file = read_raster_arr_object(pumping_AF_raster)
-            pumping_mm_arr = np.where(~np.isnan(pumping_AF_arr), pumping_AF_arr * 1233481837548 / area_mm2_single_pixel, 0)
+            pumping_mm_arr = np.where(~np.isnan(pumping_AF_arr), pumping_AF_arr * 1233481837548 /
+                                      area_mm2_single_pixel, 0)
 
-            output_mm_raster = os.path.join(pumping_mm_dir, f'pumping_{year}_mm.tif')
-            write_array_to_raster(pumping_mm_arr, file, file.transform, output_mm_raster)
+            pumping_raster_name = f'pumping_{year}_mm.tif'
+            pumping_mm_raster = os.path.join(interim_pumping_mm_dir, '', f'pumping_{year}_mm.tif')
+            write_array_to_raster(pumping_mm_arr, file, file.transform, pumping_mm_raster)
 
+            # # clipping data only to required basin
+            # pumping AF data
+            clip_resample_reproject_raster(input_raster=pumping_AF_raster,
+                                           input_shape=basin_shp, output_raster_dir=pumping_AF_dir,
+                                           keyword=' ', raster_name=output_AF_raster,
+                                           clip=True, resample=False, clip_and_resample=False,
+                                           targetaligned=True, resample_algorithm='near',
+                                           resolution=model_res,
+                                           crs='EPSG:4269', output_datatype=gdal.GDT_Float32,
+                                           use_ref_width_height=False)
+            # pumping mm data
+            clip_resample_reproject_raster(input_raster=pumping_mm_raster,
+                                           input_shape=basin_shp, output_raster_dir=pumping_mm_dir,
+                                           keyword=' ', raster_name=pumping_raster_name,
+                                           clip=True, resample=False, clip_and_resample=False,
+                                           targetaligned=True, resample_algorithm='near',
+                                           resolution=model_res,
+                                           crs='EPSG:4269', output_datatype=gdal.GDT_Float32,
+                                           use_ref_width_height=False)
     else:
         pass
 
 
-def compile_basin_df_for_netGW_pumping(years, basin_netGW_dir, basin_pumping_dir,
-                                       output_csv, skip_processing=False):
+def compile_basin_df_for_netGW_pumping(years, basin_netGW_dir, basin_pumping_mm_dir,
+                                       basin_pumping_AF_dir, output_csv,
+                                       skip_processing=False):
     if not skip_processing:
-        makedirs([basin_pumping_dir])
+        makedirs([basin_pumping_mm_dir])
 
         print(f'Compiling growing season netGW vs pumping dataframe...')
 
         # empty dictionary with to store data
-        extract_dict = {'year': [], 'netGW_mm': [], 'pumping_mm': [], 'lat': [], 'lon': []}
+        extract_dict = {'year': [], 'netGW_mm': [], 'pumping_mm': [], 'pumping_AF': [],
+                        'lat': [], 'lon': []}
 
         # lopping through each year and storing data in a list
         for year in years:
             netGW_data = glob(os.path.join(basin_netGW_dir, f'*{year}*.tif'))[0]
-            pumping_data = glob(os.path.join(basin_pumping_dir, f'*{year}*.tif'))[0]
+            pumping_mm_data = glob(os.path.join(basin_pumping_mm_dir, f'*{year}*.tif'))[0]
+            pumping_AF_data = glob(os.path.join(basin_pumping_AF_dir, f'*{year}*.tif'))[0]
 
             netGW_arr = read_raster_arr_object(netGW_data, get_file=False).flatten()
-            pump_arr = read_raster_arr_object(pumping_data, get_file=False).flatten()
+            pump_mm_arr = read_raster_arr_object(pumping_mm_data, get_file=False).flatten()
+            pump_AF_arr = read_raster_arr_object(pumping_AF_data, get_file=False).flatten()
             lon_arr, lat_arr = make_lat_lon_array_from_raster(netGW_data)
             lon_arr = lon_arr.flatten()
             lat_arr = lat_arr.flatten()
 
-            year_list = [year] * len(pump_arr)
+            year_list = [year] * len(pump_mm_arr)
 
             extract_dict['year'].extend(year_list)
             extract_dict['netGW_mm'].extend(list(netGW_arr))
-            extract_dict['pumping_mm'].extend(list(pump_arr))
+            extract_dict['pumping_mm'].extend(list(pump_mm_arr))
+            extract_dict['pumping_AF'].extend(list(pump_AF_arr))
             extract_dict['lon'].extend(list(lon_arr))
             extract_dict['lat'].extend(list(lat_arr))
 
         # converting dictionary to dataframe and saving to csv
         df = pd.DataFrame(extract_dict)
-        df = df.dropna().reset_index(drop=True)
 
+        # converting netGW mm to AF
+        area_mm2_single_pixel = (2193 * 1000) * (2193 * 1000)  # unit in mm2
+        df['netGW_AF'] = df['netGW_mm'] * area_mm2_single_pixel * 0.000000000000810714  # 1 mm3 = 0.000000000000810714 AF
+
+        df = df.dropna().reset_index(drop=True)
         df.to_csv(output_csv, index=False)
 
         return output_csv
@@ -219,14 +263,15 @@ def extract_pumping_estimate_with_lat_lon(years, input_csv, input_data_dir, resa
 
             # resampling pumping data as it might be only for a region, but to extract data it need to be of
             # similar row, column as Western US extent
-            resampled_pumping_data = clip_resample_reproject_raster(input_raster=pumping_data, input_shape=None,
-                                           output_raster_dir=resampled_output_dir,
-                                           keyword=' ', raster_name=raster_name,
-                                           clip=False, resample=True, clip_and_resample=False,
-                                           targetaligned=True, resample_algorithm='near',
-                                           resolution=resolution,
-                                           crs='EPSG:4269', output_datatype=gdal.GDT_Float32,
-                                           ref_raster=ref_rater, use_ref_width_height=True)
+            resampled_pumping_data = \
+                clip_resample_reproject_raster(input_raster=pumping_data, input_shape=None,
+                                               output_raster_dir=resampled_output_dir,
+                                               keyword=' ', raster_name=raster_name,
+                                               clip=False, resample=True, clip_and_resample=False,
+                                               targetaligned=True, resample_algorithm='near',
+                                               resolution=resolution,
+                                               crs='EPSG:4269', output_datatype=gdal.GDT_Float32,
+                                               ref_raster=ref_rater, use_ref_width_height=True)
 
             # reading resampled pumping data
             pumping_arr, pumping_file = read_raster_arr_object(resampled_pumping_data)
@@ -251,3 +296,47 @@ def extract_pumping_estimate_with_lat_lon(years, input_csv, input_data_dir, resa
         df = df.merge(result_df, on=['year', 'lon', 'lat'])
         df = df.dropna()
         df.to_csv(output_csv, index=False)
+
+
+def aggregate_netGW_pumping_to_annual(years, basin_netGW_dir,
+                                      pumping_csv, pump_attr,
+                                      output_csv,
+                                      skip_processing=False):
+    if not skip_processing:
+        print(f'Compiling growing season netGW vs annual pumping aggregated dataframe...')
+
+        # empty dictionary with to store data
+        extract_dict = {'year': [], 'netGW_mm': []}
+
+        # lopping through each year and storing data in a list
+        for year in years:
+            netGW_data = glob(os.path.join(basin_netGW_dir, f'*{year}*.tif'))[0]
+
+            netGW_arr = read_raster_arr_object(netGW_data, get_file=False).flatten()
+            year_list = [year] * len(netGW_arr)
+
+            extract_dict['year'].extend(year_list)
+            extract_dict['netGW_mm'].extend(list(netGW_arr))
+
+        # converting dictionary to dataframe and saving to csv
+        df = pd.DataFrame(extract_dict)
+
+        # converting netGW mm to AF
+        area_mm2_single_pixel = (2193 * 1000) * (2193 * 1000)  # unit in mm2
+        df['netGW_AF'] = df['netGW_mm'] * area_mm2_single_pixel * 0.000000000000810714  # 1 mm3 = 0.000000000000810714 AF
+
+        df = df.dropna().reset_index(drop=True)
+
+        # loading pumping data
+        pump_df = pd.read_csv(pumping_csv)
+
+        # aggregating netGW and pumping dataset by year_list
+        df_annual = df.groupby('year')[['netGW_mm', 'netGW_AF']].sum().reset_index()
+        pump_df_annual = pump_df.groupby('year')[pump_attr].sum().reset_index()
+
+        # joining the dataframe
+        df_final = df_annual.merge(pump_df_annual, on='year')
+
+        df_final.to_csv(output_csv, index=False)
+
+        return output_csv

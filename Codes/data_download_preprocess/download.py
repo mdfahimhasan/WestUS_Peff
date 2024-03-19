@@ -103,7 +103,6 @@ def get_gee_dict(data_name):
         'MODIS_LAI': 'MODIS/061/MOD15A2H',
         'MODIS_ET': 'MODIS/006/MOD16A2',  # unit in kg/m2
         'TERRACLIMATE_ET': 'IDAHO_EPSCOR/TERRACLIMATE',
-        'OpenET_ensemble': 'OpenET/ENSEMBLE/CONUS/GRIDMET/MONTHLY/v2_0',
         'TERRACLIMATE_RET': 'IDAHO_EPSCOR/TERRACLIMATE',
         'TERRACLIMATE_vap_pres': 'IDAHO_EPSCOR/TERRACLIMATE',
         'TERRACLIMATE_vap_pres_def': 'IDAHO_EPSCOR/TERRACLIMATE',
@@ -172,7 +171,6 @@ def get_gee_dict(data_name):
         'MODIS_LAI': 0.1,
         'MODIS_ET': 0.1,
         'TERRACLIMATE_ET': 0.1,
-        'OpenET_ensemble': 1,
         'TERRACLIMATE_RET': 0.1,
         'TERRACLIMATE_vap_pres': 0.001,
         'TERRACLIMATE_vap_pres_def': 0.01,
@@ -206,9 +204,8 @@ def get_gee_dict(data_name):
         'MODIS_NDVI': ee.Reducer.mean(),
         'MODIS_LAI': ee.Reducer.mean(),
         'MODIS_ET': ee.Reducer.sum(),
-        'TERRACLIMATE_ET': ee.Reducer.median(), # set for downloading monthly data, change if want to download yearly data
-        'OpenET_ensemble': ee.Reducer.mean(),  # monthly data; doesn't matter whether use mean()or sum() as reducer. Change for yearly data download if needed.
         'TERRACLIMATE_RET': ee.Reducer.sum(),
+        'TERRACLIMATE_ET': ee.Reducer.median(),  # set for downloading monthly data, change if want to download yearly data
         'TERRACLIMATE_vap_pres': ee.Reducer.mean(),
         'TERRACLIMATE_vap_pres_def': ee.Reducer.mean(),
         'GRIDMET_RET': ee.Reducer.sum(),
@@ -247,7 +244,6 @@ def get_gee_dict(data_name):
         'MODIS_LAI': datetime(2000, 2, 1),
         'MODIS_ET': datetime(2001, 1, 1),
         'TERRACLIMATE_ET': datetime(1958, 1, 1),
-        'OpenET_ensemble': datetime(2016, 1, 1),
         'TERRACLIMATE_RET': datetime(1958, 1, 1),
         'TERRACLIMATE_vap_pres': datetime(1958, 1, 1),
         'TERRACLIMATE_vap_pres_def': datetime(1958, 1, 1),
@@ -282,7 +278,6 @@ def get_gee_dict(data_name):
         'MODIS_LAI': datetime(2023, 11, 9),
         'MODIS_ET': datetime(2023, 8, 29),
         'TERRACLIMATE_ET': datetime(2022, 12, 1),
-        'OpenET_ensemble': datetime(2022, 12, 1),
         'TERRACLIMATE_RET': datetime(2022, 12, 31),
         'TERRACLIMATE_vap_pres': datetime(2022, 12, 31),
         'TERRACLIMATE_vap_pres_def': datetime(2022, 12, 31),
@@ -317,7 +312,6 @@ def get_gee_dict(data_name):
         'MODIS_LAI': datetime(2000, 1, 1),
         'MODIS_ET': datetime(2001, 1, 1),
         'TERRACLIMATE_ET': datetime(1958, 1, 1),
-        'OpenET_ensemble': datetime(2016, 1, 1),
         'TERRACLIMATE_RET': datetime(1958, 1, 1),
         'TERRACLIMATE_vap_pres': datetime(1958, 1, 1),
         'TERRACLIMATE_vap_pres_def': datetime(1958, 1, 1),
@@ -352,7 +346,6 @@ def get_gee_dict(data_name):
         'MODIS_LAI': datetime(2024, 1, 1),
         'MODIS_ET': datetime(2024, 1, 1),
         'TERRACLIMATE_ET': datetime(2023, 1, 1),
-        'OpenET_ensemble': datetime(2023, 1, 1),
         'TERRACLIMATE_RET': datetime(2023, 1, 1),
         'TERRACLIMATE_vap_pres': datetime(2023, 1, 1),
         'TERRACLIMATE_vap_pres_def': datetime(2023, 1, 1),
@@ -433,7 +426,7 @@ def cloud_cover_filter(data_name, start_date, end_date, from_bit, to_bit, geomet
 #     season together. So there will be visible difference in data. Consider smoothening the grids used for downloading.
 #
 #     **Saving as a reference code. Will not use in this project. Rather data will be downloaded for each month
-#     (for selected years) and then merged together based on growing season to make the data smoother.
+#     (for selected year_list) and then merged together based on growing season to make the data smoother.
 #
 #     :param data_name: Data name.
 #     Current valid data names are -
@@ -441,7 +434,7 @@ def cloud_cover_filter(data_name, start_date, end_date, from_bit, to_bit, geomet
 #         'MODIS_Day_LST', 'MODIS_Terra_NDVI', 'MODIS_Terra_EVI', 'MODIS_NDWI', 'MODIS_LAI',
 #         'MODIS_ET']
 #     :param download_dir: File path of download directory.
-#     :param year_list: List of years to download data for, e.g. [2000, 2005, 2010, 2015].
+#     :param year_list: List of year_list to download data for, e.g. [2000, 2005, 2010, 2015].
 #     :param merge_keyword: Keyword to use for merging downloaded data. Suggested 'WestUS'/'Conus'.
 #     :param grid_shape_large: File path of grid shape for which data will be downloaded and mosaiced.
 #     :param refraster_westUS: Reference raster to use for merging downloaded datasets.
@@ -768,12 +761,12 @@ def download_gee_data_yearly(data_name, download_dir, year_list, month_range, me
     :param data_name: Data name.
     Current valid data names are -
         ['SMAP_SM', 'LANDSAT_NDWI', 'LANDSAT_NDVI', 'GPM_Precip', 'GRIDMET_Precip',
-        'MODIS_Day_LST', 'MODIS_Terra_NDVI', 'MODIS_Terra_EVI', 'MODIS_NDWI', 'MODIS_NDVI', 'MODIS_LAI', 'MODIS_ET',
-        'TERRACLIMATE_RET', 'TERRACLIMATE_vap_pres', 'TERRACLIMATE_vap_pres_def', 'GRIDMET_max_RH',
-        'GRIDMET_min_RH', 'GRIDMET_wind_vel', 'GRIDMET_short_rad', 'GRIDMET_RET', 'GRIDMET_vap_pres_def',
-        'DAYMET_sun_hr']
+        'MODIS_Day_LST', 'MODIS_Terra_NDVI', 'MODIS_Terra_EVI', 'MODIS_NDWI', 'MODIS_NDVI',
+        'MODIS_LAI', 'MODIS_ET', 'TERRACLIMATE_RET', 'TERRACLIMATE_vap_pres',
+        'TERRACLIMATE_vap_pres_def', 'GRIDMET_max_RH', 'GRIDMET_min_RH', 'GRIDMET_wind_vel',
+        'GRIDMET_short_rad', 'GRIDMET_RET', 'GRIDMET_vap_pres_def', 'DAYMET_sun_hr']
     :param download_dir: File path of download directory.
-    :param year_list: List of years to download data for.
+    :param year_list: List of year_list to download data for.
     :param month_range: Tuple of month ranges to download data for, e.g., for months 4-12 use (4, 12).
     :param merge_keyword: Keyword to use for merging downloaded data. Suggested 'WestUS'/'Conus'.
     :param grid_shape: File path of grid shape for which data will be downloaded and mosaiced.
@@ -790,7 +783,7 @@ def download_gee_data_yearly(data_name, download_dir, year_list, month_range, me
 
     # Extracting dataset information required for downloading from GEE
     data, band, multiply_scale, reducer, month_start_range, month_end_range, \
-    year_start_range, year_end_range = get_gee_dict(data_name)
+        year_start_range, year_end_range = get_gee_dict(data_name)
 
     # Loading grid files to be used for data download
     grids = gpd.read_file(grid_shape)
@@ -798,7 +791,7 @@ def download_gee_data_yearly(data_name, download_dir, year_list, month_range, me
     grid_geometry = grids['geometry']
     grid_no = grids['grid_no']
 
-    for year in year_list:  # first loop for years
+    for year in year_list:  # first loop for year_list
         start_date = ee.Date.fromYMD(year, month_range[0], 1)
         start_date_dt = datetime(year, month_range[0], 1)
         if month_range[1] < 12:
@@ -918,13 +911,13 @@ def download_gee_data_monthly(data_name, download_dir, year_list, month_range, m
 
     :param data_name: Data name.
     Current valid data names are -
-        ['SMAP_SM', 'LANDSAT_NDWI', 'LANDSAT_NDVI', 'GPM_Precip', 'GRIDMET_Precip',
-        'MODIS_Day_LST', 'MODIS_Terra_NDVI', 'MODIS_Terra_EVI', 'MODIS_NDWI', 'MODIS_NDVI', 'MODIS_LAI', 'MODIS_ET',
-        'TERRSCLIMATE_ET', 'TERRACLIMATE_RET', 'TERRACLIMATE_vap_pres', 'TERRACLIMATE_vap_pres_def', 'GRIDMET_max_RH',
-        'GRIDMET_min_RH', 'GRIDMET_wind_vel', 'GRIDMET_short_rad', 'GRIDMET_RET', 'GRIDMET_vap_pres_def',
-        'DAYMET_sun_hr']
+        ['SMAP_SM', 'LANDSAT_NDWI', 'LANDSAT_NDVI', 'GPM_Precip', 'GRIDMET_Precip', 'MODIS_Day_LST',
+        'MODIS_Terra_NDVI', 'MODIS_Terra_EVI', 'MODIS_NDWI', 'MODIS_NDVI', 'MODIS_LAI', 'MODIS_ET',
+        'TERRSCLIMATE_ET', 'TERRACLIMATE_RET', 'TERRACLIMATE_vap_pres',
+        'TERRACLIMATE_vap_pres_def', 'GRIDMET_max_RH', 'GRIDMET_min_RH', 'GRIDMET_wind_vel',
+        'GRIDMET_short_rad', 'GRIDMET_RET', 'GRIDMET_vap_pres_def', 'DAYMET_sun_hr']
     :param download_dir: File path of download directory.
-    :param year_list: List of years to download data for.
+    :param year_list: List of year_list to download data for.
     :param month_range: Tuple of month ranges to download data for, e.g., for months 1-12 use (1, 12).
     :param merge_keyword: Keyword to use for merging downloaded data. Suggested 'WestUS'/'Conus'.
     :param grid_shape: File path of grid shape for which data will be downloaded and mosaicked.
@@ -954,15 +947,11 @@ def download_gee_data_monthly(data_name, download_dir, year_list, month_range, m
     month_list = [m for m in range(month_range[0], month_range[1] + 1)]  # creating list of months
 
     # the variables in data_exclude_list can't be downloaded by this function. They have separate download functions
-    data_exclude_list = ['Irrig_crop_OpenET_IrrMapper', 'Irrig_crop_OpenET_LANID',
-                         'Irrigation_Frac_IrrMapper', 'Irrigation_Frac_LANID',
-                         'Rainfed_crop_OpenET_IrrMapper', 'Rainfed_crop_OpenET_LANID',
-                         'Rainfed_Frac_IrrMapper', 'Rainfed_Frac_LANID', 'USDA_CDL',
-                         'Field_capacity', 'Bulk_density', 'Organic_carbon_content',
+    data_exclude_list = ['USDA_CDL', 'Field_capacity', 'Bulk_density', 'Organic_carbon_content',
                          'Sand_content', 'Clay_content', 'DEM', 'Effect_precip_DK', 'Tree_cover']
 
     if data_name not in data_exclude_list:
-        for year in year_list:  # first loop for years
+        for year in year_list:  # first loop for year_list
             for month in month_list:  # second loop for months
                 print('********')
                 print(f'Getting data urls for year={year}, month={month}.....')
@@ -1013,7 +1002,7 @@ def download_gee_data_monthly(data_name, download_dir, year_list, month_range, m
                                 reduce(reducer).multiply(multiply_scale).toFloat()
                             download_data = nir.subtract(red).divide(nir.add(red))
 
-                        elif data_name in ('TERRACLIMATE_ET', 'OpenET_ensemble'):
+                        elif data_name == 'TERRACLIMATE_ET':
                             download_data = ee.ImageCollection(data).select(band).filterDate(start_date, end_date). \
                                 filterBounds(gee_extent).reduce(reducer).multiply(multiply_scale).toFloat()
 
@@ -1166,7 +1155,7 @@ def download_eff_precip_data_from_DK_asset(data_name, download_dir, year_list, m
     :param data_name: Data name which will be used to create download directoryand name the data. Set to
                       'Effect_precip_DK'.
     :param download_dir: File path of download directory.
-    :param year_list: List of years to download data for.
+    :param year_list: List of year_list to download data for.
     :param month_range: Tuple of month ranges to download data for, e.g., for months 1-12 use (1, 12).
     :param grid_shape: File path of grid shape for which data will be downloaded and mosaicked.
     :param use_cpu_while_multidownloading: Number (Int) of CPU cores to use for multi-download by
@@ -1189,7 +1178,7 @@ def download_eff_precip_data_from_DK_asset(data_name, download_dir, year_list, m
     grid_geometry = grids['geometry']
     grid_no = grids['grid_no']
 
-    for year in year_list:  # first loop for years
+    for year in year_list:  # first loop for year_list
         for month in month_list:  # second loop for months
             print('********')
             print(f'Getting data urls for year={year}, month={month}.....')
@@ -1274,16 +1263,16 @@ def download_all_gee_data(data_list, download_dir, year_list, month_range,
 
     :param data_list: List of valid data names to download.
     Current valid data names are -
-        ['GRIDMET_Precip', 'MODIS_Day_LST', 'MODIS_NDWI', 'MODIS_NDVI', 'MODIS_LAI',
-        'TERRACLIMATE_RET', 'TERRACLIMATE_vap_pres', 'TERRACLIMATE_vap_pres_def',
-        'GRIDMET_max_RH', 'GRIDMET_min_RH', 'GRIDMET_wind_vel', 'GRIDMET_short_rad',
-        'GRIDMET_RET', 'GRIDMET_vap_pres_def', 'DAYMET_sun_hr',
-        'USDA_CDL', 'Field_capacity', 'Bulk_density', 'Organic_carbon_content',
-        'Sand_content', 'Clay_content', 'DEM', 'Effect_precip_DK']
+        ['MODIS_Day_LST', 'MODIS_NDWI', 'MODIS_NDVI', 'MODIS_LAI', 'TERRACLIMATE_RET',
+        'TERRACLIMATE_ET', 'TERRACLIMATE_vap_pres', 'TERRACLIMATE_vap_pres_def',
+        'GRIDMET_Precip', 'GRIDMET_max_RH', 'GRIDMET_min_RH', 'GRIDMET_wind_vel',
+        'GRIDMET_short_rad', 'GRIDMET_RET', 'GRIDMET_vap_pres_def', 'GRIDMET_Precip',
+        'DAYMET_sun_hr', 'OpenET_ensemble', 'USDA_CDL', 'Field_capacity', 'Bulk_density',
+        'Organic_carbon_content', 'Sand_content', 'Clay_content', 'DEM', 'Effect_precip_DK']
         ******************************
 
     :param download_dir: File path of main download directory. It will consist directory of individual dataset.
-    :param year_list: List of years to download data for.
+    :param year_list: List of year_list to download data for.
     :param month_range: Tuple of month ranges to download data for, e.g., for months 1-12 use (1, 12).
     :param grid_shape_large: File path of larger grids (used in most GEE data download) for which data
                              will be downloaded and mosaiced.
@@ -1353,7 +1342,7 @@ def download_ssebop_et(years_list, month_range_list, download_dir='../../Data_ma
     """
     Download ssebop actual ET data (unit in mm).
 
-    :param years_list: List of years for which to download data.
+    :param years_list: List of year_list for which to download data.
     :param month_range_list: List of first and last month, i.e., to download data from April-September use [4, 9].
     :param download_dir: Directory path to download data.
     :param ssebop_link: USGS link with ssebop ET data.
@@ -1395,20 +1384,18 @@ def download_all_datasets(year_list, month_range, grid_shape_large,
     """
     Download all GEE datasets and ssebop data.
 
-    :param year_list: List of years to download data for. We will use data for [2010, 2015] in the model.
+    :param year_list: List of year_list to download data for. We will use data for [2010, 2015] in the model.
     :param month_range: Tuple of month ranges to download data for, e.g., for months 1-12 use (1, 12).
     :param grid_shape_large: File path of larger grids (used in most GEE data download) for which data
                              will be downloaded and mosaiced.
     :param gee_data_list: List of data to download from GEE. Default set to None, use if skip_download_gee_data=True.
                           Datasets currently downloaded by this code:
-                          ['GRIDMET_Precip', 'OpenET_ensemble', 'MODIS_Day_LST', 'MODIS_NDWI', 'MODIS_LAI', 'MODIS_NDVI',
-                           'TERRACLIMATE_vap_pres', 'GRIDMET_RET', 'GRIDMET_vap_pres_def',  'GRIDMET_max_RH',
-                           'GRIDMET_min_RH', 'GRIDMET_wind_vel', 'GRIDMET_short_rad', 'DAYMET_sun_hr',
-                           'Irrig_crop_OpenET_IrrMapper', 'Irrig_crop_OpenET_LANID', 'Irrigation_Frac_IrrMapper',
-                           'Irrigation_Frac_LANID', 'Rainfed_crop_OpenET_IrrMapper', 'Rainfed_crop_OpenET_LANID',
-                           'Rainfed_Frac_IrrMapper', 'Rainfed_Frac_LANID', 'USDA_CDL', 'Field_capacity',
-                           'Bulk_density', 'Organic_carbon_content','Sand_content', 'Clay_content', 'DEM',
-                           'Effect_precip_DK', 'Tree_cover']
+                            ['MODIS_Day_LST', 'MODIS_NDWI', 'MODIS_NDVI', 'MODIS_LAI', 'TERRACLIMATE_RET',
+                            'TERRACLIMATE_ET', 'TERRACLIMATE_vap_pres', 'TERRACLIMATE_vap_pres_def',
+                            'GRIDMET_Precip', 'GRIDMET_max_RH', 'GRIDMET_min_RH', 'GRIDMET_wind_vel',
+                            'GRIDMET_short_rad', 'GRIDMET_RET', 'GRIDMET_vap_pres_def', 'GRIDMET_Precip',
+                            'DAYMET_sun_hr', 'OpenET_ensemble', 'USDA_CDL', 'Field_capacity', 'Bulk_density',
+                            'Organic_carbon_content', 'Sand_content', 'Clay_content', 'DEM', 'Effect_precip_DK']
     :param data_download_dir: Directory path to download and save data.
     :param skip_download_gee_data: Set to False if want to download listed data. Default set to True.
     :param skip_download_OpenET_data: Set to False if want to download listed data. Default set to True.

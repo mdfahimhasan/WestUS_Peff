@@ -37,7 +37,7 @@ def filter_effective_precip_training_data(training_zone_shp, general_output_dir,
     """
     if not skip_processing:
         # year_list and months to process over
-        years = [2016, 2017, 2018, 2019, 2020, 2021, 2022]
+        years = [2016, 2017, 2018, 2019, 2020]
         months = list(range(1, 13))
 
         # training zone bounding box gdf

@@ -4,7 +4,9 @@ from os.path import dirname, abspath
 sys.path.insert(0, dirname(dirname(dirname(abspath(__file__)))))
 
 from Codes.netGW.netGW_utils import clip_netGW_Irr_frac_for_basin, pumping_AF_pts_to_mm_raster, \
-    compile_basin_df_for_netGW_pumping, extract_pumping_estimate_with_lat_lon, aggregate_netGW_pumping_to_annual
+    compile_basin_df_for_netGW_pumping, extract_pumping_estimate_with_lat_lon, \
+    aggregate_pixelCSV_to_annualCSV, aggregate_netGW_pumping_to_annual,\
+    compile_annual_AF_pumping_netGW_all_basins
 
 model_res = 0.01976293625031605786  # in deg, ~2 km
 WestUS_shape = '../../Data_main/shapefiles/Western_US_ref_shapes/WestUS_states.shp'
@@ -13,12 +15,13 @@ WestUS_raster = '../../Data_main/reference_rasters/Western_US_refraster_2km.tif'
 if __name__ == '__main__':
     # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
     # boolean switches to process data for each region
-    skip_process_gmd4_data = False
-    skip_process_gmd3_data = False
-    skip_process_rpb_data = False
-    skip_process_hqr_data = False
-    skip_process_doug_data = False
+    skip_process_gmd4_data = True
+    skip_process_gmd3_data = True
+    skip_process_rpb_data = True
+    skip_process_hqr_data = True
+    skip_process_doug_data = True
     skip_process_dv_data = False
+    skip_compile_AF_annual_data = True
 
     # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
     # # # For Groundwater Management District 4 (GMD4), Kansas
@@ -59,7 +62,7 @@ if __name__ == '__main__':
                                     resolution=model_res, skip_processing=skip_process_gmd4_data)
 
         # # # # #  STEP 3 # # # # #
-        # # Compile growing season netGW and annual pumping in a dataframe
+        # # Compile growing season netGW and annual pumping in dataframes
         print('# # # # #  STEP 3 # # # # #')
 
         basin_pumping_mm_dir = '../../Data_main/Raster_data/NetGW_irrigation/GMD4_KS/pumping_mm'
@@ -70,6 +73,9 @@ if __name__ == '__main__':
                                            basin_pumping_mm_dir=basin_pumping_mm_dir,
                                            basin_pumping_AF_dir=basin_pumping_AF_dir,
                                            output_csv=GMD4_csv, skip_processing=skip_process_gmd4_data)
+
+        annual_csv = '../../Data_main/Raster_data/NetGW_irrigation/GMD4_KS/KS_GMD4_annual.csv'
+        aggregate_pixelCSV_to_annualCSV(pixel_csv=GMD4_csv, output_annual_csv=annual_csv)
 
     # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
     # # # For Groundwater Management District 3 (GMD3), Kansas
@@ -109,7 +115,7 @@ if __name__ == '__main__':
                                     skip_processing=skip_process_gmd3_data)
 
         # # # # #  STEP 3 # # # # #
-        # # Compile growing season netGW and annual pumping in a dataframe
+        # # Compile growing season netGW and annual pumping in dataframes
         print('# # # # #  STEP 3 # # # # #')
 
         basin_pumping_mm_dir = '../../Data_main/Raster_data/NetGW_irrigation/GMD3_KS/pumping_mm'
@@ -120,6 +126,9 @@ if __name__ == '__main__':
                                            basin_pumping_mm_dir=basin_pumping_mm_dir,
                                            basin_pumping_AF_dir=basin_pumping_AF_dir,
                                            output_csv=GMD3_csv, skip_processing=skip_process_gmd3_data)
+
+        annual_csv = '../../Data_main/Raster_data/NetGW_irrigation/GMD3_KS/KS_GMD3_annual.csv'
+        aggregate_pixelCSV_to_annualCSV(pixel_csv=GMD3_csv, output_annual_csv=annual_csv)
 
     # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
     # # # For Republican River Basin (RPB), Colorado
@@ -171,6 +180,9 @@ if __name__ == '__main__':
                                            basin_pumping_mm_dir=basin_pumping_mm_dir,
                                            basin_pumping_AF_dir=basin_pumping_AF_dir,
                                            output_csv=RPB_csv, skip_processing=skip_process_rpb_data)
+
+        annual_csv = '../../Data_main/Raster_data/NetGW_irrigation/RPB_CO/CO_RPB_annual.csv'
+        aggregate_pixelCSV_to_annualCSV(pixel_csv=RPB_csv, output_annual_csv=annual_csv)
 
     # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
     # # # For Harquahala INA, Arizona
@@ -224,6 +236,9 @@ if __name__ == '__main__':
                                                           basin_pumping_AF_dir=basin_pumping_AF_dir,
                                                           skip_processing=skip_process_hqr_data)
 
+        annual_csv = '../../Data_main/Raster_data/NetGW_irrigation/Harquahala_INA_AZ/AZ_Harquahala_INA_annual.csv'
+        aggregate_pixelCSV_to_annualCSV(pixel_csv=Harquahala_INA_csv, output_annual_csv=annual_csv)
+
         # # # # #  STEP 4 # # # # #
         # # Extracting predicted pumping from Majumdar et al. 2022
         print('# # # # #  STEP 4 # # # # #')
@@ -239,22 +254,22 @@ if __name__ == '__main__':
                                               skip_processing=skip_process_hqr_data)
 
     # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-    # # # For Douglas INA, Arizona
+    # # # For Douglas AMA, Arizona
     if not skip_process_doug_data:
-        print('Processing netGW, pumping dataset and netGW-pumping dataframe for Douglas_INA, AZ...')
+        print('Processing netGW, pumping dataset and netGW-pumping dataframe for Douglas_AMA, AZ...')
 
         # # # # #  STEP 1 # # # # #
-        # # Clip growing season netGW for Douglas_INA
+        # # Clip growing season netGW for Douglas_AMA
         print('# # # # #  STEP 1 # # # # #')
 
         years = [2016, 2017, 2018, 2019, 2020]
-        Douglas_INA_shp = '../../Data_main/shapefiles/Basins_of_interest/Douglas_INA.shp'
+        Douglas_AMA_shp = '../../Data_main/shapefiles/Basins_of_interest/Douglas_AMA.shp'
         netGW_irrigation_dir = '../../Data_main/Raster_data/NetGW_irrigation/WesternUS'
-        basin_netGW_output_dir = '../../Data_main/Raster_data/NetGW_irrigation/Douglas_INA_AZ/netGW_Douglas_INA_AZ'
+        basin_netGW_output_dir = '../../Data_main/Raster_data/NetGW_irrigation/Douglas_AMA_AZ/netGW_Douglas_AMA_AZ'
         irrig_fraction_dir = '../../Data_main/Raster_data/Irrigated_cropland/Irrigated_Frac'
         basin_irrig_fraction_output_dir = '../../Data_main/Raster_data/NetGW_irrigation/GMD3_KS/irrig_frac'
 
-        clip_netGW_Irr_frac_for_basin(years=years, basin_shp=Douglas_INA_shp,
+        clip_netGW_Irr_frac_for_basin(years=years, basin_shp=Douglas_AMA_shp,
                                       netGW_input_dir=netGW_irrigation_dir,
                                       basin_netGW_output_dir=basin_netGW_output_dir,
                                       irr_frac_input_dir=irrig_fraction_dir,
@@ -268,11 +283,11 @@ if __name__ == '__main__':
         pumping_shp = '../../Data_main/Pumping/Arizona/AZ_GW_Douglas.shp'
         pumping_attr_AF = 'AF_pumped'
         year_attr = 'Year'
-        Douglas_INA_output_dir = '../../Data_main/Raster_data/NetGW_irrigation/Douglas_INA_AZ'
+        Douglas_AMA_output_dir = '../../Data_main/Raster_data/NetGW_irrigation/Douglas_AMA_AZ'
 
         pumping_AF_pts_to_mm_raster(years=years, irrigated_fraction_dir=irrig_fraction_dir,
                                     pumping_pts_shp=pumping_shp, pumping_attr_AF=pumping_attr_AF,
-                                    year_attr=year_attr, output_dir=Douglas_INA_output_dir, basin_shp=Douglas_INA_shp,
+                                    year_attr=year_attr, output_dir=Douglas_AMA_output_dir, basin_shp=Douglas_AMA_shp,
                                     ref_raster=WestUS_raster, resolution=model_res,
                                     skip_processing=skip_process_doug_data)
 
@@ -280,15 +295,18 @@ if __name__ == '__main__':
         # # Compile growing season netGW and annual pumping in a dataframe
         print('# # # # #  STEP 3 # # # # #')
 
-        basin_pumping_mm_dir = '../../Data_main/Raster_data/NetGW_irrigation/Douglas_INA_AZ/pumping_mm'
-        basin_pumping_AF_dir = '../../Data_main/Raster_data/NetGW_irrigation/Douglas_INA_AZ/pumping_AF_raster'
-        Douglas_INA_csv = '../../Data_main/Raster_data/NetGW_irrigation/Douglas_INA_AZ/AZ_Douglas_INA_netGW_pumping.csv'
+        basin_pumping_mm_dir = '../../Data_main/Raster_data/NetGW_irrigation/Douglas_AMA_AZ/pumping_mm'
+        basin_pumping_AF_dir = '../../Data_main/Raster_data/NetGW_irrigation/Douglas_AMA_AZ/pumping_AF_raster'
+        Douglas_AMA_csv = '../../Data_main/Raster_data/NetGW_irrigation/Douglas_AMA_AZ/AZ_Douglas_AMA_netGW_pumping.csv'
 
         compiled_csv = compile_basin_df_for_netGW_pumping(years=years, basin_netGW_dir=basin_netGW_output_dir,
                                                           basin_pumping_mm_dir=basin_pumping_mm_dir,
                                                           basin_pumping_AF_dir=basin_pumping_AF_dir,
-                                                          output_csv=Douglas_INA_csv,
+                                                          output_csv=Douglas_AMA_csv,
                                                           skip_processing=skip_process_doug_data)
+
+        annual_csv = '../../Data_main/Raster_data/NetGW_irrigation/Douglas_AMA_AZ/AZ_Douglas_AMA_annual.csv'
+        aggregate_pixelCSV_to_annualCSV(pixel_csv=Douglas_AMA_csv, output_annual_csv=annual_csv)
 
         # # # # #  STEP 4 # # # # #
         # # Extracting predicted pumping from Majumdar et al. 2022
@@ -296,12 +314,12 @@ if __name__ == '__main__':
 
         AZ_pumping_Majumadar_2022_dir = '../../Data_main/Raster_data/AZ_predictions_Majumdar et al. 2022/Postprocessed'
         AZ_pumping_Majumadar_2022_resampled_dir = '../../Data_main/Raster_data/AZ_predictions_Majumdar et al. 2022/Postprocessed_resampled'
-        Douglas_INA_csv_updated = '../../Data_main/Raster_data/NetGW_irrigation/Douglas_INA_AZ/AZ_Douglas_INA_netGW_pumping_updated.csv'
+        Douglas_AMA_csv_updated = '../../Data_main/Raster_data/NetGW_irrigation/Douglas_AMA_AZ/AZ_Douglas_AMA_netGW_pumping_updated.csv'
 
         extract_pumping_estimate_with_lat_lon(years, input_csv=compiled_csv,
                                               input_data_dir=AZ_pumping_Majumadar_2022_dir,
                                               resampled_output_dir=AZ_pumping_Majumadar_2022_resampled_dir,
-                                              output_csv=Douglas_INA_csv_updated,
+                                              output_csv=Douglas_AMA_csv_updated,
                                               ref_rater=WestUS_raster, resolution=model_res,
                                               skip_processing=skip_process_doug_data)
 
@@ -333,9 +351,24 @@ if __name__ == '__main__':
         print('# # # # #  STEP 2 # # # # #')
 
         pumping_data = '../../Data_main/Pumping/Nevada/joined_data/dv_joined_et_pumping_data_all.csv'
-        Diamond_Valley_csv = '../../Data_main/Raster_data/NetGW_irrigation/Diamond_Valley_NV/NV_Diamond_Valley_netGW_pumping_annual.csv'
+        Diamond_Valley_csv = '../../Data_main/Raster_data/NetGW_irrigation/Diamond_Valley_NV/NV_Diamond_Valley_annual.csv'
 
         aggregate_netGW_pumping_to_annual(years=years, basin_netGW_dir=basin_netGW_output_dir,
                                           pumping_csv=pumping_data, pump_attr='pumping_AF',
                                           output_csv=Diamond_Valley_csv,
                                           skip_processing=skip_process_dv_data)
+
+    # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+    # # # For annual AF pumping and netGW compilation
+    if not skip_compile_AF_annual_data:
+        print('Compiling annual pumping and net GW estimates for all basin in dataframe...')
+
+        basin_annual_csvs = ['../../Data_main/Raster_data/NetGW_irrigation/GMD4_KS/KS_GMD4_annual.csv',
+                             '../../Data_main/Raster_data/NetGW_irrigation/GMD3_KS/KS_GMD3_annual.csv',
+                             '../../Data_main/Raster_data/NetGW_irrigation/RPB_CO/CO_RPB_annual.csv',
+                             '../../Data_main/Raster_data/NetGW_irrigation/Harquahala_INA_AZ/AZ_Harquahala_INA_annual.csv',
+                             '../../Data_main/Raster_data/NetGW_irrigation/Douglas_AMA_AZ/AZ_Douglas_AMA_annual.csv',
+                             '../../Data_main/Raster_data/NetGW_irrigation/Diamond_Valley_NV/NV_Diamond_Valley_annual.csv']
+        output_csv = '../../Data_main/Raster_data/NetGW_irrigation/annual_AF_pumping_netGW_BOI.csv'
+
+        compile_annual_AF_pumping_netGW_all_basins(annual_csv_list=basin_annual_csvs, output_csv=output_csv)

@@ -298,6 +298,16 @@ def extract_pumping_estimate_with_lat_lon(years, input_csv, input_data_dir, resa
         df.to_csv(output_csv, index=False)
 
 
+def aggregate_pixelCSV_to_annualCSV(pixel_csv, output_annual_csv):
+    pixel_df = pd.read_csv(pixel_csv)
+
+    # groupby using sum()
+    yearly_df = pixel_df.groupby('year').sum()
+    yearly_df = yearly_df.drop(columns=['lat', 'lon'])
+    yearly_df = yearly_df.reset_index()
+    yearly_df.to_csv(output_annual_csv, index=False)
+
+
 def aggregate_netGW_pumping_to_annual(years, basin_netGW_dir,
                                       pumping_csv, pump_attr,
                                       output_csv,
@@ -331,12 +341,43 @@ def aggregate_netGW_pumping_to_annual(years, basin_netGW_dir,
         pump_df = pd.read_csv(pumping_csv)
 
         # aggregating netGW and pumping dataset by year_list
-        df_annual = df.groupby('year')[['netGW_mm', 'netGW_AF']].sum().reset_index()
+        df_annual = df.groupby('year')[['netGW_AF']].sum().reset_index()
         pump_df_annual = pump_df.groupby('year')[pump_attr].sum().reset_index()
 
         # joining the dataframe
         df_final = df_annual.merge(pump_df_annual, on='year')
 
+        # # calculating mean netGW and mean pumping (in mm)
+        # area of a 2 km pixel
+        area_mm2_single_pixel = (2193 * 1000) * (2193 * 1000)  # unit in mm2
+
+        df_final['mean netGW_mm'] = df_final['netGW_AF'] * 1233481837548 / area_mm2_single_pixel
+        df_final['mean pumping_mm'] = df_final['pumping_AF'] * 1233481837548 / area_mm2_single_pixel
+
         df_final.to_csv(output_csv, index=False)
 
         return output_csv
+
+
+def compile_annual_AF_pumping_netGW_all_basins(annual_csv_list, output_csv):
+    # making the output directory if not available
+    makedirs([os.path.dirname(output_csv)])
+
+    # empty dataframe to store the results
+    compiled_annual_df = pd.DataFrame()
+
+    # basin name dict
+    basin_name_dict = {'GMD4': 'GMD4, KS', 'GMD3': 'GMD3, KS', 'RPB': 'RPB, CO',
+                       'Harquahala': 'Harquahala INA', 'Douglas': 'Douglas AMA',
+                       'Diamond': 'Diamond Valley', 'Harney': 'Harney Basin'}
+
+    for csv in annual_csv_list:
+        df = pd.read_csv(csv)
+        df = df[['pumping_AF', 'netGW_AF']]
+
+        basin_name = os.path.basename(csv).split('_')[1]
+
+        df['basin'] = [basin_name_dict[basin_name] for i in range(len(df))]
+        compiled_annual_df = pd.concat([compiled_annual_df, df])
+
+    compiled_annual_df.to_csv(output_csv, index=False)

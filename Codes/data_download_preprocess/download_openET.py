@@ -41,12 +41,12 @@ def get_openet_gee_dict(data_name):
         'Rainfed_crop_OpenET_IrrMapper': 'OpenET/ENSEMBLE/CONUS/GRIDMET/MONTHLY/v2_0',
         'Rainfed_crop_OpenET_LANID': 'OpenET/ENSEMBLE/CONUS/GRIDMET/MONTHLY/v2_0',
         'USDA_CDL': 'USDA/NASS/CDL',
-        'IrrMapper': 'UMT/Climate/IrrMapper_RF/v1_2',
+        'IrrMapper': 'projects/ee-dgketchum/assets/IrrMapper/IrrMapperComp',
         'LANID': 'projects/ee-fahim/assets/LANID_for_selected_states/selected_Annual_LANID',
         'AIM-HPA': 'projects/h2yo/IrrigationMaps/AIM/AIM-HPA/AIM-HPA_Deines_etal_RSE_v01_extend_1984-2020',
-        'Irrigation_Frac_IrrMapper': 'UMT/Climate/IrrMapper_RF/v1_2',
+        'Irrigation_Frac_IrrMapper': 'projects/ee-dgketchum/assets/IrrMapper/IrrMapperComp',
         'Irrigation_Frac_LANID': 'projects/ee-fahim/assets/LANID_for_selected_states/selected_Annual_LANID',
-        'Rainfed_Frac_IrrMapper': 'UMT/Climate/IrrMapper_RF/v1_2',
+        'Rainfed_Frac_IrrMapper': 'projects/ee-dgketchum/assets/IrrMapper/IrrMapperComp',
         'Rainfed_Frac_LANID': 'projects/ee-fahim/assets/LANID_for_selected_states/selected_Annual_LANID'
     }
 

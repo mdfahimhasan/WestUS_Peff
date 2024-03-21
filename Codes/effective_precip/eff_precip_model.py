@@ -25,7 +25,7 @@ WestUS_raster = '../../Data_main/reference_rasters/Western_US_refraster_2km.tif'
 # # filtering training data
 training_zone_shapefile = '../../Data_main/shapefiles/Training_zones/effective_precip_training_zone.shp'
 output_dir = '../../Data_main/Raster_data/Rainfed_cropET_filtered_training'
-skip_effective_precip_training_data_filtering = True  ######
+skip_effective_precip_training_data_filtering = False  ######
 
 filter_effective_precip_training_data(training_zone_shp=training_zone_shapefile,
                                       general_output_dir=output_dir,
@@ -76,7 +76,7 @@ datasets_to_include = ['Effective_precip_train',
                        'Bulk_density', 'Clay_content', 'Field_capacity', 'Sand_content',
                        'AWC', 'DEM', 'Slope', 'Latitude', 'Longitude']
 
-skip_train_test_df_creation = True  ######
+skip_train_test_df_creation = False  ######
 train_test_parquet_path = f'../../Eff_Precip_Model_Run/Model_csv/train_test.parquet'
 
 makedirs([os.path.dirname(train_test_parquet_path)])
@@ -238,7 +238,7 @@ datasets_to_include_month_predictors = ['PRISM_Precip', 'PRISM_Tmax', 'PRISM_Tmi
 predictor_years = [2016, 2017, 2018, 2019, 2020]
 
 monthly_predictor_csv_dir = '../../Eff_Precip_Model_Run/Model_csv/monthly_predictors'
-skip_prcessing_monthly_predictor_dataframe = True
+skip_prcessing_monthly_predictor_dataframe = False
 create_monthly_dataframes_for_eff_precip_prediction(years_list=predictor_years,
                                                     month_range=(4, 10),
                                                     monthly_data_path_dict=monthly_data_path_dict,
@@ -251,7 +251,7 @@ create_monthly_dataframes_for_eff_precip_prediction(years_list=predictor_years,
 # # Creating nan position dict for irrigated cropET (westUS)
 irrigated_cropET_monthly_dir = '../../Data_main/Raster_data/Irrigated_cropET/WestUS_monthly'
 output_dir_nan_pos = '../../Eff_Precip_Model_Run/Model_csv/nan_pos_irrigated_cropET'
-skip_processing_nan_pos_irrig_cropET = True
+skip_processing_nan_pos_irrig_cropET = False
 
 create_nan_pos_dict_for_irrigated_cropET(irrigated_cropET_dir=irrigated_cropET_monthly_dir,
                                          output_dir=output_dir_nan_pos,

@@ -12,18 +12,19 @@ GEE_merging_refraster_large_grids = '../../Data_main/reference_rasters/GEE_mergi
 
 # # Data download
 skip_download_gee_data = True
-skip_download_OpenET_data = True
+skip_download_OpenET_data = False
 
 gee_data_list = ['Field_capacity', 'Bulk_density', 'Sand_content', 'Clay_content',
                  'GRIDMET_RET', 'GRIDMET_vap_pres_def','GRIDMET_max_RH', 'GRIDMET_Precip',
                  'GRIDMET_min_RH', 'GRIDMET_wind_vel', 'GRIDMET_short_rad', 'DAYMET_sun_hr',
                  'USDA_CDL', 'Tree_cover', 'DEM']
 
-openET_data_list = ['OpenET_ensemble',
-                    'Irrig_crop_OpenET_IrrMapper', 'Irrig_crop_OpenET_LANID',
-                    'Irrigation_Frac_IrrMapper', 'Irrigation_Frac_LANID',
-                    'Rainfed_crop_OpenET_IrrMapper', 'Rainfed_crop_OpenET_LANID',
-                    'Rainfed_Frac_IrrMapper', 'Rainfed_Frac_LANID']
+openET_data_list = ['OpenET_indiv_models_grow_season']
+                    # ['Irrig_crop_OpenET_IrrMapper', 'Irrig_crop_OpenET_LANID',
+                    # 'Irrigation_Frac_IrrMapper', 'Irrigation_Frac_LANID',
+                    # 'Rainfed_crop_OpenET_IrrMapper', 'Rainfed_crop_OpenET_LANID',
+                    # 'Rainfed_Frac_IrrMapper', 'Rainfed_Frac_LANID',
+                    # 'OpenET_ensemble', 'OpenET_indiv_models_grow_season']
 
 
 years_for_gee = [2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007,

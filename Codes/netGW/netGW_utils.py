@@ -88,11 +88,11 @@ def estimate_netGW_Irr(years_list, effective_precip_dir, irrigated_cropET_dir,
 
 
 def clip_netGW_Irr_frac_for_basin(years, basin_shp, netGW_input_dir, basin_netGW_output_dir,
-                                  irr_frac_input_dir, basin_irr_frac_output_dir,
-                                  resolution=model_res, skip_processing=False):
+                                  resolution=model_res, skip_processing=False,
+                                  irr_frac_input_dir=None, basin_irr_frac_output_dir=None):
     if not skip_processing:
         for year in years:
-            print(f'Clip growing season netGW and Irrigated fraction for {year}...')
+            print(f'Clip growing season netGW for {year}...')
 
             # net GW
             netGW_raster = glob(os.path.join(netGW_input_dir, f'*{year}*.tif'))[0]
@@ -106,19 +106,23 @@ def clip_netGW_Irr_frac_for_basin(years, basin_shp, netGW_input_dir, basin_netGW
                                            crs='EPSG:4269', output_datatype=gdal.GDT_Float32,
                                            use_ref_width_height=False)
 
-            # irrigation fraction
-            irr_frac_raster = glob(os.path.join(irr_frac_input_dir, f'*{year}*.tif'))[0]
+            if irr_frac_input_dir is not None:
+                print(f'Clip irrigated fraction for {year}...')
+                # irrigation fraction
+                irr_frac_raster = glob(os.path.join(irr_frac_input_dir, f'*{year}*.tif'))[0]
 
-            clip_resample_reproject_raster(input_raster=irr_frac_raster, input_shape=basin_shp,
-                                           output_raster_dir=basin_irr_frac_output_dir,
-                                           keyword=' ', raster_name=f'Irr_frac_{year}.tif',
-                                           clip=True, resample=False, clip_and_resample=False,
-                                           targetaligned=True, resample_algorithm='near',
-                                           resolution=resolution,
-                                           crs='EPSG:4269', output_datatype=gdal.GDT_Float32,
-                                           use_ref_width_height=False)
+                clip_resample_reproject_raster(input_raster=irr_frac_raster, input_shape=basin_shp,
+                                               output_raster_dir=basin_irr_frac_output_dir,
+                                               keyword=' ', raster_name=f'Irr_frac_{year}.tif',
+                                               clip=True, resample=False, clip_and_resample=False,
+                                               targetaligned=True, resample_algorithm='near',
+                                               resolution=resolution,
+                                               crs='EPSG:4269', output_datatype=gdal.GDT_Float32,
+                                               use_ref_width_height=False)
     else:
         pass
+
+
 
 
 def pumping_AF_pts_to_mm_raster(years, irrigated_fraction_dir, pumping_pts_shp, pumping_attr_AF,
@@ -308,12 +312,12 @@ def aggregate_pixelCSV_to_annualCSV(pixel_csv, output_annual_csv):
     yearly_df.to_csv(output_annual_csv, index=False)
 
 
-def aggregate_netGW_pumping_to_annual(years, basin_netGW_dir,
-                                      pumping_csv, pump_attr,
-                                      output_csv,
-                                      skip_processing=False):
+def aggregate_netGW_pumping_to_annual_DV(years, basin_netGW_dir,
+                                         pumping_csv, pump_attr,
+                                         area_of_basin_mm2, output_csv,
+                                         skip_processing=False):
     if not skip_processing:
-        print(f'Compiling growing season netGW vs annual pumping aggregated dataframe...')
+        print(f'Compiling growing season netGW vs annual pumping aggregated dataframe for Diamond Valley, NV...')
 
         # empty dictionary with to store data
         extract_dict = {'year': [], 'netGW_mm': []}
@@ -348,11 +352,68 @@ def aggregate_netGW_pumping_to_annual(years, basin_netGW_dir,
         df_final = df_annual.merge(pump_df_annual, on='year')
 
         # # calculating mean netGW and mean pumping (in mm)
-        # area of a 2 km pixel
-        area_mm2_single_pixel = (2193 * 1000) * (2193 * 1000)  # unit in mm2
+        df_final['mean netGW_mm'] = df_final['netGW_AF'] * 1233481837548 / area_of_basin_mm2
+        df_final['mean pumping_mm'] = df_final['pumping_AF'] * 1233481837548 / area_of_basin_mm2
 
-        df_final['mean netGW_mm'] = df_final['netGW_AF'] * 1233481837548 / area_mm2_single_pixel
-        df_final['mean pumping_mm'] = df_final['pumping_AF'] * 1233481837548 / area_mm2_single_pixel
+        df_final.to_csv(output_csv, index=False)
+
+
+def aggregate_mean_netGW_pumping_to_annual_HRB(years, basin_netGW_dir,
+                                               pumping_csv, pump_attr,
+                                               area_of_irrig_fields_mm2, output_csv,
+                                               available_gw_field_mask_dir=None, irr_frac_dir=None,
+                                               skip_processing=False):
+    if not skip_processing:
+        print(f'Compiling growing season netGW vs annual pumping aggregated dataframe for Harney Basin, OR...')
+
+        # For Harney Basin, OR, not all pumping wells are monitored. So, we can't compare total pumping vs total netGW(in AF).
+        # We will develop a field mask to extract only pixels that have pumping. Then, for those those pixels, we will
+        # calculate netGW in mm (considering irrigated fraction in each pixel) and  pumping in mm. Then we will calculate
+        # annual average for both estimates.
+
+        # empty dictionary with to store data
+        extract_dict = {'year': [], 'netGW_mm': [], 'irr_frac': [], 'gw_field': []}
+
+        # lopping through each year and storing data in a list
+        for year in years:
+            netGW_data = glob(os.path.join(basin_netGW_dir, f'*{year}*.tif'))[0]
+            gw_field_data = glob(os.path.join(available_gw_field_mask_dir, '*.tif'))[0]
+            irr_frac_data = glob(os.path.join(irr_frac_dir, f'*{year}*.tif'))[0]
+
+            netGW_arr = read_raster_arr_object(netGW_data, get_file=False).flatten()
+            gw_field_arr = read_raster_arr_object(gw_field_data, get_file=False).flatten()
+            irr_frac_arr = read_raster_arr_object(irr_frac_data, get_file=False).flatten()
+            year_list = [year] * len(netGW_arr)
+
+            extract_dict['year'].extend(year_list)
+            extract_dict['netGW_mm'].extend(list(netGW_arr))
+            extract_dict['gw_field'].extend(list(gw_field_arr))
+            extract_dict['irr_frac'].extend(list(irr_frac_arr))
+
+        # converting dictionary to dataframe and saving to csv
+        df = pd.DataFrame(extract_dict)
+        df = df.dropna()  # dropping rows with no in-situ pumping records
+
+        # converting netGW mm to AF
+        area_mm2_single_pixel = (2193 * 1000) * (2193 * 1000)  # unit in mm2
+        df['netGW_AF'] = df['netGW_mm'] * area_mm2_single_pixel * 0.000000000000810714  # 1 mm3 = 0.000000000000810714 AF
+        df['area_irrig'] = df['irr_frac'] * area_mm2_single_pixel  # in mm2
+
+        df = df.dropna().reset_index(drop=True)
+
+        # loading pumping data
+        pump_df = pd.read_csv(pumping_csv)
+
+        # aggregating netGW and pumping dataset by year_list
+        df_annual = df.groupby('year')[['netGW_AF', 'area_irrig']].sum().reset_index()
+        pump_df_annual = pump_df.groupby('year')[pump_attr].sum().reset_index()
+
+        # joining the dataframe
+        df_final = df_annual.merge(pump_df_annual, on='year')
+
+        # # calculating mean netGW and mean pumping (in mm)
+        df_final['mean netGW_mm'] = df_final['netGW_AF'] * 1233481837548 / df_final['area_irrig']
+        df_final['mean pumping_mm'] = df_final['pumping_AF'] * 1233481837548 / area_of_irrig_fields_mm2
 
         df_final.to_csv(output_csv, index=False)
 
@@ -368,8 +429,8 @@ def compile_annual_AF_pumping_netGW_all_basins(annual_csv_list, output_csv):
 
     # basin name dict
     basin_name_dict = {'GMD4': 'GMD4, KS', 'GMD3': 'GMD3, KS', 'RPB': 'RPB, CO',
-                       'Harquahala': 'Harquahala INA', 'Douglas': 'Douglas AMA',
-                       'Diamond': 'Diamond Valley', 'Harney': 'Harney Basin'}
+                       'Harquahala': 'Harquahala INA, AZ', 'Douglas': 'Douglas AMA, AZ',
+                       'Diamond': 'Diamond Valley, NV'}
 
     for csv in annual_csv_list:
         df = pd.read_csv(csv)

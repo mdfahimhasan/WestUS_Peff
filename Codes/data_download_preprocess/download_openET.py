@@ -268,8 +268,8 @@ def download_openet_indiv_models_grow_season(download_dir, year_list, merge_keyw
 
     for asset in all_assets:
         model_name = asset.split('/')[1]
-        download_dir = os.path.join(download_dir, model_name)
-        makedirs([download_dir])
+        sub_download_dir = os.path.join(download_dir, model_name)
+        makedirs([sub_download_dir])
 
         for year in year_list:  # first loop for year_list
             print('********')
@@ -309,7 +309,7 @@ def download_openet_indiv_models_grow_season(download_dir, year_list, merge_keyw
                                                              'format': 'GEO_TIFF'})
 
                 key_word = model_name
-                local_file_path = os.path.join(download_dir,
+                local_file_path = os.path.join(sub_download_dir,
                                                f'{key_word}_{str(year)}_{str(grid_sr)}.tif')
 
                 # Appending data url and local file path (to save data) to a central list
@@ -334,12 +334,12 @@ def download_openet_indiv_models_grow_season(download_dir, year_list, merge_keyw
                     local_file_paths_list = []
 
             mosaic_name = f'{model_name}_{year}.tif'
-            mosaic_dir = os.path.join(download_dir, f'{merge_keyword}', 'merged')
-            clip_dir = os.path.join(download_dir, f'{merge_keyword}')
+            mosaic_dir = os.path.join(sub_download_dir, f'{merge_keyword}', 'merged')
+            clip_dir = os.path.join(sub_download_dir, f'{merge_keyword}')
 
             makedirs([clip_dir, mosaic_dir])
             search_by = f'*{year}*.tif'
-            merged_arr, merged_raster = mosaic_rasters_from_directory(input_dir=download_dir,
+            merged_arr, merged_raster = mosaic_rasters_from_directory(input_dir=sub_download_dir,
                                                                       output_dir=mosaic_dir,
                                                                       raster_name=mosaic_name,
                                                                       ref_raster=refraster_gee_merge,

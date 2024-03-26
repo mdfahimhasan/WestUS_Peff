@@ -19,7 +19,7 @@ gee_data_list = ['Field_capacity', 'Bulk_density', 'Sand_content', 'Clay_content
                  'GRIDMET_min_RH', 'GRIDMET_wind_vel', 'GRIDMET_short_rad', 'DAYMET_sun_hr',
                  'USDA_CDL', 'Tree_cover', 'DEM']
 
-openET_data_list =  ['Irrig_crop_OpenET_IrrMapper', 'Irrig_crop_OpenET_LANID',
+openET_data_list = ['Irrig_crop_OpenET_IrrMapper', 'Irrig_crop_OpenET_LANID',
                     'Irrigation_Frac_IrrMapper', 'Irrigation_Frac_LANID',
                     'Rainfed_crop_OpenET_IrrMapper', 'Rainfed_crop_OpenET_LANID',
                     'Rainfed_Frac_IrrMapper', 'Rainfed_Frac_LANID',

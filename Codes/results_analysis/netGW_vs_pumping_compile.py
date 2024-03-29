@@ -4,7 +4,7 @@ from os.path import dirname, abspath
 sys.path.insert(0, dirname(dirname(dirname(abspath(__file__)))))
 
 from Codes.utils.raster_ops import shapefile_to_raster, clip_resample_reproject_raster
-from Codes.netGW.netGW_utils import clip_netGW_Irr_frac_for_basin, pumping_AF_pts_to_mm_raster, \
+from Codes.results_analysis.analysis_utils import clip_netGW_Irr_frac_for_basin, pumping_AF_pts_to_mm_raster, \
     compile_basin_df_for_netGW_pumping, extract_pumping_estimate_with_lat_lon, \
     aggregate_pixelCSV_to_annualCSV, aggregate_netGW_pumping_to_annual_DV, \
     aggregate_mean_netGW_pumping_to_annual_HRB, compile_annual_AF_pumping_netGW_all_basins

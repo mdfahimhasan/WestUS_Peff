@@ -36,12 +36,13 @@ def create_buffer(input_shapefile, distance, output_shapefile, change_crs='EPSG:
     return output_shapefile
 
 
-def clip_vector(input_shapefile, mask_shapefile, output_shapefile, create_zero_buffer=False):
+def clip_vector(input_shapefile, mask_shapefile, output_shapefile, change_crs=None, create_zero_buffer=False):
     """
     Clips a vector file based on the vector mask provided.
 
     :param input_shapefile: Filepath of input shapefile.
     :param mask_shapefile: Filepath of shapefile to use as mask.
+    :param change_crs: Crs if want to change crs. Currently changes input shapefile's crs.
     :param output_shapefile: Filepath of output (clipped) shapefile.
     :param create_zero_buffer: Set to True to create zero buffer around input shapefile. Default set to False.
                                There might be intersection error for complex/problematic shapefiles. Creating a zero
@@ -49,18 +50,23 @@ def clip_vector(input_shapefile, mask_shapefile, output_shapefile, create_zero_b
 
     :return: Returns the filepath of clipped shapefile.
     """
+    output_dir = os.path.dirname(output_shapefile)
+    makedirs([output_dir])
+
     if create_zero_buffer:
         # # Buffering might ruin the attribute information of the input shapefile. Do further processing.
-        output_dir = os.path.dirname(output_shapefile)
         buffered_shape_path = os.path.join(output_dir, 'zero_buffer.shp')
 
         # Creating zero buffered shapefile. The crs will be converted to original crs of the shapefile automatically
         buffered_shapefile = create_buffer(input_shapefile, distance=0, output_shapefile=buffered_shape_path,
-                                           change_crs='EPSG:32611')
+                                           change_crs=change_crs)
         input_shapefile = buffered_shapefile
 
     input_gdf = gpd.read_file(input_shapefile)
     mask_gdf = gpd.read_file(mask_shapefile)
+
+    if change_crs is not None:
+        input_gdf = input_gdf.to_crs(change_crs)
 
     clipped_gdf = gpd.clip(input_gdf, mask_gdf, keep_geom_type=True)
 
@@ -150,6 +156,7 @@ def create_pixel_multipoly_shapefile(refraster, interim_output_raster, output_fi
 ###########
 # # # This function isn't optimized and need major change/modification.
 
+
 def raster_to_shapefile(input_raster, output_shapefile, shapefile_crs=None):
     """
     Convert a raster to shapefile.
@@ -236,10 +243,3 @@ def create_fishnets_from_shapefile(input_shape, num_cols, num_rows, output_shape
 
     fishnet = gpd.GeoDataFrame(poly_geoms, columns=['geometry']).set_crs(crs)
     fishnet.to_file(output_shape)
-
-
-# create_fishnets_from_shapefile(input_shape='../../Data_main/shapefiles/Western_US_ref_shapes/WestUS_gee_grid.shp',
-#                                num_cols=50, num_rows=25,
-#                                output_shape='../../Data_main/shapefiles/Western_US_ref_shapes/WestUS_gee_grid_for30m.shp')
-
-

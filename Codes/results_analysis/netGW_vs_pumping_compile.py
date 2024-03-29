@@ -3,11 +3,11 @@ import sys
 from os.path import dirname, abspath
 sys.path.insert(0, dirname(dirname(dirname(abspath(__file__)))))
 
-from Codes.utils.raster_ops import shapefile_to_raster, clip_resample_reproject_raster
+from Codes.utils.raster_ops import shapefile_to_raster
 from Codes.results_analysis.analysis_utils import clip_netGW_Irr_frac_for_basin, pumping_AF_pts_to_mm_raster, \
     compile_basin_df_for_netGW_pumping, extract_pumping_estimate_with_lat_lon, \
     aggregate_pixelCSV_to_annualCSV, aggregate_netGW_pumping_to_annual_DV, \
-    aggregate_mean_netGW_pumping_to_annual_HRB, compile_annual_AF_pumping_netGW_all_basins
+    aggregate_mean_netGW_pumping_to_annual_HRB, compile_annual_pumping_netGW_all_basins
 
 model_res = 0.01976293625031605786  # in deg, ~2 km
 WestUS_shape = '../../Data_main/shapefiles/Western_US_ref_shapes/WestUS_states.shp'
@@ -23,9 +23,9 @@ if __name__ == '__main__':
     skip_process_rpb_data = True    # Republican River Basin, Co
     skip_process_hqr_data = True   # Harquahala INA, AZ
     skip_process_doug_data = True  # Douglas AMA, AZ
-    skip_process_dv_data = False   # Diamond valley, NV
-    skip_process_hrn_data = False   # Harney Basin, OR
-    skip_compile_AF_annual_data = False
+    skip_process_dv_data = True   # Diamond valley, NV
+    skip_process_hrn_data = True   # Harney Basin, OR
+    skip_compile_AF_annual_data = True  # all basins
 
     # area of basins
     basin_area_dict = {
@@ -34,8 +34,9 @@ if __name__ == '__main__':
                        'rpb': 22753400088.854 * (1000 * 1000),  # in mm2
                        'hqr': 1982641859.510 * (1000 * 1000),  # in mm2
                        'doug': 2459122191.981 * (1000 * 1000),  # in mm2
-                       'dv': 1933578136.225 * (1000 * 1000), # in mm2
+                       'dv': 1933578136.225 * (1000 * 1000),  # in mm2
                        'hrn': 13582971455.033 * (1000 * 1000)  # in mm2
+
                        }
 
     # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
@@ -88,7 +89,8 @@ if __name__ == '__main__':
                                            output_csv=GMD4_csv, skip_processing=skip_process_gmd4_data)
 
         annual_csv = '../../Data_main/Raster_data/NetGW_irrigation/GMD4_KS/KS_GMD4_annual.csv'
-        aggregate_pixelCSV_to_annualCSV(pixel_csv=GMD4_csv, output_annual_csv=annual_csv)
+        aggregate_pixelCSV_to_annualCSV(pixel_csv=GMD4_csv, area_basin_mm2=basin_area_dict['gmd4'],
+                                        output_annual_csv=annual_csv)
 
     # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
     # # # For Groundwater Management District 3 (GMD3), Kansas
@@ -139,7 +141,8 @@ if __name__ == '__main__':
                                            output_csv=GMD3_csv, skip_processing=skip_process_gmd3_data)
 
         annual_csv = '../../Data_main/Raster_data/NetGW_irrigation/GMD3_KS/KS_GMD3_annual.csv'
-        aggregate_pixelCSV_to_annualCSV(pixel_csv=GMD3_csv, output_annual_csv=annual_csv)
+        aggregate_pixelCSV_to_annualCSV(pixel_csv=GMD3_csv, area_basin_mm2=basin_area_dict['gmd3'],
+                                        output_annual_csv=annual_csv)
 
     # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
     # # # For Republican River Basin (RPB), Colorado
@@ -191,7 +194,8 @@ if __name__ == '__main__':
                                            output_csv=RPB_csv, skip_processing=skip_process_rpb_data)
 
         annual_csv = '../../Data_main/Raster_data/NetGW_irrigation/RPB_CO/CO_RPB_annual.csv'
-        aggregate_pixelCSV_to_annualCSV(pixel_csv=RPB_csv, output_annual_csv=annual_csv)
+        aggregate_pixelCSV_to_annualCSV(pixel_csv=RPB_csv, area_basin_mm2=basin_area_dict['rpb'],
+                                        output_annual_csv=annual_csv)
 
     # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
     # # # For Harquahala INA, Arizona
@@ -244,7 +248,8 @@ if __name__ == '__main__':
                                                           skip_processing=skip_process_hqr_data)
 
         annual_csv = '../../Data_main/Raster_data/NetGW_irrigation/Harquahala_INA_AZ/AZ_Harquahala_INA_annual.csv'
-        aggregate_pixelCSV_to_annualCSV(pixel_csv=Harquahala_INA_csv, output_annual_csv=annual_csv)
+        aggregate_pixelCSV_to_annualCSV(pixel_csv=Harquahala_INA_csv, area_basin_mm2=basin_area_dict['hqr'],
+                                        output_annual_csv=annual_csv)
 
         # # # # #  STEP 4 # # # # #
         # # Extracting predicted pumping from Majumdar et al. 2022
@@ -311,7 +316,8 @@ if __name__ == '__main__':
                                                           skip_processing=skip_process_doug_data)
 
         annual_csv = '../../Data_main/Raster_data/NetGW_irrigation/Douglas_AMA_AZ/AZ_Douglas_AMA_annual.csv'
-        aggregate_pixelCSV_to_annualCSV(pixel_csv=Douglas_AMA_csv, output_annual_csv=annual_csv)
+        aggregate_pixelCSV_to_annualCSV(pixel_csv=Douglas_AMA_csv, area_basin_mm2=basin_area_dict['doug'],
+                                        output_annual_csv=annual_csv)
 
         # # # # #  STEP 4 # # # # #
         # # Extracting predicted pumping from Majumdar et al. 2022
@@ -356,10 +362,10 @@ if __name__ == '__main__':
         Diamond_Valley_csv = '../../Data_main/Raster_data/NetGW_irrigation/Diamond_Valley_NV/NV_Diamond_Valley_annual.csv'
 
         aggregate_netGW_pumping_to_annual_DV(years=years, basin_netGW_dir=basin_netGW_output_dir,
-                                              pumping_csv=pumping_data, pump_attr='pumping_AF',
-                                              area_of_basin_mm2=basin_area_dict['dv'],
-                                              output_csv=Diamond_Valley_csv,
-                                              skip_processing=skip_process_dv_data)
+                                             pumping_csv=pumping_data, pump_AF_attr='pumping_AF',
+                                             area_of_basin_mm2=basin_area_dict['dv'],
+                                             output_csv=Diamond_Valley_csv,
+                                             skip_processing=skip_process_dv_data)
 
     # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
     # # # For Harney Basin, Oregon
@@ -425,6 +431,6 @@ if __name__ == '__main__':
                              '../../Data_main/Raster_data/NetGW_irrigation/Harquahala_INA_AZ/AZ_Harquahala_INA_annual.csv',
                              '../../Data_main/Raster_data/NetGW_irrigation/Douglas_AMA_AZ/AZ_Douglas_AMA_annual.csv',
                              '../../Data_main/Raster_data/NetGW_irrigation/Diamond_Valley_NV/NV_Diamond_Valley_annual.csv']
-        output_csv = '../../Data_main/Raster_data/NetGW_irrigation/annual_AF_pumping_netGW_BOI.csv'
+        output_csv = '../../Data_main/Raster_data/NetGW_irrigation/annual_pumping_netGW_BOI.csv'
 
-        compile_annual_AF_pumping_netGW_all_basins(annual_csv_list=basin_annual_csvs, output_csv=output_csv)
+        compile_annual_pumping_netGW_all_basins(annual_csv_list=basin_annual_csvs, output_csv=output_csv)

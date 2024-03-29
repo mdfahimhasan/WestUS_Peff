@@ -8,11 +8,9 @@ def make_scatter_line_plots(x1, y1,
                             xlabel_scatter, ylabel_scatter, x_y_lim_scatter,
                             make_line_plot=True,
                             x2=None, y2=None,
-                            area_basin_mm2=None,
                             year=None,
                             xlabel_line=None, ylabel_line=None,
-                            line_label_1=None, line_label_2=None,
-                            area_2km_pixel=4809249000000):
+                            line_label_1=None, line_label_2=None):
 
     # R2 and RMSE calculation
     r2 = r2_score(y_true=y1, y_pred=x1)
@@ -36,8 +34,8 @@ def make_scatter_line_plots(x1, y1,
                  bbox=dict(boxstyle='round', facecolor='white', edgecolor='lightgray', alpha=0.8))
 
         # line plot (annual mean mm/year)
-        ax[1].plot(year, (x2 * area_2km_pixel / area_basin_mm2), label=line_label_1, marker='o')
-        ax[1].plot(year, (y2 * area_2km_pixel / area_basin_mm2), label=line_label_2, marker='o')
+        ax[1].plot(year, x2, label=line_label_1, marker='o')
+        ax[1].plot(year, y2, label=line_label_2, marker='o')
         ax[1].set_xticks(year)
         ax[1].set_ylabel(ylabel_line)
         ax[1].set_xlabel(xlabel_line)
@@ -74,7 +72,32 @@ def make_line_plot(x, y,  year, fontsize,xlabel_line, ylabel_line, line_label_1,
     ax.legend(loc='upper left', fontsize=(fontsize-2))
 
 
-def make_BOI_AF_scatter_plot(df, x, y, hue, xlabel, ylabel, fontsize, lim):
+def make_BOI_netGW_vs_pumping_scatter_plot(df, x, y, hue, xlabel, ylabel, fontsize, lim, scientific_ticks=True):
+    fig, ax = plt.subplots(figsize=(8, 6))
+    plt.rcParams['font.size'] = fontsize
+
+    sns.scatterplot(data=df, x=x, y=y, hue=hue, marker='s')
+    ax.plot([0, 1], [0, 1], '-r', transform=ax.transAxes)
+    ax.set_ylabel(ylabel)
+    ax.set_xlabel(xlabel)
+    ax.set_xlim(lim)
+    ax.set_ylim(lim)
+
+    if scientific_ticks:
+        ax.ticklabel_format(style='sci', scilimits=(4, 4))
+        ax.tick_params(axis='both', labelsize=fontsize)
+
+    # Create a custom legend
+    handles, labels = ax.get_legend_handles_labels()
+
+    # Create legend with square markers, adjust marker size as needed
+    new_handles = [plt.Line2D([], [], marker='s', color=handle.get_facecolor()[0], linestyle='None') for handle in
+                   handles[0:]]  # Skip the first handle as it's the legend title
+
+    ax.legend(handles=new_handles, labels=labels[0:], title='Basin', loc='upper left', fontsize=fontsize)
+
+
+def make_BOI_mean_mm_scatter_plot(df, x, y, hue, xlabel, ylabel, fontsize, lim):
     fig, ax = plt.subplots(figsize=(8, 6))
     plt.rcParams['font.size'] = fontsize
 

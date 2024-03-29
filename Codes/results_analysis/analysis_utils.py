@@ -19,11 +19,26 @@ GEE_merging_refraster_large_grids = '../../Data_main/reference_rasters/GEE_mergi
 def clip_netGW_Irr_frac_for_basin(years, basin_shp, netGW_input_dir, basin_netGW_output_dir,
                                   resolution=model_res, skip_processing=False,
                                   irr_frac_input_dir=None, basin_irr_frac_output_dir=None):
+    """
+    Clip netGW and irrigated fraction datasets for a basin, Clipping irrigation fraction data is optional.
+
+    :param years: List of years to process data.
+    :param basin_shp: Filepath of basin shapefile.
+    :param netGW_input_dir: Directory path of Western US netGW estimates.
+    :param basin_netGW_output_dir: Output directory path to save the clipped netGW estimates for the basin.
+    :param resolution: model resolution.
+    :param skip_processing: Set to True to skip this processing step.
+    :param irr_frac_input_dir: Directory path of Western US annual irrigation fraction datasets.
+                               Default set to None to not do this step. To do this step, insert required directory path.
+    :param basin_irr_frac_output_dir: Output directory path to save the clipped irrigation fraction estimates for the basin.
+
+    :return: None.
+    """
     if not skip_processing:
         for year in years:
             print(f'Clip growing season netGW for {year}...')
 
-            # net GW
+            # netGW
             netGW_raster = glob(os.path.join(netGW_input_dir, f'*{year}*.tif'))[0]
 
             clip_resample_reproject_raster(input_raster=netGW_raster, input_shape=basin_shp,
@@ -55,6 +70,25 @@ def clip_netGW_Irr_frac_for_basin(years, basin_shp, netGW_input_dir, basin_netGW
 def pumping_AF_pts_to_mm_raster(years, irrigated_fraction_dir, pumping_pts_shp, pumping_attr_AF,
                                 year_attr, output_dir, basin_shp, ref_raster=WestUS_raster,
                                 resolution=model_res, skip_processing=False):
+    """
+    Convert point scale (shapefile) groundwater pumping estimates to rasters in mm.
+    For individual pixels (2km) sums up all the pumping values inside it.
+    Also, generates intermediate pumping in AF rasters.
+
+    :param years: List of years to process data.
+    :param irrigated_fraction_dir: Directory path of Western US annual irrigation fraction datasets.
+    :param pumping_pts_shp: Filepath of point shapefile with annual pumping estimates.
+    :param pumping_attr_AF: Attribute in the point shapefile with pumping in AF values.
+    :param year_attr: Attribute in the point shapefile with year.
+    :param output_dir: Filepath of main output dir. Intermediate directories named 'pumping_AF_raster' and
+                        'pumping_mm_raster' will be created automatically.
+    :param basin_shp: Filepath of basin shapefile.
+    :param ref_raster: Filepath of Western US reference raster.
+    :param resolution: model resolution.
+    :param skip_processing: Set to True to skip this processing step.
+
+    :return: None.
+    """
     if not skip_processing:
         # creating sub-directories
         annual_pump_shp_dir = os.path.join(output_dir, 'annual_pumping_shp')
@@ -133,6 +167,18 @@ def pumping_AF_pts_to_mm_raster(years, irrigated_fraction_dir, pumping_pts_shp, 
 def compile_basin_df_for_netGW_pumping(years, basin_netGW_dir, basin_pumping_mm_dir,
                                        basin_pumping_AF_dir, output_csv,
                                        skip_processing=False):
+    """
+    Compiling pixel-wise annual netGW and pumping data for a basin.
+
+    :param years: List of years to process data.
+    :param basin_netGW_dir: Basin netGW directory.
+    :param basin_pumping_mm_dir: Basin pumping (in mm) directory.
+    :param basin_pumping_AF_dir: Basin pumping (in AF) directory.
+    :param output_csv: Filepath of output csv.
+    :param skip_processing: Set to True to skip this processing step.
+
+    :return:  Filepath of output csv.
+    """
     if not skip_processing:
         makedirs([basin_pumping_mm_dir])
 
@@ -180,6 +226,21 @@ def compile_basin_df_for_netGW_pumping(years, basin_netGW_dir, basin_pumping_mm_
 def extract_pumping_estimate_with_lat_lon(years, input_csv, input_data_dir, resampled_output_dir,
                                           output_csv, ref_rater=WestUS_raster,
                                           resolution=model_res, skip_processing=False):
+    """
+    Extract pumping values using latitude and longitude from a pumping value raster.
+    ** using it to extract pumping value from Majumdar et al.'s simulated Arizona's pumping data.
+
+    :param years: List of years to process data.
+    :param input_csv: Filepath of original pixel-wise annual netGW and pumping csv for a basin.
+    :param input_data_dir: Input pumping data directory path.
+    :param resampled_output_dir: Directory path to save intermediate resampled pumping data.
+    :param output_csv: Filepath of out csv that holds extracted pumping values.
+    :param ref_raster: Filepath of Western US reference raster.
+    :param resolution: model resolution.
+    :param skip_processing: Set to True to skip this processing step.
+
+    :return: None
+    """
     if not skip_processing:
         df = pd.read_csv(input_csv)
 
@@ -229,20 +290,51 @@ def extract_pumping_estimate_with_lat_lon(years, input_csv, input_data_dir, resa
         df.to_csv(output_csv, index=False)
 
 
-def aggregate_pixelCSV_to_annualCSV(pixel_csv, output_annual_csv):
+def aggregate_pixelCSV_to_annualCSV(pixel_csv, area_basin_mm2, output_annual_csv):
+    """
+    Aggregate (by sum and mean) pixel-wise annual netGW and pumping csv for a basin to calculate total annual
+    netGW/pumping (in AF/year and mm/year) and mean netGW/pumping (in mm/year).
+
+    *** used for GMD4, GMD3 in KS; RPB in CO; HQR, DOUG in AZ.
+
+    :param pixel_csv: Filepath of csv holding pixel-wise annual netGW and pumping data for a basin.
+    :param area_basin_mm2: Area of the basin in mm2.
+    :param output_annual_csv: Filepath of output annual total/mean netGW/pumping csv.
+
+    :return: None.
+    """
     pixel_df = pd.read_csv(pixel_csv)
 
     # groupby using sum()
     yearly_df = pixel_df.groupby('year').sum()
     yearly_df = yearly_df.drop(columns=['lat', 'lon'])
     yearly_df = yearly_df.reset_index()
+
+    # estimating mean netGW + pumping (in mm)
+    area_mm2_single_pixel = (2193 * 1000) * (2193 * 1000)  # unit in mm2
+    yearly_df['mean netGW_mm'] = yearly_df['netGW_mm'] * area_mm2_single_pixel / area_basin_mm2
+    yearly_df['mean pumping_mm'] = yearly_df['pumping_mm'] * area_mm2_single_pixel / area_basin_mm2
+
     yearly_df.to_csv(output_annual_csv, index=False)
 
 
 def aggregate_netGW_pumping_to_annual_DV(years, basin_netGW_dir,
-                                         pumping_csv, pump_attr,
+                                         pumping_csv, pump_AF_attr,
                                          area_of_basin_mm2, output_csv,
                                          skip_processing=False):
+    """
+    Aggregates netGW and annual pumping estimates for Diamond Valley, Nevada.
+
+    :param years: List of years to process data.
+    :param basin_netGW_dir: Basin netGW directory.
+    :param pumping_csv: Filepath  of pumping csv dataset for the Diamond valley basin.
+    :param pump_AF_attr: Pumping attribute (in AF) in the csv file.
+    :param area_of_basin_mm2: Area of the basin in mm2.
+    :param output_csv: Filepath of output annual total/mean netGW/pumping csv.
+    :param skip_processing: Set to True to skip this processing step.
+
+    :return: None.
+    """
     if not skip_processing:
         print(f'Compiling growing season netGW vs annual pumping aggregated dataframe for Diamond Valley, NV...')
 
@@ -273,7 +365,7 @@ def aggregate_netGW_pumping_to_annual_DV(years, basin_netGW_dir,
 
         # aggregating netGW and pumping dataset by year_list
         df_annual = df.groupby('year')[['netGW_AF']].sum().reset_index()
-        pump_df_annual = pump_df.groupby('year')[pump_attr].sum().reset_index()
+        pump_df_annual = pump_df.groupby('year')[pump_AF_attr].sum().reset_index()
 
         # joining the dataframe
         df_final = df_annual.merge(pump_df_annual, on='year')
@@ -347,7 +439,7 @@ def aggregate_mean_netGW_pumping_to_annual_HRB(years, basin_netGW_dir,
         return output_csv
 
 
-def compile_annual_AF_pumping_netGW_all_basins(annual_csv_list, output_csv):
+def compile_annual_pumping_netGW_all_basins(annual_csv_list, output_csv):
     # making the output directory if not available
     makedirs([os.path.dirname(output_csv)])
 
@@ -361,11 +453,123 @@ def compile_annual_AF_pumping_netGW_all_basins(annual_csv_list, output_csv):
 
     for csv in annual_csv_list:
         df = pd.read_csv(csv)
-        df = df[['pumping_AF', 'netGW_AF']]
 
         basin_name = os.path.basename(csv).split('_')[1]
-
         df['basin'] = [basin_name_dict[basin_name] for i in range(len(df))]
         compiled_annual_df = pd.concat([compiled_annual_df, df])
 
     compiled_annual_df.to_csv(output_csv, index=False)
+
+
+def clip_Peff_precip_basin(years, basin_shp, Peff_input_dir, Peff_output_dir,
+                           precip_input_dir, precip_output_dir,
+                           resolution=model_res, skip_processing=False):
+    if not skip_processing:
+        for year in years:
+            print(f'Clip growing season effective precipitation and precipitation for {year}...')
+
+            # effective precipitation
+            Peff_raster = glob(os.path.join(Peff_input_dir, f'*{year}*.tif'))[0]
+
+            clip_resample_reproject_raster(input_raster=Peff_raster, input_shape=basin_shp,
+                                           output_raster_dir=Peff_output_dir,
+                                           keyword=' ', raster_name=f'Peff_{year}.tif',
+                                           clip=True, resample=False, clip_and_resample=False,
+                                           targetaligned=True, resample_algorithm='near',
+                                           resolution=resolution,
+                                           crs='EPSG:4269', output_datatype=gdal.GDT_Float32,
+                                           use_ref_width_height=False)
+
+            # precipitation
+            precip_raster = glob(os.path.join(precip_input_dir, f'*{year}*.tif'))[0]
+
+            clip_resample_reproject_raster(input_raster=precip_raster, input_shape=basin_shp,
+                                           output_raster_dir=precip_output_dir,
+                                           keyword=' ', raster_name=f'precip_{year}.tif',
+                                           clip=True, resample=False, clip_and_resample=False,
+                                           targetaligned=True, resample_algorithm='near',
+                                           resolution=resolution,
+                                           crs='EPSG:4269', output_datatype=gdal.GDT_Float32,
+                                           use_ref_width_height=False)
+    else:
+        pass
+
+
+def aggregate_annual_Q_from_streamstats(years, input_Q_data_txt, header, Q_attr,
+                                        output_annual_csv, skip_processing=False):
+    if not skip_processing:
+        # growing season months
+        months = list(range(4, 11))
+
+        # read text file
+        df = pd.read_csv(input_Q_data_txt, header=header, sep='\t')
+        df = df.drop(index=0, axis=1)
+
+        # convert Q value to float
+        df[Q_attr] = df[Q_attr].astype('float')  # unit cfs
+
+        # the daily discharge value is the mean discharge.
+        # converting it to daily total discharge by multiplying it with 86400
+        df[Q_attr] = df[Q_attr] * 86400   # unit cft
+
+        # creating year and month columns
+        df['datetime'] = pd.to_datetime(df['datetime'])
+        df = df.assign(year=lambda x: x['datetime'].dt.year, month=lambda x: x['datetime'].dt.month)
+
+        # selecting rows with needed years and columns
+        df = df[df['year'].isin(years) & df['month'].isin(months)]
+
+        # sum annual/growing season discharge
+        sum_df = df.groupby('year')[Q_attr].sum()
+        sum_df = sum_df.reset_index()
+        sum_df.columns = ['year', 'Q_cft']  # renaming discharge column
+
+        # saving file as csv
+        sum_df.to_csv(output_annual_csv, index=False)
+
+
+def calc_Q_plus_n_compile(years, Peff_input_dir, precip_input_dir, usgs_annual_Q_csv,
+                          basin_area_mm2, output_annual_Q_csv, skip_processing=False):
+    if not skip_processing:
+        # empty list to store annual Peff and precip estimates (unit in cfs) for the basin
+        Peff_cfs = []
+        precip_cfs = []
+
+        for year in years:
+            # reading Peff and precip datasets for the basin
+            Peff_raster = glob(os.path.join(Peff_input_dir, f'*{year}*.tif'))[0]
+            precip_raster = glob(os.path.join(precip_input_dir, f'*{year}*.tif'))[0]
+
+            Peff_arr = read_raster_arr_object(Peff_raster, get_file=False)
+            precip_arr = read_raster_arr_object(precip_raster, get_file=False)
+
+            # summing growing season Peff and precip
+            # the nansum values are in in mm/year
+            Peff_sum = np.nansum(Peff_arr)
+            precip_sum = np.nansum(precip_arr)
+
+            # converting unit to cfs
+            # 1 mm3 = (3.5314 * 10**-8) cft
+            # 214 days in the growing season
+            area_mm2_single_pixel = (2193 * 1000) * (2193 * 1000)  # unit in mm2
+
+            Peff_sum = Peff_sum * area_mm2_single_pixel * (3.5314 * 10 ** -8) / 214
+            precip_sum = precip_sum * area_mm2_single_pixel * (3.5314 * 10 ** -8) / 214
+
+            # appending the summed values in the empty lists
+            Peff_cfs.append(Peff_sum)
+            precip_cfs.append(precip_sum)
+
+        # compiling to a dataframe and estimating Q.
+        # estimated Q (surface runoff) should be theoretically higher that the Q from USGS data
+        # because we are assuming deep percolation to be zero.
+        annual_df = pd.DataFrame({'year': years, 'Peff_cft': Peff_cfs, 'precip_cft': precip_cfs})
+        annual_df['estimated_Q_cft'] = annual_df['precip_cft'] - annual_df['Peff_cft']
+
+        # merging with annual USGS Q estimates
+        usgs_Q_df = pd.read_csv(usgs_annual_Q_csv)
+        merged_df = usgs_Q_df.merge(annual_df, on='year')
+
+        merged_df.to_csv(output_annual_Q_csv, index=False)
+
+

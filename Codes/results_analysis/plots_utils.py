@@ -72,7 +72,8 @@ def make_line_plot(x, y,  year, fontsize,xlabel_line, ylabel_line, line_label_1,
     ax.legend(loc='upper left', fontsize=(fontsize-2))
 
 
-def make_BOI_netGW_vs_pumping_scatter_plot(df, x, y, hue, xlabel, ylabel, fontsize, lim, scientific_ticks=True):
+def make_BOI_netGW_vs_pumping_scatter_plot(df, x, y, hue, xlabel, ylabel, fontsize, lim,
+                                           scientific_ticks=True, savepath=None):
     fig, ax = plt.subplots(figsize=(8, 6))
     plt.rcParams['font.size'] = fontsize
 
@@ -96,8 +97,11 @@ def make_BOI_netGW_vs_pumping_scatter_plot(df, x, y, hue, xlabel, ylabel, fontsi
 
     ax.legend(handles=new_handles, labels=labels[0:], title='Basin', loc='upper left', fontsize=fontsize)
 
+    if savepath is not None:
+        fig.savefig(savepath, dpi=300)
 
-def make_BOI_mean_mm_scatter_plot(df, x, y, hue, xlabel, ylabel, fontsize, lim):
+
+def make_BOI_mean_mm_scatter_plot(df, x, y, hue, xlabel, ylabel, fontsize, lim, savepath=None):
     fig, ax = plt.subplots(figsize=(8, 6))
     plt.rcParams['font.size'] = fontsize
 
@@ -118,6 +122,9 @@ def make_BOI_mean_mm_scatter_plot(df, x, y, hue, xlabel, ylabel, fontsize, lim):
                    handles[0:]]  # Skip the first handle as it's the legend title
 
     ax.legend(handles=new_handles, labels=labels[0:], title='Basin', loc='upper left', fontsize=fontsize)
+
+    if savepath is not None:
+        fig.savefig(savepath, dpi=300)
 
 
 

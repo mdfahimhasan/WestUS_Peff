@@ -137,7 +137,7 @@ def estimate_sw_mm_HUC12(years_list, HUC12_input_shapefile, irrigated_CropET_wit
         area_mm2_single_pixel = (2193 * 1000) * (2193 * 1000)  # unit in mm2
 
         for year in years_list:
-            sw_mm3 = HUC12_gdf_merged[f'{year}'] * 3785411784000 * 214  # conversion from MGD to mm3/grow season; 214 days from April-October
+            sw_mm3 = HUC12_gdf_merged[f'{year}'] * 3785411784000 * 30  # conversion from MGD to mm3/grow season; 214 days from April-October
             area_irrig_pixels = area_mm2_single_pixel * HUC12_gdf_merged[f'pixel_{year}']   # unit mm2
             HUC12_gdf_merged[f'sw_{year}_mm'] = sw_mm3 / area_irrig_pixels   # unit mm/grow season
 

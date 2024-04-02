@@ -73,7 +73,9 @@ def make_line_plot(x, y,  year, fontsize,xlabel_line, ylabel_line, line_label_1,
 
 
 def make_BOI_netGW_vs_pumping_vs_USGS_scatter_plot(df, x1, y1, hue, xlabel1, ylabel1, fontsize, lim,
-                                                   scientific_ticks=True,
+                                                   scientific_ticks=True, scilimits=(4, 4),
+                                                   basin_labels=('GMD4, KS', 'GMD3, KS', 'RPB, CO',
+                                                                'Harquahala INA, AZ', 'Douglas AMA, AZ', 'Diamond Valley, NV'),
                                                    x2=None, y2=None, xlabel2=None, ylabel2=None,
                                                    figsize=(12, 8), savepath=None):
     if x2 is not None:
@@ -81,6 +83,7 @@ def make_BOI_netGW_vs_pumping_vs_USGS_scatter_plot(df, x1, y1, hue, xlabel1, yla
         plt.rcParams['font.size'] = fontsize
 
         sns.scatterplot(data=df, x=x1, y=y1, hue=hue, marker='s', ax=ax[0])
+        ax[0].legend_.remove()
         ax[0].plot([0, 1], [0, 1], '-r', transform=ax[0].transAxes)
         ax[0].set_ylabel(ylabel1)
         ax[0].set_xlabel(xlabel1)
@@ -96,13 +99,22 @@ def make_BOI_netGW_vs_pumping_vs_USGS_scatter_plot(df, x1, y1, hue, xlabel1, yla
         ax[1].set_ylim(lim)
 
         if scientific_ticks:
-            ax[0].ticklabel_format(style='sci', scilimits=(4, 4))
+            ax[0].ticklabel_format(style='sci', scilimits=scilimits)
             ax[0].tick_params(axis='both', labelsize=fontsize)
 
-            ax[1].ticklabel_format(style='sci', scilimits=(4, 4))
+            ax[1].ticklabel_format(style='sci', scilimits=scilimits)
             ax[1].tick_params(axis='both', labelsize=fontsize)
 
         plt.tight_layout()
+
+        # Create a custom legend
+        handles, labels = ax[0].get_legend_handles_labels()
+
+        # Create legend with square markers, adjust marker size as needed
+        new_handles = [plt.Line2D([], [], marker='s', color=handle.get_facecolor()[0], linestyle='None') for handle in
+                       handles[0:]]  # Skip the first handle as it's the legend title
+
+        ax[0].legend(handles=new_handles, labels=list(basin_labels), title='basin', loc='upper left', fontsize=fontsize)
 
         if savepath is not None:
             fig.savefig(savepath, dpi=300)
@@ -122,3 +134,11 @@ def make_BOI_netGW_vs_pumping_vs_USGS_scatter_plot(df, x1, y1, hue, xlabel1, yla
         if scientific_ticks:
             ax.ticklabel_format(style='sci', scilimits=(4, 4))
             ax.tick_params(axis='both', labelsize=fontsize)
+
+        handles, labels = ax.get_legend_handles_labels()
+
+        # Create legend with square markers, adjust marker size as needed
+        new_handles = [plt.Line2D([], [], marker='s', color=handle.get_facecolor()[0], linestyle='None') for handle in
+                       handles[0:]]  # Skip the first handle as it's the legend title
+
+        ax.legend(handles=new_handles, labels=list(basin_labels), title='basin', loc='upper left', fontsize=fontsize)

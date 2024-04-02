@@ -300,6 +300,11 @@ def aggregate_netGW_insitu_usgs_pumping_to_annualCSV(pixel_netGW_pumping_csv, an
     # merging netGW + in-situ pumping + USGS pumping estimates together
     yearly_df = yearly_df.merge(usgs_df, on='year')
 
+    # calculating m3 values
+    yearly_df['netGW_m3'] = yearly_df['netGW_AF'] * 1233.48
+    yearly_df['pumping_m3'] = yearly_df['pumping_AF'] * 1233.48
+    yearly_df['USGS_m3'] = yearly_df['USGS_AF'] * 1233.48
+
     # calculating mean netGW + mean pumping + mean USGS pumping (in mm)
     area_mm2_single_pixel = (2193 * 1000) * (2193 * 1000)  # unit in mm2
     yearly_df['mean netGW_mm'] = yearly_df['netGW_mm'] * area_mm2_single_pixel / area_basin_mm2
@@ -367,6 +372,11 @@ def aggregate_netGW_insitu_usgs_pumping_to_annualCSV_DV(years, basin_netGW_dir,
 
     # merging netGW + in-situ pumping + USGS pumping estimates together
     yearly_df = yearly_df.merge(usgs_df, on='year')
+
+    # calculating m3 values
+    yearly_df['netGW_m3'] = yearly_df['netGW_AF'] * 1233.48
+    yearly_df['pumping_m3'] = yearly_df['pumping_AF'] * 1233.48
+    yearly_df['USGS_m3'] = yearly_df['USGS_AF'] * 1233.48
 
     # # calculating mean netGW + mean pumping + mean USGS pumping (in mm)
     yearly_df['mean netGW_mm'] = yearly_df['netGW_AF'] * 1233481837548 / area_basin_mm2

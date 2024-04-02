@@ -52,7 +52,7 @@ def make_scatter_line_plots(x1, y1,
         ax.scatter(x1, y1, facecolor=facecolor, edgecolor=edgecolor, s=marker_size)
         ax.set_ylabel(ylabel_scatter)
         ax.set_xlabel(xlabel_scatter)
-        ax.plot([0, 1], [0, 1], '-r', transform=ax.transAxes)
+        ax.plot([0, 1], [0, 1], 'gray', transform=ax.transAxes)
         ax.set_xlim(x_y_lim_scatter)
         ax.set_ylim(x_y_lim_scatter)
         fig.text(0.05, 0.95, f'RMSE: {rmse:.2f}\nR²: {r2:.2f}', transform=ax.transAxes,
@@ -84,7 +84,7 @@ def make_BOI_netGW_vs_pumping_vs_USGS_scatter_plot(df, x1, y1, hue, xlabel1, yla
 
         sns.scatterplot(data=df, x=x1, y=y1, hue=hue, marker='s', ax=ax[0])
         ax[0].legend_.remove()
-        ax[0].plot([0, 1], [0, 1], '-r', transform=ax[0].transAxes)
+        ax[0].plot([0, 1], [0, 1], 'gray', transform=ax[0].transAxes)
         ax[0].set_ylabel(ylabel1)
         ax[0].set_xlabel(xlabel1)
         ax[0].set_xlim(lim)
@@ -92,7 +92,7 @@ def make_BOI_netGW_vs_pumping_vs_USGS_scatter_plot(df, x1, y1, hue, xlabel1, yla
 
         sns.scatterplot(data=df, x=x2, y=y2, hue=hue, marker='s', ax=ax[1])
         ax[1].legend_.remove()
-        ax[1].plot([0, 1], [0, 1], '-r', transform=ax[1].transAxes)
+        ax[1].plot([0, 1], [0, 1], 'gray', transform=ax[1].transAxes)
         ax[1].set_ylabel(ylabel2)
         ax[1].set_xlabel(xlabel2)
         ax[1].set_xlim(lim)
@@ -125,7 +125,7 @@ def make_BOI_netGW_vs_pumping_vs_USGS_scatter_plot(df, x1, y1, hue, xlabel1, yla
 
         sns.scatterplot(data=df, x=x1, y=y1, hue=hue, marker='s')
         ax.legend_.remove()
-        ax.plot([0, 1], [0, 1], '-r', transform=ax.transAxes)
+        ax.plot([0, 1], [0, 1], 'gray', transform=ax.transAxes)
         ax.set_ylabel(ylabel1)
         ax.set_xlabel(xlabel1)
         ax.set_xlim(lim)

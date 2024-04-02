@@ -72,59 +72,53 @@ def make_line_plot(x, y,  year, fontsize,xlabel_line, ylabel_line, line_label_1,
     ax.legend(loc='upper left', fontsize=(fontsize-2))
 
 
-def make_BOI_netGW_vs_pumping_scatter_plot(df, x, y, hue, xlabel, ylabel, fontsize, lim,
-                                           scientific_ticks=True, savepath=None):
-    fig, ax = plt.subplots(figsize=(8, 6))
-    plt.rcParams['font.size'] = fontsize
+def make_BOI_netGW_vs_pumping_vs_USGS_scatter_plot(df, x1, y1, hue, xlabel1, ylabel1, fontsize, lim,
+                                                   scientific_ticks=True,
+                                                   x2=None, y2=None, xlabel2=None, ylabel2=None,
+                                                   figsize=(12, 8), savepath=None):
+    if x2 is not None:
+        fig, ax = plt.subplots(1, 2, figsize=figsize)
+        plt.rcParams['font.size'] = fontsize
 
-    sns.scatterplot(data=df, x=x, y=y, hue=hue, marker='s')
-    ax.plot([0, 1], [0, 1], '-r', transform=ax.transAxes)
-    ax.set_ylabel(ylabel)
-    ax.set_xlabel(xlabel)
-    ax.set_xlim(lim)
-    ax.set_ylim(lim)
+        sns.scatterplot(data=df, x=x1, y=y1, hue=hue, marker='s', ax=ax[0])
+        ax[0].plot([0, 1], [0, 1], '-r', transform=ax[0].transAxes)
+        ax[0].set_ylabel(ylabel1)
+        ax[0].set_xlabel(xlabel1)
+        ax[0].set_xlim(lim)
+        ax[0].set_ylim(lim)
 
-    if scientific_ticks:
-        ax.ticklabel_format(style='sci', scilimits=(4, 4))
-        ax.tick_params(axis='both', labelsize=fontsize)
+        sns.scatterplot(data=df, x=x2, y=y2, hue=hue, marker='s', ax=ax[1])
+        ax[1].legend_.remove()
+        ax[1].plot([0, 1], [0, 1], '-r', transform=ax[1].transAxes)
+        ax[1].set_ylabel(ylabel2)
+        ax[1].set_xlabel(xlabel2)
+        ax[1].set_xlim(lim)
+        ax[1].set_ylim(lim)
 
-    # Create a custom legend
-    handles, labels = ax.get_legend_handles_labels()
+        if scientific_ticks:
+            ax[0].ticklabel_format(style='sci', scilimits=(4, 4))
+            ax[0].tick_params(axis='both', labelsize=fontsize)
 
-    # Create legend with square markers, adjust marker size as needed
-    new_handles = [plt.Line2D([], [], marker='s', color=handle.get_facecolor()[0], linestyle='None') for handle in
-                   handles[0:]]  # Skip the first handle as it's the legend title
+            ax[1].ticklabel_format(style='sci', scilimits=(4, 4))
+            ax[1].tick_params(axis='both', labelsize=fontsize)
 
-    ax.legend(handles=new_handles, labels=labels[0:], title='Basin', loc='upper left', fontsize=fontsize)
+        plt.tight_layout()
 
-    if savepath is not None:
-        fig.savefig(savepath, dpi=300)
+        if savepath is not None:
+            fig.savefig(savepath, dpi=300)
 
+    else:
+        fig, ax = plt.subplots(figsize=figsize)
+        plt.rcParams['font.size'] = fontsize
 
-def make_BOI_mean_mm_scatter_plot(df, x, y, hue, xlabel, ylabel, fontsize, lim, savepath=None):
-    fig, ax = plt.subplots(figsize=(8, 6))
-    plt.rcParams['font.size'] = fontsize
+        sns.scatterplot(data=df, x=x1, y=y1, hue=hue, marker='s')
+        ax.legend_.remove()
+        ax.plot([0, 1], [0, 1], '-r', transform=ax.transAxes)
+        ax.set_ylabel(ylabel1)
+        ax.set_xlabel(xlabel1)
+        ax.set_xlim(lim)
+        ax.set_ylim(lim)
 
-    sns.scatterplot(data=df, x=x, y=y, hue=hue, marker='s')
-    ax.plot([0, 1], [0, 1], '-r', transform=ax.transAxes)
-    ax.set_ylabel(ylabel)
-    ax.set_xlabel(xlabel)
-    ax.set_xlim(lim)
-    ax.set_ylim(lim)
-    ax.ticklabel_format(style='sci', scilimits=(4, 4))
-    ax.tick_params(axis='both', labelsize=fontsize)
-
-    # Create a custom legend
-    handles, labels = ax.get_legend_handles_labels()
-
-    # Create legend with square markers, adjust marker size as needed
-    new_handles = [plt.Line2D([], [], marker='s', color=handle.get_facecolor()[0], linestyle='None') for handle in
-                   handles[0:]]  # Skip the first handle as it's the legend title
-
-    ax.legend(handles=new_handles, labels=labels[0:], title='Basin', loc='upper left', fontsize=fontsize)
-
-    if savepath is not None:
-        fig.savefig(savepath, dpi=300)
-
-
-
+        if scientific_ticks:
+            ax.ticklabel_format(style='sci', scilimits=(4, 4))
+            ax.tick_params(axis='both', labelsize=fontsize)

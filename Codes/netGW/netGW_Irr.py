@@ -93,7 +93,7 @@ if __name__ == '__main__':
     sw_irrigation_dir = '../../Data_main/Raster_data/SW_irrigation'
     netGW_irrigation_output_dir = '../../Data_main/Raster_data/NetGW_irrigation/WesternUS'
 
-    skip_westUS_netGW_processing = False
+    skip_westUS_netGW_processing = False  ######
     estimate_netGW_Irr(years_list=years, effective_precip_dir=effective_precip, irrigated_cropET_dir=irrigated_cropET,
                         irrigated_fraction_dir=irrigated_fraction, sw_irrigation_dist_dir=sw_irrigation_dir,
                         output_dir=netGW_irrigation_output_dir, skip_processing=skip_westUS_netGW_processing)

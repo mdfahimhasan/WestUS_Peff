@@ -78,11 +78,19 @@ def make_BOI_netGW_vs_pumping_vs_USGS_scatter_plot(df, x1, y1, hue, xlabel1, yla
                                                                 'Harquahala INA, AZ', 'Douglas AMA, AZ', 'Diamond Valley, NV'),
                                                    x2=None, y2=None, xlabel2=None, ylabel2=None,
                                                    figsize=(12, 8), savepath=None):
+
+    basin_colors = {'GMD4, KS': '#4c72b0',
+                    'GMD3, KS': '#dd8452',
+                    'RPB, CO': '#55a868',
+                    'Harquahala INA, AZ': '#c44e52',
+                    'Douglas AMA, AZ': '#8172b3',
+                    'Diamond Valley, NV': '#64b5cd'}
+
     if x2 is not None:
         fig, ax = plt.subplots(1, 2, figsize=figsize)
         plt.rcParams['font.size'] = fontsize
 
-        sns.scatterplot(data=df, x=x1, y=y1, hue=hue, marker='s', ax=ax[0])
+        sns.scatterplot(data=df, x=x1, y=y1, hue=hue, marker='s', ax=ax[0], palette=basin_colors)
         ax[0].legend_.remove()
         ax[0].plot([0, 1], [0, 1], 'gray', transform=ax[0].transAxes)
         ax[0].set_ylabel(ylabel1)
@@ -90,7 +98,7 @@ def make_BOI_netGW_vs_pumping_vs_USGS_scatter_plot(df, x1, y1, hue, xlabel1, yla
         ax[0].set_xlim(lim)
         ax[0].set_ylim(lim)
 
-        sns.scatterplot(data=df, x=x2, y=y2, hue=hue, marker='s', ax=ax[1])
+        sns.scatterplot(data=df, x=x2, y=y2, hue=hue, marker='s', ax=ax[1], palette=basin_colors)
         ax[1].legend_.remove()
         ax[1].plot([0, 1], [0, 1], 'gray', transform=ax[1].transAxes)
         ax[1].set_ylabel(ylabel2)
@@ -123,7 +131,7 @@ def make_BOI_netGW_vs_pumping_vs_USGS_scatter_plot(df, x1, y1, hue, xlabel1, yla
         fig, ax = plt.subplots(figsize=figsize)
         plt.rcParams['font.size'] = fontsize
 
-        sns.scatterplot(data=df, x=x1, y=y1, hue=hue, marker='s')
+        sns.scatterplot(data=df, x=x1, y=y1, hue=hue, marker='s', ax=ax, palette=basin_colors)
         ax.legend_.remove()
         ax.plot([0, 1], [0, 1], 'gray', transform=ax.transAxes)
         ax.set_ylabel(ylabel1)

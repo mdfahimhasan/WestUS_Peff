@@ -17,7 +17,9 @@ if __name__ == '__main__':
     # # create yearly canal coverage raster compiling irrigated cropET (growing season) and canal coverage 2km buffer
     print('# # # # #  STEP 1 # # # # #')
 
-    years_list = [2016, 2017, 2018, 2019, 2020]
+    years_list = [2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007,
+                 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015,
+                 2016, 2017, 2018, 2019, 2020]
     canal_cover_shapefile = '../../Data_main/shapefiles/Surface_water_shapes/canals_buffered_1km_epsg_4269.shp'
     original_irrig_cropET_grow_season_dir = '../../Data_main/Raster_data/Irrigated_cropET/WestUS_grow_season'
     canal_cover_output_dir = '../../Data_main/Raster_data/Canal_coverage/canal_coverage'

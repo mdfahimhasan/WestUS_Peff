@@ -99,9 +99,8 @@ def filter_effective_precip_training_data(training_zone_shp, general_output_dir,
             cdl_arr = read_raster_arr_object(cdl_data, get_file=False)
             excess_et_arr = read_raster_arr_object(excess_et_filter_data, get_file=False)
 
-            # training zones types -
-            # type 1: pasture lands with rainfed croplands or any rainfed cropland with no overlapping with irrigated croplands,
-            #         excess_et_filter = 1 in both cases
+            # grass/pasture lands with rainfed croplands or any rainfed cropland with no overlapping with irrigated croplands,
+            # excess_et_filter = 1 in both cases
 
             # collecting the train zone rasters and looping over them to apply each train zone raster on a cropET raster
             zone_rasters = glob(os.path.join(shape_temp_output_dir, '*.tif'))

@@ -6,9 +6,9 @@ from Codes.utils.system_ops import makedirs
 from Codes.utils.raster_ops import read_raster_arr_object, write_array_to_raster
 
 
-def stdv_of_openET_models(years, model_dir_dict, netGW_dir, stdv_output_dir):
+def coef_var_openET_models(years, model_dir_dict, netGW_dir, stdv_output_dir):
     for year in years:
-        print(f'estimating stdv and mean for openET models for {year}...')
+        print(f'estimating stdv, mean, coef. of variation for openET models for {year}...')
         makedirs([stdv_output_dir])
 
         # collecting each model's data for a year
@@ -52,6 +52,13 @@ def stdv_of_openET_models(years, model_dir_dict, netGW_dir, stdv_output_dir):
         write_array_to_raster(raster_arr=mean_per_element, raster_file=file, transform=file.transform,
                               output_path=mean_raster)
 
+        # calculating coef. of variation
+        coef_variation_arr = np.where((stdv_per_element != -9999) & (mean_per_element != -9999),
+                                      stdv_per_element /mean_per_element, -9999)
+        coef_var_raster = os.path.join(stdv_output_dir, f'openET_coef_var_{year}.tif')
+        write_array_to_raster(raster_arr=coef_variation_arr, raster_file=file, transform=file.transform,
+                              output_path=coef_var_raster)
+
 
 if __name__ == '__main__':
     openet_model_dict = {'SSEBOP': '../../Data_main/Raster_data/SSEBOP/WestUS_annual',
@@ -65,5 +72,5 @@ if __name__ == '__main__':
     netGW_dir = '../../Data_main/Raster_data/NetGW_irrigation/WesternUS'
     output_dir = '../../Data_main/Raster_data/OpenET_stdv_mean'
 
-    stdv_of_openET_models(years=years_list, model_dir_dict=openet_model_dict,
-                          netGW_dir=netGW_dir, stdv_output_dir=output_dir)
+    coef_var_openET_models(years=years_list, model_dir_dict=openet_model_dict,
+                           netGW_dir=netGW_dir, stdv_output_dir=output_dir)

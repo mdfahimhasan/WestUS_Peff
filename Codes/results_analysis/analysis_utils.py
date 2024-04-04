@@ -655,6 +655,11 @@ def compile_annual_pumping_netGW_all_basins(annual_csv_list, output_csv):
         df['basin'] = [basin_name_dict[basin_name] for i in range(len(df))]
         compiled_annual_df = pd.concat([compiled_annual_df, df])
 
+    # assuming average irrigation efficiency as 0.80, estimating total and mean simulated pumping
+    avg_irrig_efficiency = 0.8
+    compiled_annual_df['sim_pumping_m3'] = compiled_annual_df['netGW_m3'] / avg_irrig_efficiency
+    compiled_annual_df['sim_mean_pumping_mm'] = compiled_annual_df['mean netGW_mm'] / avg_irrig_efficiency
+
     compiled_annual_df.to_csv(output_csv, index=False)
 
 

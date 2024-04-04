@@ -29,8 +29,10 @@ openET_data_list = ['Irrig_crop_OpenET_IrrMapper', 'Irrig_crop_OpenET_LANID',
 years_for_gee = [2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007,
                  2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015,
                  2016, 2017, 2018, 2019, 2020]
-
-years_for_openet = [2016, 2017, 2018, 2019, 2020]  # openET 2000-2015 data will be contributed by DRI collaborators
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+# openET 2000-2015 data will be contributed by DRI collaborators
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+years_for_openet = [2016, 2017, 2018, 2019, 2020]
 
 months = (1, 12)
 gee_grid_shape_large = '../../Data_main/shapefiles/Western_US_ref_shapes/WestUS_gee_grid.shp'
@@ -69,8 +71,8 @@ skip_classifying_irrigated_rainfed_cropland = True
 skip_filtering_irrigated_rainfed_cropET = True
 skip_summing_irrigated_cropET = True
 skip_summing_rainfed_cropET = True
-skip_openET_processing = True
-skip_excess_ET_filter_processing = True
+skip_openET_processing = False
+skip_excess_ET_filter_processing = False
 skip_processing_slope_data = True
 skip_process_AWC_data = True
 

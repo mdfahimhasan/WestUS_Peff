@@ -85,8 +85,9 @@ def estimate_netGW_Irr(years_list, effective_precip_dir, irrigated_cropET_dir,
 
 if __name__ == '__main__':
     # estimating netGW (coverage WestUS, need to refine by adding SW irrigation)
-    years = [2016, 2017, 2018, 2019, 2020]
-    model_version = 'v8'
+    years = [2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010,
+             2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020]
+    model_version = 'v9'
     effective_precip = f'../../Data_main/Raster_data/Effective_precip_prediction_WestUS/{model_version}_grow_season'
     irrigated_cropET = '../../Data_main/Raster_data/Irrigated_cropET/WestUS_grow_season'
     irrigated_fraction = '../../Data_main/Raster_data/Irrigated_cropland/Irrigated_Frac'

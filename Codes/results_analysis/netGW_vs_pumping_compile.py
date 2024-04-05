@@ -10,7 +10,7 @@ from Codes.results_analysis.analysis_utils import run_annual_csv_processing, run
 model_res = 0.01976293625031605786  # in deg, ~2 km
 WestUS_shape = '../../Data_main/shapefiles/Western_US_ref_shapes/WestUS_states.shp'
 WestUS_raster = '../../Data_main/reference_rasters/Western_US_refraster_2km.tif'
-basin_name_dict = {'GMD4': 'GMD4, KS', 'GMD3': 'GMD3, KS', 'RPB': 'RPB, CO',
+basin_name_dict = {'GMD4': 'GMD4, KS', 'GMD3': 'GMD3, KS', 'RPB': 'Republican Basin, CO',
                    'Harquahala': 'Harquahala INA, AZ', 'Douglas': 'Douglas AMA, AZ',
                    'Diamond': 'Diamond Valley, NV', 'Harney': 'Harney Basin, Or'}
 
@@ -19,11 +19,11 @@ if __name__ == '__main__':
     # boolean switches to process data for each region
     skip_process_gmd4_data = True   # Groundwater Management District 4, KS
     skip_process_gmd3_data = True  # Groundwater Management District 3, KS
-    skip_process_rpb_data = True    # Republican River Basin, Co
+    skip_process_rpb_data = True   # Republican River Basin, Co
     skip_process_hqr_data = True   # Harquahala INA, AZ
     skip_process_doug_data = True  # Douglas AMA, AZ
     skip_process_dv_data = True   # Diamond valley, NV
-    skip_process_hrn_data = True   # Harney Basin, OR
+    skip_process_hrn_data = False   # Harney Basin, OR
     skip_compile_AF_annual_data = False  # all basins
 
     # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
@@ -31,7 +31,8 @@ if __name__ == '__main__':
     if not skip_process_gmd4_data:
         print('Processing netGW, pumping (in-situ + USGS) annual dataframe for GMD4, KS...')
 
-        years = [2016, 2017, 2018, 2019, 2020]
+        years = [2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010,
+                 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020]
         basin_code = 'gmd4'
         basin_shp = '../../Data_main/shapefiles/Basins_of_interest/GMD4.shp'
         westUS_netGW_dir = '../../Data_main/Raster_data/NetGW_irrigation/WesternUS'
@@ -58,7 +59,8 @@ if __name__ == '__main__':
     if not skip_process_gmd3_data:
         print('Processing netGW, pumping (in-situ + USGS) annual dataframe for GMD3, KS...')
 
-        years = [2016, 2017, 2018, 2019, 2020]
+        years = [2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010,
+                 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020]
         basin_code = 'gmd3'
         basin_shp = '../../Data_main/shapefiles/Basins_of_interest/GMD3.shp'
         westUS_netGW_dir = '../../Data_main/Raster_data/NetGW_irrigation/WesternUS'
@@ -85,7 +87,8 @@ if __name__ == '__main__':
     if not skip_process_rpb_data:
         print('Processing netGW, pumping (in-situ + USGS) annual dataframe for Republican Basin, CO...')
 
-        years = [2016, 2017, 2018, 2019, 2020]
+        years = [2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010,
+                 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020]
         basin_code = 'rpb'
         basin_shp = '../../Data_main/shapefiles/Basins_of_interest/Republican_Basin.shp'
         westUS_netGW_dir = '../../Data_main/Raster_data/NetGW_irrigation/WesternUS'
@@ -112,7 +115,8 @@ if __name__ == '__main__':
     if not skip_process_hqr_data:
         print('Processing netGW, pumping (in-situ + USGS) annual dataframe for Harquahala INA, AZ...')
 
-        years = [2016, 2017, 2018, 2019, 2020]
+        years = [2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010,
+                 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020]
         basin_code = 'hqr'
         basin_shp = '../../Data_main/shapefiles/Basins_of_interest/Harquahala_INA.shp'
         westUS_netGW_dir = '../../Data_main/Raster_data/NetGW_irrigation/WesternUS'
@@ -139,7 +143,8 @@ if __name__ == '__main__':
     if not skip_process_doug_data:
         print('Processing netGW, pumping (in-situ + USGS) dataset and netGW-pumping dataframe for Douglas AMA, AZ...')
 
-        years = [2016, 2017, 2018, 2019, 2020]
+        years = [2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010,
+                 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020]
         basin_code = 'doug'
         basin_shp = '../../Data_main/shapefiles/Basins_of_interest/Douglas_AMA.shp'
         westUS_netGW_dir = '../../Data_main/Raster_data/NetGW_irrigation/WesternUS'
@@ -166,7 +171,8 @@ if __name__ == '__main__':
     if not skip_process_dv_data:
         print('Processing netGW, pumping (in-situ + USGS) dataset and netGW-pumping dataframe for Diamond Valley, NV...')
 
-        years = [2016, 2017, 2018, 2019, 2020]
+        years = [2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010,
+                 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020]
         basin_code = 'dv'
         basin_shp = '../../Data_main/shapefiles/Basins_of_interest/Diamond_Valley_Basin.shp'
         westUS_netGW_dir = '../../Data_main/Raster_data/NetGW_irrigation/WesternUS'

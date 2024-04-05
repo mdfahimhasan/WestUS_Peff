@@ -37,8 +37,9 @@ def filter_effective_precip_training_data(training_zone_shp, general_output_dir,
     """
     if not skip_processing:
         # year_list and months to process over
-        years = [2016, 2017, 2018, 2019, 2020]
-        months = list(range(1, 13))
+        # starting from 2008 as rainfed cropET dataset starts from 2008
+        years = [2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020]
+        months = list(range(4, 11))
 
         # training zone bounding box gdf
         training_zone_gdf = gpd.read_file(training_zone_shp)
@@ -130,7 +131,6 @@ def filter_effective_precip_training_data(training_zone_shp, general_output_dir,
                 # the  dot (.) is important to collect data for the same months. Not providing 'tif' here as glob will find
                 # the rasters without it and we can't use both 'dot' and 'tif' for our purpose at the same time.
                 filtered_training_rasters = glob(os.path.join(cropET_interim_shape_dir, f'*{year}_{month}.*'))
-
                 final_train_arr = None  # we will iterate and paste values of each training box here
 
                 # compiling the individual zone cropET raster in a single raster for each year-month

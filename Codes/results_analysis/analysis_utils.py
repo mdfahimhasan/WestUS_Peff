@@ -365,7 +365,7 @@ def aggregate_netGW_insitu_usgs_pumping_to_annualCSV_DV(years, basin_netGW_dir,
     pump_df_annual = pump_df.groupby('year')[pump_AF_attr].sum().reset_index()
 
     # joining the annual netGW and in-situ pumping dataframes
-    yearly_df = df_annual.merge(pump_df_annual, on='year')
+    yearly_df = df_annual.merge(pump_df_annual, on='year', how='outer')  # doing outer merge to keep all years' records
 
     # loading USGS annual pumping estimates data
     usgs_df = pd.read_csv(annual_usgs_GW_csv)
@@ -375,7 +375,7 @@ def aggregate_netGW_insitu_usgs_pumping_to_annualCSV_DV(years, basin_netGW_dir,
 
     # calculating m3 values
     yearly_df['netGW_m3'] = yearly_df['netGW_AF'] * 1233.48
-    yearly_df['pumping_m3'] = yearly_df['pumping_AF'] * 1233.48
+    yearly_df['pumping_m3'] = yearly_df['pumping_AF'] * 1233.48  # will get nans in years with no pumping records
     yearly_df['USGS_m3'] = yearly_df['USGS_AF'] * 1233.48
 
     # # calculating mean netGW + mean pumping + mean USGS pumping (in mm)
@@ -644,7 +644,7 @@ def compile_annual_pumping_netGW_all_basins(annual_csv_list, output_csv):
     compiled_annual_df = pd.DataFrame()
 
     # basin name dict
-    basin_name_dict = {'gmd4': 'GMD4, KS', 'gmd3': 'GMD3, KS', 'rpb': 'RPB, CO',
+    basin_name_dict = {'gmd4': 'GMD4, KS', 'gmd3': 'GMD3, KS', 'rpb': 'Republican Basin, CO',
                        'hqr': 'Harquahala INA, AZ', 'doug': 'Douglas AMA, AZ',
                        'dv': 'Diamond Valley, NV'}
 
@@ -659,6 +659,9 @@ def compile_annual_pumping_netGW_all_basins(annual_csv_list, output_csv):
     avg_irrig_efficiency = 0.8
     compiled_annual_df['sim_pumping_m3'] = compiled_annual_df['netGW_m3'] / avg_irrig_efficiency
     compiled_annual_df['sim_mean_pumping_mm'] = compiled_annual_df['mean netGW_mm'] / avg_irrig_efficiency
+
+    # setting all nan values to zero
+    compiled_annual_df = compiled_annual_df.replace({np.nan: 0})
 
     compiled_annual_df.to_csv(output_csv, index=False)
 

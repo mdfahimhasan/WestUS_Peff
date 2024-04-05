@@ -769,7 +769,6 @@ def develop_excess_ET_filter(yearly_precip_dir, grow_season_ET_dir, output_dir,
 
 def run_all_preprocessing(skip_prism_processing=True,
                           skip_gridmet_precip_processing=False,
-                          skip_openET_processing=True,
                           skip_gridmet_RET_precessing=False,
                           skip_merging_rainfed_frac=False,
                           skip_merging_rainfed_cropET=False,
@@ -779,6 +778,7 @@ def run_all_preprocessing(skip_prism_processing=True,
                           skip_filtering_irrigated_rainfed_cropET=False,
                           skip_summing_irrigated_cropET=False,
                           skip_summing_rainfed_cropET=False,
+                          skip_openET_processing=True,
                           skip_excess_ET_filter_processing=False,
                           skip_processing_slope_data=False,
                           skip_process_AWC_data=False,
@@ -788,7 +788,6 @@ def run_all_preprocessing(skip_prism_processing=True,
 
     :param skip_prism_processing: Set True if want to skip prism (precipitation and temperature) data preprocessing.
     :param skip_gridmet_precip_processing: Set True to skip gridmet precip yearly data processing.
-    :param skip_openET_processing: Set True to skip openET ensemble yearly data processing.
     :param skip_gridmet_RET_precessing: Set to True to skip GridMET RET data processing.
     :param skip_merging_rainfed_frac: Set to True to skip merging rainfed fraction data.
     :param skip_merging_rainfed_cropET: Set to True to skip merging rainfed cropET data.
@@ -800,6 +799,7 @@ def run_all_preprocessing(skip_prism_processing=True,
                                                     data.
     :param skip_summing_irrigated_cropET: Set to True if want to skip summing irrigated cropET data summing for year/grow season.
     :param skip_summing_rainfed_cropET: Set to True if want to skip summing rainfed cropET data summing for year/grow season.
+    :param skip_openET_processing: Set True to skip openET ensemble yearly data processing.
     :param skip_excess_ET_filter_processing: Set to True if want to skip excess ET filter dataset processing.
     :param skip_processing_slope_data: Set to True if want to skip DEM to slope conversion.
     :param skip_process_AWC_data: Set to True ti skip processing AWC data.
@@ -925,7 +925,8 @@ def run_all_preprocessing(skip_prism_processing=True,
                                    skip_processing=skip_gridmet_precip_processing)
 
     # OpenET ensemble yearly data processing
-    sum_OpenET_yearly_data(year_list=(2016, 2017, 2018, 2019, 2020),
+    sum_OpenET_yearly_data(year_list=(2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011,
+                                      2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020),
                            input_OpenET_monthly_dir='../../Data_main/Raster_data/OpenET_ensemble/WestUS_monthly',
                            output_dir_OpenET_yearly='../../Data_main/Raster_data/OpenET_ensemble/WestUS_yearly',
                            output_dir_OpenET_growing_season='../../Data_main/Raster_data/OpenET_ensemble/WestUS_grow_season',

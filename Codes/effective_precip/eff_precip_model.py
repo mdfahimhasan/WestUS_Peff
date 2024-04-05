@@ -41,7 +41,6 @@ monthly_data_path_dict = {
     'PRISM_Precip': '../../Data_main/Raster_data/PRISM_Precip/WestUS_monthly',
     'PRISM_Tmax': '../../Data_main/Raster_data/PRISM_Tmax/WestUS_monthly',
     'PRISM_Tmin': '../../Data_main/Raster_data/PRISM_Tmin/WestUS_monthly',
-    'Ssebop_ETa': '../../Data_main/Raster_data/Ssebop_ETa/WestUS_monthly',
     'GRIDMET_Precip': '../../Data_main/Raster_data/GRIDMET_Precip/WestUS_monthly',
     'GRIDMET_RET': '../../Data_main/Raster_data/GRIDMET_RET/WestUS_monthly',
     'GRIDMET_vap_pres_def': '../../Data_main/Raster_data/GRIDMET_vap_pres_def/WestUS_monthly',
@@ -63,14 +62,17 @@ static_data_path_dict = {'Bulk_density': '../../Data_main/Raster_data/Bulk_densi
                          'Latitude': '../../Data_main/Raster_data/Latitude/WestUS',
                          'Longitude': '../../Data_main/Raster_data/Longitude/WestUS'}
 
-train_test_years_list = [2016, 2017, 2018, 2019, 2020]
-total_month_range = (4, 10)  # considering all months for dataframe creation,
-# later will consider growing season for train-test split (4-10)
-model_version = 'v8'  ######
+# # time periods
+# training data starting from 2008 as rainfed cropET dataset starts from 2008
+# considering growing season months for dataframe creation,
+train_test_years_list = [2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020]
+total_month_range = (4, 10)
+
+model_version = 'v9'  ######
 print(f'Running model version {model_version}...')
 
 datasets_to_include = ['Effective_precip_train',
-                       'PRISM_Precip', 'PRISM_Tmax', 'PRISM_Tmin', 'Ssebop_ETa',
+                       'PRISM_Precip', 'PRISM_Tmax', 'PRISM_Tmin',
                        'GRIDMET_Precip', 'GRIDMET_RET', 'GRIDMET_vap_pres_def', 'GRIDMET_max_RH',
                        'GRIDMET_min_RH', 'GRIDMET_wind_vel', 'GRIDMET_short_rad', 'DAYMET_sun_hr',
                        'Bulk_density', 'Clay_content', 'Field_capacity', 'Sand_content',
@@ -101,9 +103,7 @@ makedirs([output_dir])
 exclude_columns = ['year', 'Latitude', 'Longitude',
                    'Bulk_density', 'Clay_content', 'Slope',
                    'PRISM_Tmax', 'PRISM_Tmin', 'PRISM_Precip',
-                   'Ssebop_ETa', 'GRIDMET_wind_vel', 'GRIDMET_min_RH']
-remove_outlier = False
-outlier_upper_range = None
+                   'GRIDMET_wind_vel', 'GRIDMET_min_RH']
 
 skip_train_test_split = False  ######
 
@@ -114,7 +114,7 @@ x_train, x_test, y_train, y_test = \
                              output_dir=output_dir, test_perc=0.3, validation_perc=0,
                              random_state=0, verbose=True,
                              skip_processing=skip_train_test_split,
-                             remove_outlier=remove_outlier, outlier_upper_val=outlier_upper_range)
+                             remove_outlier=False, outlier_upper_val=None)
 
 # ******************************** Model training and performance evaluation (westUS) **********************************
 
@@ -229,13 +229,14 @@ print('##################################')
 print('**********************************')
 
 # # Creating monthly predictor dataframe for model prediction
-datasets_to_include_month_predictors = ['PRISM_Precip', 'PRISM_Tmax', 'PRISM_Tmin', 'Ssebop_ETa',
+datasets_to_include_month_predictors = ['PRISM_Precip', 'PRISM_Tmax', 'PRISM_Tmin',
                                         'GRIDMET_Precip', 'GRIDMET_RET', 'GRIDMET_vap_pres_def', 'GRIDMET_max_RH',
                                         'GRIDMET_min_RH', 'GRIDMET_wind_vel', 'GRIDMET_short_rad', 'DAYMET_sun_hr',
                                         'Bulk_density', 'Clay_content', 'Field_capacity', 'Sand_content',
                                         'AWC', 'DEM', 'Slope', 'Latitude', 'Longitude']
 
-predictor_years = [2016, 2017, 2018, 2019, 2020]
+predictor_years = [2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010,
+                   2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020]
 
 monthly_predictor_csv_dir = '../../Eff_Precip_Model_Run/Model_csv/monthly_predictors'
 skip_prcessing_monthly_predictor_dataframe = False
@@ -258,9 +259,9 @@ create_nan_pos_dict_for_irrigated_cropET(irrigated_cropET_dir=irrigated_cropET_m
                                          skip_processing=skip_processing_nan_pos_irrig_cropET)
 
 # # Generating monthly predictions for 11 states
-exclude_columns = [ 'Latitude', 'Longitude', 'Bulk_density', 'Clay_content',
+exclude_columns = ['Latitude', 'Longitude', 'Bulk_density', 'Clay_content',
                    'Slope', 'PRISM_Tmax', 'PRISM_Tmin', 'PRISM_Precip',
-                   'Ssebop_ETa', 'GRIDMET_wind_vel', 'GRIDMET_min_RH']
+                   'GRIDMET_wind_vel', 'GRIDMET_min_RH']
 
 effective_precip_monthly_output_dir = f'../../Data_main/Raster_data/Effective_precip_prediction_WestUS/{model_version}_monthly'
 skip_estimate_monthly_eff_precip_WestUS = False

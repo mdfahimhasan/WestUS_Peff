@@ -36,7 +36,7 @@ def make_scatter_line_plots(x1, y1,
         # line plot (annual mean mm/year)
         ax[1].plot(year, x2, label=line_label_1, marker='o')
         ax[1].plot(year, y2, label=line_label_2, marker='o')
-        ax[1].set_xticks(year)
+        ax[1].set_xticks(year, rotation=45)
         ax[1].set_ylabel(ylabel_line)
         ax[1].set_xlabel(xlabel_line)
         ax[1].legend(loc='upper left', fontsize=(fontsize-2))
@@ -60,28 +60,45 @@ def make_scatter_line_plots(x1, y1,
                  bbox=dict(boxstyle='round', facecolor='white', edgecolor='lightgray', alpha=0.8))
 
 
-def make_line_plot(x, y,  year, fontsize,xlabel_line, ylabel_line, line_label_1, line_label_2):
+def make_line_plot_v1(y1, y2, year, fontsize, xlabel_line, ylabel_line, line_label_1, line_label_2,
+                      figsize=(10, 4), legend_pos='upper left'):
 
     # line plot (annual mean mm/year)
-    fig, ax = plt.subplots(figsize=(6, 4))
-    ax.plot(year, x, label=line_label_1, marker='o')
-    ax.plot(year, y, label=line_label_2, marker='o')
+    fig, ax = plt.subplots(figsize=figsize)
+    ax.plot(year, y1, label=line_label_1, marker='^', linewidth=1)
+    ax.plot(year, y2, label=line_label_2, marker='^', linewidth=1)
     ax.set_xticks(year)
+    ax.set_xticklabels(labels=year, rotation=45)
     ax.set_ylabel(ylabel_line)
     ax.set_xlabel(xlabel_line)
-    ax.legend(loc='upper left', fontsize=(fontsize-2))
+    ax.legend(loc=legend_pos, fontsize=(fontsize-2))
+
+
+def make_line_plot_v2(y1, y2, y3, year, fontsize, xlabel_line, ylabel_line, line_label_1, line_label_2, line_label_3,
+                      figsize=(10, 4), legend_pos='upper left'):
+
+    # line plot (annual mean mm/year)
+    fig, ax = plt.subplots(figsize=figsize)
+    ax.plot(year, y1, label=line_label_1, marker='^', linewidth=1)
+    ax.plot(year, y2, label=line_label_2, marker='^', linewidth=1)
+    ax.plot(year, y3, label=line_label_3, marker='^', linewidth=1)
+    ax.set_xticks(year)
+    ax.set_xticklabels(labels=year, rotation=45)
+    ax.set_ylabel(ylabel_line)
+    ax.set_xlabel(xlabel_line)
+    ax.legend(loc=legend_pos, fontsize=(fontsize-2))
 
 
 def make_BOI_netGW_vs_pumping_vs_USGS_scatter_plot(df, x1, y1, hue, xlabel1, ylabel1, fontsize, lim,
                                                    scientific_ticks=True, scilimits=(4, 4),
-                                                   basin_labels=('GMD4, KS', 'GMD3, KS', 'RPB, CO',
-                                                                'Harquahala INA, AZ', 'Douglas AMA, AZ', 'Diamond Valley, NV'),
+                                                   basin_labels=('GMD4, KS', 'GMD3, KS', 'Republican Basin, CO',
+                                                                 'Harquahala INA, AZ', 'Douglas AMA, AZ', 'Diamond Valley, NV'),
                                                    x2=None, y2=None, xlabel2=None, ylabel2=None,
                                                    figsize=(12, 8), savepath=None):
 
     basin_colors = {'GMD4, KS': '#4c72b0',
                     'GMD3, KS': '#dd8452',
-                    'RPB, CO': '#55a868',
+                    'Republican Basin, CO': '#55a868',
                     'Harquahala INA, AZ': '#c44e52',
                     'Douglas AMA, AZ': '#8172b3',
                     'Diamond Valley, NV': '#64b5cd'}

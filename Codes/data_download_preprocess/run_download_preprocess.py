@@ -26,13 +26,12 @@ openET_data_list = ['Irrig_crop_OpenET_IrrMapper', 'Irrig_crop_OpenET_LANID',
                     'OpenET_ensemble', 'OpenET_indiv_models_grow_season']
 
 
-years_for_gee = [2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007,
-                 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015,
-                 2016, 2017, 2018, 2019, 2020]
+years = [2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007,
+         2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015,
+         2016, 2017, 2018, 2019, 2020]
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 # openET 2000-2015 data will be contributed by DRI collaborators
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-years_for_openet = [2016, 2017, 2018, 2019, 2020]
 
 months = (1, 12)
 gee_grid_shape_large = '../../Data_main/shapefiles/Western_US_ref_shapes/WestUS_gee_grid.shp'
@@ -41,14 +40,14 @@ gee_grid_shape_for30m_LANID = '../../Data_main/shapefiles/Western_US_ref_shapes/
 data_download_dir = '../../Data_main/Raster_data'
 use_cpu_while_multidownloading = 15
 
-download_all_datasets(year_list=years_for_gee, month_range=months,
+download_all_datasets(year_list=years, month_range=months,
                       grid_shape_large=gee_grid_shape_large,
                       data_download_dir=data_download_dir,
                       gee_data_list=gee_data_list,
                       skip_download_gee_data=skip_download_gee_data,
                       use_cpu_while_multidownloading=use_cpu_while_multidownloading)
 
-download_all_openET_datasets(year_list=years_for_openet, month_range=months,
+download_all_openET_datasets(year_list=years, month_range=months,
                              grid_shape_for_2km_ensemble=gee_grid_shape_large,
                              grid_shape_for30m_irrmapper=gee_grid_shape_for30m_IrrMapper,
                              grid_shape_for30m_lanid=gee_grid_shape_for30m_LANID,
@@ -71,8 +70,8 @@ skip_classifying_irrigated_rainfed_cropland = True
 skip_filtering_irrigated_rainfed_cropET = True
 skip_summing_irrigated_cropET = True
 skip_summing_rainfed_cropET = True
-skip_openET_processing = False
-skip_excess_ET_filter_processing = False
+skip_openET_processing = True
+skip_excess_ET_filter_processing = True
 skip_processing_slope_data = True
 skip_process_AWC_data = True
 

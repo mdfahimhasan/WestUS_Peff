@@ -4,8 +4,8 @@ from os.path import dirname, abspath
 sys.path.insert(0, dirname(dirname(dirname(abspath(__file__)))))
 
 from Codes.utils.raster_ops import shapefile_to_raster
-from Codes.results_analysis.analysis_utils import run_annual_csv_processing, run_annual_csv_processing_DV, \
-    compile_annual_pumping_netGW_all_basins
+from Codes.results_analysis.analysis_utils import run_annual_csv_processing_KS_CO, run_annual_csv_processing_AZ,\
+    run_annual_csv_processing_NV, compile_annual_pumping_netGW_all_basins
 
 model_res = 0.01976293625031605786  # in deg, ~2 km
 WestUS_shape = '../../Data_main/shapefiles/Western_US_ref_shapes/WestUS_states.shp'
@@ -23,8 +23,7 @@ if __name__ == '__main__':
     skip_process_hqr_data = True   # Harquahala INA, AZ
     skip_process_doug_data = True  # Douglas AMA, AZ
     skip_process_dv_data = True   # Diamond valley, NV
-    skip_process_hrn_data = False   # Harney Basin, OR
-    skip_compile_AF_annual_data = False  # all basins
+    skip_compile_AF_annual_data = True  # all basins
 
     # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
     # # # For Groundwater Management District 4 (GMD4), Kansas
@@ -46,13 +45,13 @@ if __name__ == '__main__':
         usgs_annual_GW_estimates_csv = f'../../Data_main/results_eval/netGW/{basin_code}/{basin_code}_USGS.csv'
         final_annual_csv = f'../../Data_main/results_eval/netGW/{basin_code}/{basin_code}_annual.csv'
 
-        run_annual_csv_processing(years, basin_code, basin_shp,
-                                  westUS_netGW_dir, westUS_irr_frac_dir,
-                                  pumping_pts_shp, pumping_attr_AF, year_attr,
-                                  main_output_dir, pixelwise_output_csv,
-                                  usgs_westUS_GW_shp,
-                                  usgs_annual_GW_estimates_csv,
-                                  final_annual_csv, skip_processing=skip_process_gmd4_data)
+        run_annual_csv_processing_KS_CO(years, basin_code, basin_shp,
+                                        westUS_netGW_dir, westUS_irr_frac_dir,
+                                        pumping_pts_shp, pumping_attr_AF, year_attr,
+                                        main_output_dir, pixelwise_output_csv,
+                                        usgs_westUS_GW_shp,
+                                        usgs_annual_GW_estimates_csv,
+                                        final_annual_csv, skip_processing=skip_process_gmd4_data)
 
     # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
     # # # For Groundwater Management District 3 (GMD3), Kansas
@@ -74,13 +73,13 @@ if __name__ == '__main__':
         usgs_annual_GW_estimates_csv = f'../../Data_main/results_eval/netGW/{basin_code}/{basin_code}_USGS.csv'
         final_annual_csv = f'../../Data_main/results_eval/netGW/{basin_code}/{basin_code}_annual.csv'
 
-        run_annual_csv_processing(years, basin_code, basin_shp,
-                                  westUS_netGW_dir, westUS_irr_frac_dir,
-                                  pumping_pts_shp, pumping_attr_AF, year_attr,
-                                  main_output_dir, pixelwise_output_csv,
-                                  usgs_westUS_GW_shp,
-                                  usgs_annual_GW_estimates_csv,
-                                  final_annual_csv, skip_processing=skip_process_gmd3_data)
+        run_annual_csv_processing_KS_CO(years, basin_code, basin_shp,
+                                        westUS_netGW_dir, westUS_irr_frac_dir,
+                                        pumping_pts_shp, pumping_attr_AF, year_attr,
+                                        main_output_dir, pixelwise_output_csv,
+                                        usgs_westUS_GW_shp,
+                                        usgs_annual_GW_estimates_csv,
+                                        final_annual_csv, skip_processing=skip_process_gmd3_data)
 
     # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
     # # # For Republican River Basin (RPB), Colorado
@@ -102,13 +101,13 @@ if __name__ == '__main__':
         usgs_annual_GW_estimates_csv = f'../../Data_main/results_eval/netGW/{basin_code}/{basin_code}_USGS.csv'
         final_annual_csv = f'../../Data_main/results_eval/netGW/{basin_code}/{basin_code}_annual.csv'
 
-        run_annual_csv_processing(years, basin_code, basin_shp,
-                                  westUS_netGW_dir, westUS_irr_frac_dir,
-                                  pumping_pts_shp, pumping_attr_AF, year_attr,
-                                  main_output_dir, pixelwise_output_csv,
-                                  usgs_westUS_GW_shp,
-                                  usgs_annual_GW_estimates_csv,
-                                  final_annual_csv, skip_processing=skip_process_rpb_data)
+        run_annual_csv_processing_KS_CO(years, basin_code, basin_shp,
+                                        westUS_netGW_dir, westUS_irr_frac_dir,
+                                        pumping_pts_shp, pumping_attr_AF, year_attr,
+                                        main_output_dir, pixelwise_output_csv,
+                                        usgs_westUS_GW_shp,
+                                        usgs_annual_GW_estimates_csv,
+                                        final_annual_csv, skip_processing=skip_process_rpb_data)
 
     # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
     # # # For Harquahala INA, Arizona
@@ -124,19 +123,20 @@ if __name__ == '__main__':
         pumping_pts_shp = '../../Data_main/Pumping/Arizona/AZ_GW_Harquahala.shp'
         pumping_attr_AF = 'AF_pumped'
         year_attr = 'Year'
+        annual_pumping_csv = f'../../Data_main/Pumping/Arizona/pumping_AZ_v2.csv'
         main_output_dir = f'../../Data_main/results_eval/netGW/{basin_code}'
         pixelwise_output_csv = f'../../Data_main/results_eval/netGW/{basin_code}/{basin_code}_netGW_pumping.csv'
         usgs_westUS_GW_shp = '../../Data_main/USGS_water_use_data/USGS_new_wateruse_data_HUC12/HUC12_WestUS_with_Annual_GW.shp'
         usgs_annual_GW_estimates_csv = f'../../Data_main/results_eval/netGW/{basin_code}/{basin_code}_USGS.csv'
         final_annual_csv = f'../../Data_main/results_eval/netGW/{basin_code}/{basin_code}_annual.csv'
-
-        run_annual_csv_processing(years, basin_code, basin_shp,
-                                  westUS_netGW_dir, westUS_irr_frac_dir,
-                                  pumping_pts_shp, pumping_attr_AF, year_attr,
-                                  main_output_dir, pixelwise_output_csv,
-                                  usgs_westUS_GW_shp,
-                                  usgs_annual_GW_estimates_csv,
-                                  final_annual_csv, skip_processing=skip_process_hqr_data)
+        run_annual_csv_processing_AZ(years, basin_code, basin_shp,
+                                     westUS_netGW_dir, westUS_irr_frac_dir,
+                                     pumping_pts_shp, pumping_attr_AF, year_attr,
+                                     annual_pumping_csv,
+                                     main_output_dir, pixelwise_output_csv,
+                                     usgs_westUS_GW_shp,
+                                     usgs_annual_GW_estimates_csv,
+                                     final_annual_csv, skip_processing=skip_process_hqr_data)
 
     # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
     # # # For Douglas AMA, Arizona
@@ -152,19 +152,21 @@ if __name__ == '__main__':
         pumping_pts_shp = '../../Data_main/Pumping/Arizona/AZ_GW_Douglas.shp'
         pumping_attr_AF = 'AF_pumped'
         year_attr = 'Year'
+        annual_pumping_csv = f'../../Data_main/Pumping/Arizona/pumping_AZ_v2.csv'
         main_output_dir = f'../../Data_main/results_eval/netGW/{basin_code}'
         pixelwise_output_csv = f'../../Data_main/results_eval/netGW/{basin_code}/{basin_code}_netGW_pumping.csv'
         usgs_westUS_GW_shp = '../../Data_main/USGS_water_use_data/USGS_new_wateruse_data_HUC12/HUC12_WestUS_with_Annual_GW.shp'
         usgs_annual_GW_estimates_csv = f'../../Data_main/results_eval/netGW/{basin_code}/{basin_code}_USGS.csv'
         final_annual_csv = f'../../Data_main/results_eval/netGW/{basin_code}/{basin_code}_annual.csv'
 
-        run_annual_csv_processing(years, basin_code, basin_shp,
-                                  westUS_netGW_dir, westUS_irr_frac_dir,
-                                  pumping_pts_shp, pumping_attr_AF, year_attr,
-                                  main_output_dir, pixelwise_output_csv,
-                                  usgs_westUS_GW_shp,
-                                  usgs_annual_GW_estimates_csv,
-                                  final_annual_csv, skip_processing=skip_process_doug_data)
+        run_annual_csv_processing_AZ(years, basin_code, basin_shp,
+                                     westUS_netGW_dir, westUS_irr_frac_dir,
+                                     pumping_pts_shp, pumping_attr_AF, year_attr,
+                                     annual_pumping_csv,
+                                     main_output_dir, pixelwise_output_csv,
+                                     usgs_westUS_GW_shp,
+                                     usgs_annual_GW_estimates_csv,
+                                     final_annual_csv, skip_processing=skip_process_doug_data)
 
     # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
     # # # For Diamond Valley, Nevada
@@ -183,7 +185,7 @@ if __name__ == '__main__':
         usgs_annual_GW_estimates_csv = f'../../Data_main/results_eval/netGW/{basin_code}/{basin_code}_USGS.csv'
         final_annual_csv = f'../../Data_main/results_eval/netGW/{basin_code}/{basin_code}_annual.csv'
 
-        run_annual_csv_processing_DV(years, basin_code, basin_shp,
+        run_annual_csv_processing_NV(years, basin_code, basin_shp,
                                      westUS_netGW_dir,
                                      pumping_csv, pumping_attr_AF,
                                      main_output_dir,
@@ -206,3 +208,5 @@ if __name__ == '__main__':
         output_csv = '../../Data_main/results_eval/netGW/annual_all_basins.csv'
 
         compile_annual_pumping_netGW_all_basins(annual_csv_list=basin_annual_csvs, output_csv=output_csv)
+
+

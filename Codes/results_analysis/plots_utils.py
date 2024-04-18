@@ -157,7 +157,7 @@ def make_BOI_netGW_vs_pumping_vs_USGS_scatter_plot(df, x1, y1, hue, xlabel1, yla
         ax.set_ylim(lim)
 
         if scientific_ticks:
-            ax.ticklabel_format(style='sci', scilimits=(4, 4))
+            ax.ticklabel_format(style='sci', scilimits=scilimits)
             ax.tick_params(axis='both', labelsize=fontsize)
 
         handles, labels = ax.get_legend_handles_labels()
@@ -167,3 +167,46 @@ def make_BOI_netGW_vs_pumping_vs_USGS_scatter_plot(df, x1, y1, hue, xlabel1, yla
                        handles[0:]]  # Skip the first handle as it's the legend title
 
         ax.legend(handles=new_handles, labels=list(basin_labels), title='basin', loc='upper left', fontsize=fontsize)
+
+        if savepath is not None:
+            fig.savefig(savepath, dpi=300)
+
+
+def make_scatter_plot(df, x1, y1, hue, xlabel, ylabel, fontsize, lim,
+                      basin_labels, figsize=(10, 6),
+                      scientific_ticks=True, scilimits=(4, 4),
+                      savepath=None):
+    basin_colors = {'GMD4, KS': '#4c72b0',
+                    'GMD3, KS': '#dd8452',
+                    'Republican Basin, CO': '#55a868',
+                    'Harquahala INA, AZ': '#c44e52',
+                    'Douglas AMA, AZ': '#8172b3',
+                    'Diamond Valley, NV': '#64b5cd'}
+
+    fig, ax = plt.subplots(figsize=figsize)
+    plt.rcParams['font.size'] = fontsize
+
+    sns.scatterplot(data=df, x=x1, y=y1, hue=hue, ax=ax, palette=basin_colors)
+    ax.legend_.remove()
+    ax.plot([0, 1], [0, 1], 'gray', transform=ax.transAxes)
+    ax.set_ylabel(ylabel)
+    ax.set_xlabel(xlabel)
+    ax.set_xlim(lim)
+    ax.set_ylim(lim)
+
+    if scientific_ticks:
+        ax.ticklabel_format(style='sci', scilimits=scilimits)
+        ax.tick_params(axis='both', labelsize=fontsize)
+
+    handles, labels = ax.get_legend_handles_labels()
+
+    # Create legend with square markers, adjust marker size as needed
+    new_handles = [plt.Line2D([], [], marker='s', color=handle.get_facecolor()[0], linestyle='None') for handle in
+                   handles[0:]]  # Skip the first handle as it's the legend title
+
+    ax.legend(handles=new_handles, labels=list(basin_labels), title='basin', loc='upper left', fontsize=fontsize)
+
+    plt.tight_layout()
+
+    if savepath is not None:
+        fig.savefig(savepath, dpi=300)

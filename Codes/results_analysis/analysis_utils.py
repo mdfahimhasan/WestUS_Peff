@@ -268,11 +268,11 @@ def aggregate_USGS_pumping_annual_csv(years, usgs_GW_shp_for_basin, convert_to_c
     usgs_df_T.to_csv(output_csv, index=False)
 
 
-def aggregate_netGW_insitu_usgs_pumping_to_annualCSV(pixel_netGW_pumping_csv, annual_usgs_GW_csv,
-                                                     area_basin_mm2, output_annual_csv):
+def aggregate_netGW_insitu_usgs_pumping_to_annualCSV_KS_CO(pixel_netGW_pumping_csv, annual_usgs_GW_csv,
+                                                           area_basin_mm2, output_annual_csv):
     """
     Aggregate (by sum) pixel-wise annual netGW, in-situ pumping records and usgs pumping estimates for a basin
-    to a annual csv.     *** used for GMD4, GMD3 in KS; RPB in CO; HQR, DOUG in AZ. ***
+    to a annual csv.     *** used for GMD4, GMD3 in KS and RPB in CO ***
 
     *** provides annual netGW/in-situ pumping/usgs pumping (in AF/year and mm/year)
     and mean netGW/in-situ pumping/usgs pumping (in mm/year).
@@ -284,7 +284,7 @@ def aggregate_netGW_insitu_usgs_pumping_to_annualCSV(pixel_netGW_pumping_csv, an
 
     :return: None.
     """
-    print('Aggregating netGW, in-situ pumping, USGS estiamted pumping to a annual csv...')
+    print('Aggregating netGW, in-situ pumping, USGS estimated pumping to a annual csv...')
 
     # loading dataframe with pixelwise netGW and pumping estimates
     pixel_df = pd.read_csv(pixel_netGW_pumping_csv)
@@ -315,7 +315,64 @@ def aggregate_netGW_insitu_usgs_pumping_to_annualCSV(pixel_netGW_pumping_csv, an
     yearly_df.to_csv(output_annual_csv, index=False)
 
 
-def aggregate_netGW_insitu_usgs_pumping_to_annualCSV_DV(years, basin_netGW_dir,
+def aggregate_netGW_insitu_usgs_pumping_to_annualCSV_AZ(pixel_netGW_csv, annual_pumping_csv, basin_code,
+                                                        annual_usgs_GW_csv, area_basin_mm2, output_annual_csv):
+    """
+    Aggregate (by sum) pixel-wise annual netGW, in-situ pumping records and usgs pumping estimates for a basin
+    to a annual csv.     *** used for HQR INA and Doug. AMA in AZ  ***
+
+    *** provides annual netGW/in-situ pumping/usgs pumping (in AF/year and mm/year)
+    and mean netGW/in-situ pumping/usgs pumping (in mm/year).
+
+    :param pixel_netGW_csv: Filepath of csv holding pixel-wise annual netGW data for a basin.
+    :param annual_pumping_csv: In-situ annually summed pumping csv (for all basins in AZ).
+    :param annual_usgs_GW_csv: USGS annual pumping estimates' csv for the basin.
+    :param basin_code: Either 'hqr' or 'doug' to select from 'HARQUAHALA INA' or 'DOUGLAS AMA'.
+    :param area_basin_mm2: Area of the basin in mm2.
+    :param output_annual_csv: Filepath of output annual total/mean netGW/pumping csv.
+
+    :return: None.
+    """
+    print('Aggregating netGW, in-situ pumping, USGS estimated pumping to a annual csv...')
+
+    # loading dataframe with pixelwise netGW estimates
+    pixel_df = pd.read_csv(pixel_netGW_csv)
+    pixel_df = pixel_df[['year', 'netGW_mm', 'netGW_AF']]
+
+    # groupby using sum()
+    netGW_df = pixel_df.groupby('year').sum()
+    netGW_df = netGW_df.reset_index()
+
+    # loading annual summed pumping database
+    basin_name = 'HARQUAHALA INA' if basin_code == 'hqr' else 'DOUGLAS AMA'
+    pump_df = pd.read_csv(annual_pumping_csv)
+    pump_df = pump_df[pump_df['AMA INA'] == basin_name]
+    pump_df = pump_df[['year', 'AF_sum']]
+    pump_df.columns.values[1] = 'pumping_AF'
+
+    # loading USGS annual pumping estimates data
+    usgs_df = pd.read_csv(annual_usgs_GW_csv)
+
+    # merging netGW + in-situ pumping + USGS pumping estimates together
+    yearly_df = netGW_df.merge(pump_df, on='year')
+    yearly_df = yearly_df.merge(usgs_df, on='year')
+
+    # calculating m3 values
+    yearly_df['netGW_m3'] = yearly_df['netGW_AF'] * 1233.48
+    yearly_df['pumping_m3'] = yearly_df['pumping_AF'] * 1233.48
+    yearly_df['USGS_m3'] = yearly_df['USGS_AF'] * 1233.48
+
+    # calculating mean netGW + mean pumping + mean USGS pumping (in mm)
+    area_mm2_single_pixel = (2193 * 1000) * (2193 * 1000)  # unit in mm2
+    yearly_df['mean netGW_mm'] = yearly_df['netGW_mm'] * area_mm2_single_pixel / area_basin_mm2
+    yearly_df['mean pumping_mm'] = yearly_df['pumping_AF'] * 1233481837547.5 / area_basin_mm2  # AF >> mm3 >> mean mm
+    yearly_df['mean USGS_mm'] = (yearly_df['USGS_AF'] * 1233481837547.5 / area_basin_mm2)   # AF >> mm3 >> mean mm
+
+    # saving final csv
+    yearly_df.to_csv(output_annual_csv, index=False)
+
+
+def aggregate_netGW_insitu_usgs_pumping_to_annualCSV_NV(years, basin_netGW_dir,
                                                         pumping_csv, pump_AF_attr,
                                                         annual_usgs_GW_csv,
                                                         area_basin_mm2, output_csv):
@@ -386,76 +443,17 @@ def aggregate_netGW_insitu_usgs_pumping_to_annualCSV_DV(years, basin_netGW_dir,
     yearly_df.to_csv(output_csv, index=False)
 
 
-def aggregate_mean_netGW_pumping_to_annual_HRB(years, basin_netGW_dir,
-                                               pumping_csv, pump_attr,
-                                               area_of_irrig_fields_mm2, output_csv,
-                                               available_gw_field_mask_dir=None, irr_frac_dir=None):
-    print(f'Compiling growing season netGW vs annual pumping aggregated dataframe for Harney Basin, OR...')
-
-    # For Harney Basin, OR, not all pumping wells are monitored. So, we can't compare total pumping vs total netGW(in AF).
-    # We will develop a field mask to extract only pixels that have pumping. Then, for those those pixels, we will
-    # calculate netGW in mm (considering irrigated fraction in each pixel) and  pumping in mm. Then we will calculate
-    # annual average for both estimates.
-
-    # empty dictionary with to store data
-    extract_dict = {'year': [], 'netGW_mm': [], 'irr_frac': [], 'gw_field': []}
-
-    # lopping through each year and storing data in a list
-    for year in years:
-        netGW_data = glob(os.path.join(basin_netGW_dir, f'*{year}*.tif'))[0]
-        gw_field_data = glob(os.path.join(available_gw_field_mask_dir, '*.tif'))[0]
-        irr_frac_data = glob(os.path.join(irr_frac_dir, f'*{year}*.tif'))[0]
-
-        netGW_arr = read_raster_arr_object(netGW_data, get_file=False).flatten()
-        gw_field_arr = read_raster_arr_object(gw_field_data, get_file=False).flatten()
-        irr_frac_arr = read_raster_arr_object(irr_frac_data, get_file=False).flatten()
-        year_list = [year] * len(netGW_arr)
-
-        extract_dict['year'].extend(year_list)
-        extract_dict['netGW_mm'].extend(list(netGW_arr))
-        extract_dict['gw_field'].extend(list(gw_field_arr))
-        extract_dict['irr_frac'].extend(list(irr_frac_arr))
-
-    # converting dictionary to dataframe and saving to csv
-    df = pd.DataFrame(extract_dict)
-    df = df.dropna()  # dropping rows with no in-situ pumping records
-
-    # converting netGW mm to AF
-    area_mm2_single_pixel = (2193 * 1000) * (2193 * 1000)  # unit in mm2
-    df['netGW_AF'] = df['netGW_mm'] * area_mm2_single_pixel * 0.000000000000810714  # 1 mm3 = 0.000000000000810714 AF
-    df['area_irrig'] = df['irr_frac'] * area_mm2_single_pixel  # in mm2
-
-    df = df.dropna().reset_index(drop=True)
-
-    # loading pumping data
-    pump_df = pd.read_csv(pumping_csv)
-
-    # aggregating netGW and pumping dataset by year_list
-    df_annual = df.groupby('year')[['netGW_AF', 'area_irrig']].sum().reset_index()
-    pump_df_annual = pump_df.groupby('year')[pump_attr].sum().reset_index()
-
-    # joining the dataframe
-    df_final = df_annual.merge(pump_df_annual, on='year')
-
-    # # calculating mean netGW and mean pumping (in mm)
-    df_final['mean netGW_mm'] = df_final['netGW_AF'] * 1233481837548 / df_final['area_irrig']
-    df_final['mean pumping_mm'] = df_final['pumping_AF'] * 1233481837548 / area_of_irrig_fields_mm2
-
-    df_final.to_csv(output_csv, index=False)
-
-    return output_csv
-
-
-def run_annual_csv_processing(years, basin_code, basin_shp,
-                              westUS_netGW_dir, westUS_irr_frac_dir,
-                              pumping_pts_shp, pumping_attr_AF, year_attr,
-                              main_output_dir, pixelwise_output_csv,
-                              usgs_westUS_GW_shp,
-                              usgs_annual_GW_estimates_csv,
-                              final_annual_csv,
-                              skip_processing=False):
+def run_annual_csv_processing_KS_CO(years, basin_code, basin_shp,
+                                    westUS_netGW_dir, westUS_irr_frac_dir,
+                                    pumping_pts_shp, pumping_attr_AF, year_attr,
+                                    main_output_dir, pixelwise_output_csv,
+                                    usgs_westUS_GW_shp,
+                                    usgs_annual_GW_estimates_csv,
+                                    final_annual_csv,
+                                    skip_processing=False):
     """
-    Run processes to compile a basins' netGW, pumping, and USGS pumping data at annual scale in a csv.
+    Run processes to compile a basins' netGW, pumping, and USGS pumping data at annual scale in a csv for
+    groundwater management districts in KS and republican basin in CO.
 
     :param years: List of years to process data.
     :param basin_code: Basin keyword to get area and save processed datasets. Must be one of the following-
@@ -481,9 +479,6 @@ def run_annual_csv_processing(years, basin_code, basin_shp,
                            'gmd4': 12737667189.642 * (1000 * 1000),  # in mm2
                            'gmd3': 21820149683.491 * (1000 * 1000),  # in mm2
                            'rpb': 22753400088.854 * (1000 * 1000),  # in mm2
-                           'hqr': 1982641859.510 * (1000 * 1000),  # in mm2
-                           'doug': 2459122191.981 * (1000 * 1000),  # in mm2
-                           'dv': 1933578136.225 * (1000 * 1000),  # in mm2
                            }
 
         # creating output directories for different processes
@@ -544,15 +539,124 @@ def run_annual_csv_processing(years, basin_code, basin_shp,
         # # Compile the basin's pixelwise netGW and in-situ pumping to a common csv
         print('# # # # #  STEP 6 # # # # #')
 
-        aggregate_netGW_insitu_usgs_pumping_to_annualCSV(pixel_netGW_pumping_csv=pixelwise_output_csv,
-                                                         annual_usgs_GW_csv=usgs_annual_GW_estimates_csv,
-                                                         area_basin_mm2=basin_area_dict[basin_code],
-                                                         output_annual_csv=final_annual_csv)
+        aggregate_netGW_insitu_usgs_pumping_to_annualCSV_KS_CO(pixel_netGW_pumping_csv=pixelwise_output_csv,
+                                                               annual_usgs_GW_csv=usgs_annual_GW_estimates_csv,
+                                                               area_basin_mm2=basin_area_dict[basin_code],
+                                                               output_annual_csv=final_annual_csv)
     else:
         pass
 
 
-def run_annual_csv_processing_DV(years, basin_code, basin_shp,
+def run_annual_csv_processing_AZ(years, basin_code, basin_shp,
+                                 westUS_netGW_dir, westUS_irr_frac_dir,
+                                 pumping_pts_shp, pumping_attr_AF, year_attr,
+                                 annual_pumping_csv,
+                                 main_output_dir, pixelwise_output_csv,
+                                 usgs_westUS_GW_shp,
+                                 usgs_annual_GW_estimates_csv,
+                                 final_annual_csv,
+                                 skip_processing=False):
+    """
+    Run processes to compile a basins' netGW, pumping, and USGS pumping data at annual scale in a csv for
+    Harquahala INA and Douglas AMA in Arizona.
+
+    :param years: List of years to process data.
+    :param basin_code: Basin keyword to get area and save processed datasets. Must be one of the following-
+                        ['gmd4', 'gmd3', 'rpb', 'hqr', 'doug']
+    :param basin_shp: Filepath of basin shapefile.
+    :param westUS_netGW_dir: WestUS netGW directory.
+    :param westUS_irr_frac_dir: WestUS irrigated fraction directory.
+    :param pumping_pts_shp: Filepath of point shapefile with annual pumping estimates.
+    :param pumping_attr_AF: Attribute in the point shapefile with pumping in AF values.
+    :param year_attr: Attribute in the point shapefile with year.
+    :param annual_pumping_csv: Filepath of annual basin aggregated pumping database (csv).
+    :param main_output_dir: Filepath of main output directory to store processed data for a basin.
+    :param pixelwise_output_csv: Filepath of csv holding pixel-wise annual netGW and pumping data for a basin.
+    :param usgs_westUS_GW_shp: USGS HUC12-level shapefile (for the Western US) with annual GW pumping estimates in AF.
+    :param usgs_annual_GW_estimates_csv: Filepath of output csv with USGS annual GW pumping estimates for the basin.
+    :param final_annual_csv: Fileapth of final output csv with annual netGW, in-situ pumping, and USGS pumping estimates.
+    :param skip_processing: Set to True to skip the processing.
+
+    :return: None.
+    """
+    if not skip_processing:
+        # area of basins
+        basin_area_dict = {
+                           'hqr': 1982641859.510 * (1000 * 1000),  # in mm2
+                           'doug': 2459122191.981 * (1000 * 1000),  # in mm2
+                           }
+
+        # creating output directories for different processes
+        # pumping AF and mm raster directories will be created inside the pumping_AF_pts_to_mm_raster() function
+        basin_netGW_dir = os.path.join(main_output_dir, 'netGW_basin_mm')
+        usgs_basin_GW_dir = os.path.join(main_output_dir, 'USGS_GW_irr')
+        usgs_basin_GW_shp = os.path.join(main_output_dir, 'USGS_GW_irr', 'USGS_GW_irr.shp')
+        makedirs([basin_netGW_dir, usgs_basin_GW_dir])
+
+        # # # # #  STEP 1 # # # # #
+        # # Clip growing season netGW for the basin
+        print('# # # # #  STEP 1 # # # # #')
+
+        clip_netGW_Irr_frac_for_basin(years=years, basin_shp=basin_shp,
+                                      netGW_input_dir=westUS_netGW_dir,
+                                      basin_netGW_output_dir=basin_netGW_dir,
+                                      resolution=model_res,
+                                      irr_frac_input_dir=None,
+                                      basin_irr_frac_output_dir=None)
+
+        # # # # #  STEP 2 # # # # #
+        # # Converting annual pumping shapefile (unit AF) to mm raster
+        # # these are only the wells that have location (lat/lon) info. There are significant num of wells with missing
+        # # location info which will not come into the pumping rasters
+        print('# # # # #  STEP 2 # # # # #')
+
+        basin_pumping_AF_dir, basin_pumping_mm_dir = \
+            pumping_AF_pts_to_mm_raster(years=years, irrigated_fraction_dir=westUS_irr_frac_dir,
+                                        pumping_pts_shp=pumping_pts_shp, pumping_attr_AF=pumping_attr_AF,
+                                        year_attr=year_attr,
+                                        output_dir=main_output_dir, basin_shp=basin_shp,
+                                        ref_raster=WestUS_raster, resolution=model_res)
+
+        # # # # #  STEP 3 # # # # #
+        # # Compile pixelwise growing season netGW and annual pumping in dataframes
+        print('# # # # #  STEP 3 # # # # #')
+
+        compile_pixelwise_basin_df_for_netGW_pumping(years=years, basin_netGW_dir=basin_netGW_dir,
+                                                     basin_pumping_mm_dir=basin_pumping_mm_dir,
+                                                     basin_pumping_AF_dir=basin_pumping_AF_dir,
+                                                     output_csv=pixelwise_output_csv)
+
+        # # # # #  STEP 4 # # # # #
+        # # Clip USGS HUC12-scale basins with NHM predicted GW pumping estimates
+        print('# # # # #  STEP 4 # # # # #', '\n', 'Clipping HUC12-scale basins with USGS GW pumping data...')
+
+        clip_vector(input_shapefile=usgs_westUS_GW_shp, mask_shapefile=basin_shp,
+                    output_shapefile=usgs_basin_GW_shp, create_zero_buffer=False,
+                    change_crs='EPSG:4269')  # the conversion to EPSG 4269 is needed as all basin shapefiles are in this crs
+
+        # # # # #  STEP 5 # # # # #
+        # # Aggregate USGS HUC12-scale GW pumping estimates to a annual scale for the basin of interest
+        print('# # # # #  STEP 5 # # # # #')
+
+        aggregate_USGS_pumping_annual_csv(years=years, usgs_GW_shp_for_basin=usgs_basin_GW_shp,
+                                          convert_to_crs='EPSG:3857',
+                                          output_csv=usgs_annual_GW_estimates_csv)
+
+        # # # # #  STEP 6 # # # # #
+        # # Compile the basin's pixelwise netGW and in-situ pumping to a common csv
+        print('# # # # #  STEP 6 # # # # #')
+
+        aggregate_netGW_insitu_usgs_pumping_to_annualCSV_AZ(pixel_netGW_csv=pixelwise_output_csv,
+                                                            annual_pumping_csv=annual_pumping_csv, basin_code=basin_code,
+                                                            annual_usgs_GW_csv=usgs_annual_GW_estimates_csv,
+                                                            area_basin_mm2=basin_area_dict[basin_code],
+                                                            output_annual_csv=final_annual_csv)
+
+    else:
+        pass
+
+
+def run_annual_csv_processing_NV(years, basin_code, basin_shp,
                                  westUS_netGW_dir,
                                  pumping_csv, pumping_attr_AF,
                                  main_output_dir,
@@ -561,7 +665,7 @@ def run_annual_csv_processing_DV(years, basin_code, basin_shp,
                                  final_annual_csv,
                                  skip_processing=False):
     """
-    Run processes to compile Diamond Valley's  netGW, pumping, and USGS pumping data at annual scale in a csv.
+    Run processes to compile Diamond Valley's (Nevada)  netGW, pumping, and USGS pumping data at annual scale in a csv.
 
     :param years: ist of years to process data.
     :param basin_code: Basin keyword to get area and save processed datasets. Must be - 'dv'.
@@ -619,7 +723,7 @@ def run_annual_csv_processing_DV(years, basin_code, basin_shp,
         # # Compile the basin's pixelwise netGW and in-situ pumping to a common csv
         print('# # # # #  STEP 4 # # # # #')
 
-        aggregate_netGW_insitu_usgs_pumping_to_annualCSV_DV(years=years, basin_netGW_dir=basin_netGW_dir,
+        aggregate_netGW_insitu_usgs_pumping_to_annualCSV_NV(years=years, basin_netGW_dir=basin_netGW_dir,
                                                             pumping_csv=pumping_csv, pump_AF_attr=pumping_attr_AF,
                                                             annual_usgs_GW_csv=usgs_annual_GW_estimates_csv,
                                                             area_basin_mm2=basin_area_dict[basin_code],
@@ -660,8 +764,8 @@ def compile_annual_pumping_netGW_all_basins(annual_csv_list, output_csv):
     compiled_annual_df['sim_pumping_m3'] = compiled_annual_df['netGW_m3'] / avg_irrig_efficiency
     compiled_annual_df['sim_mean_pumping_mm'] = compiled_annual_df['mean netGW_mm'] / avg_irrig_efficiency
 
-    # setting all nan values to zero
-    compiled_annual_df = compiled_annual_df.replace({np.nan: 0})
+    # setting all zero values to np.nan
+    compiled_annual_df = compiled_annual_df.replace({0: np.nan})
 
     compiled_annual_df.to_csv(output_csv, index=False)
 
@@ -730,6 +834,154 @@ def extract_pumping_estimate_with_lat_lon(years, input_csv, input_data_dir, resa
     df = df.dropna()
     df.to_csv(output_csv, index=False)
 
+
+def process_and_aggregate_irrigated_acres_KS(years, irr_cropland_input_dir, irr_frac_input_dir, basin_shp, basin_name,
+                                             in_situ_acreage_csv, main_output_dir, output_csv, resolution=model_res):
+    # creating output dirs
+    basin_irr_frac_output_dir = os.path.join(main_output_dir, 'irr_frac')
+    basin_irr_cropland_output_dir = os.path.join(main_output_dir, 'irr_cropland')
+
+    makedirs([basin_irr_frac_output_dir, basin_irr_cropland_output_dir])
+
+    # loading and summing (annually) in-situ acreage data
+    acre_df = pd.read_csv(in_situ_acreage_csv)
+    basin_code = 3 if basin_name == 'gmd3' else 4  # we are only considering gmd4 or gmd3 for this project. The database has all gmds' data
+    acre_df = acre_df[acre_df['gmd'] == basin_code]
+    acre_df_agg = acre_df.groupby('Year')['Acres'].sum().reset_index()
+    acre_df_agg = acre_df_agg.rename(columns={'Acres': 'In situ Acres'})
+
+    # empty dictionary to store results
+    acre_dict = {'Year': [], 'Irr data Acres': []}
+
+    for year in years:
+        print(f'Clip irrigated cropland and fraction data for {year}...')
+
+        # irrigation fraction
+        irr_frac_raster = glob(os.path.join(irr_frac_input_dir, f'*{year}*.tif'))[0]
+
+        basin_irr_frac_data = clip_resample_reproject_raster(input_raster=irr_frac_raster, input_shape=basin_shp,
+                                                             output_raster_dir=basin_irr_frac_output_dir,
+                                                             keyword=' ', raster_name=f'Irr_frac_{year}.tif',
+                                                             clip=True, resample=False, clip_and_resample=False,
+                                                             targetaligned=True, resample_algorithm='near',
+                                                             resolution=resolution,
+                                                             crs='EPSG:4269', output_datatype=gdal.GDT_Float32,
+                                                             use_ref_width_height=False)
+
+        # irrigation cropland
+        irr_crop_raster = glob(os.path.join(irr_cropland_input_dir, f'*{year}*.tif'))[0]
+
+        basin_irr_cropland_data = clip_resample_reproject_raster(input_raster=irr_crop_raster, input_shape=basin_shp,
+                                                                 output_raster_dir=basin_irr_cropland_output_dir,
+                                                                 keyword=' ', raster_name=f'Irr_cropland_{year}.tif',
+                                                                 clip=True, resample=False, clip_and_resample=False,
+                                                                 targetaligned=True, resample_algorithm='near',
+                                                                 resolution=resolution,
+                                                                 crs='EPSG:4269', output_datatype=gdal.GDT_Float32,
+                                                                 use_ref_width_height=False)
+
+        # calculating irrigated acreage
+        irr_frac_arr, file = read_raster_arr_object(basin_irr_frac_data)
+        irr_cropland_arr = read_raster_arr_object(basin_irr_cropland_data, get_file=False)
+
+        area_acres_single_pixel = (2.193 ** 2) * 247.105   # unit in acres
+        irr_acreage_arr = np.where((irr_frac_arr != -9999), irr_frac_arr * irr_cropland_arr * area_acres_single_pixel, -9999)
+
+        total_irr_acreage = np.nansum(irr_acreage_arr)
+
+        # appending result to dictionary
+        acre_dict['Year'].append(year)
+        acre_dict['Irr data Acres'].append(total_irr_acreage)
+
+    # converting dictionary to dataframe
+    irr_acre_df = pd.DataFrame(acre_dict)
+
+    # compiling in-situ irrigated acreage records and irrigated acreage from irrigated datasets
+    acre_df_agg = acre_df_agg.merge(irr_acre_df, on='Year')
+
+    # converting acres to sq meter (SI unit)
+    acre_df_agg['In situ m2'] = acre_df_agg['In situ Acres'] * 4046.8564224  # sq meter
+    acre_df_agg['Irr data m2'] = acre_df_agg['Irr data Acres'] * 4046.8564224  # sq meter
+
+    # assigning basin name
+    basin_name = 'GMD3, KS' if basin_name == 'gmd3' else 'GMD4, KS'
+    acre_df_agg['basin_name'] = [basin_name] * len(acre_df_agg)
+
+    # save
+    acre_df_agg.to_csv(output_csv, index=False)
+
+
+def compile_irr_acres_all_basins(annual_csv_list, output_csv):
+    # making the output directory if not available
+    makedirs([os.path.dirname(output_csv)])
+
+    # empty dataframe to store the results
+    compiled_annual_df = pd.DataFrame()
+
+    for csv in annual_csv_list:
+        df = pd.read_csv(csv)
+        compiled_annual_df = pd.concat([compiled_annual_df, df])
+
+    compiled_annual_df.to_csv(output_csv, index=False)
+
+# def aggregate_mean_netGW_pumping_to_annual_HRB(years, basin_netGW_dir,
+#                                                pumping_csv, pump_attr,
+#                                                area_of_irrig_fields_mm2, output_csv,
+#                                                available_gw_field_mask_dir=None, irr_frac_dir=None):
+#     print(f'Compiling growing season netGW vs annual pumping aggregated dataframe for Harney Basin, OR...')
+#
+#     # For Harney Basin, OR, not all pumping wells are monitored. So, we can't compare total pumping vs total netGW(in AF).
+#     # We will develop a field mask to extract only pixels that have pumping. Then, for those those pixels, we will
+#     # calculate netGW in mm (considering irrigated fraction in each pixel) and  pumping in mm. Then we will calculate
+#     # annual average for both estimates.
+#
+#     # empty dictionary with to store data
+#     extract_dict = {'year': [], 'netGW_mm': [], 'irr_frac': [], 'gw_field': []}
+#
+#     # lopping through each year and storing data in a list
+#     for year in years:
+#         netGW_data = glob(os.path.join(basin_netGW_dir, f'*{year}*.tif'))[0]
+#         gw_field_data = glob(os.path.join(available_gw_field_mask_dir, '*.tif'))[0]
+#         irr_frac_data = glob(os.path.join(irr_frac_dir, f'*{year}*.tif'))[0]
+#
+#         netGW_arr = read_raster_arr_object(netGW_data, get_file=False).flatten()
+#         gw_field_arr = read_raster_arr_object(gw_field_data, get_file=False).flatten()
+#         irr_frac_arr = read_raster_arr_object(irr_frac_data, get_file=False).flatten()
+#         year_list = [year] * len(netGW_arr)
+#
+#         extract_dict['year'].extend(year_list)
+#         extract_dict['netGW_mm'].extend(list(netGW_arr))
+#         extract_dict['gw_field'].extend(list(gw_field_arr))
+#         extract_dict['irr_frac'].extend(list(irr_frac_arr))
+#
+#     # converting dictionary to dataframe and saving to csv
+#     df = pd.DataFrame(extract_dict)
+#     df = df.dropna()  # dropping rows with no in-situ pumping records
+#
+#     # converting netGW mm to AF
+#     area_mm2_single_pixel = (2193 * 1000) * (2193 * 1000)  # unit in mm2
+#     df['netGW_AF'] = df['netGW_mm'] * area_mm2_single_pixel * 0.000000000000810714  # 1 mm3 = 0.000000000000810714 AF
+#     df['area_irrig'] = df['irr_frac'] * area_mm2_single_pixel  # in mm2
+#
+#     df = df.dropna().reset_index(drop=True)
+#
+#     # loading pumping data
+#     pump_df = pd.read_csv(pumping_csv)
+#
+#     # aggregating netGW and pumping dataset by year_list
+#     df_annual = df.groupby('year')[['netGW_AF', 'area_irrig']].sum().reset_index()
+#     pump_df_annual = pump_df.groupby('year')[pump_attr].sum().reset_index()
+#
+#     # joining the dataframe
+#     df_final = df_annual.merge(pump_df_annual, on='year')
+#
+#     # # calculating mean netGW and mean pumping (in mm)
+#     df_final['mean netGW_mm'] = df_final['netGW_AF'] * 1233481837548 / df_final['area_irrig']
+#     df_final['mean pumping_mm'] = df_final['pumping_AF'] * 1233481837548 / area_of_irrig_fields_mm2
+#
+#     df_final.to_csv(output_csv, index=False)
+#
+#     return output_csv
 
 # def clip_Peff_precip_basin(years, basin_shp, Peff_input_dir, Peff_output_dir,
 #                            precip_input_dir, precip_output_dir,

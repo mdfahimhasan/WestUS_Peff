@@ -176,7 +176,7 @@ def classify_irrigated_rainfed_cropland(rainfed_fraction_dir, irrigated_fraction
         ############################
         # Rainfed
         # Criteria of irrigated and rainfed cropland classification
-        # More than 0.20 (30%) rainfed and less than 0.02 (2%) irrigated 30m pixels in a 2km pixel will be classified
+        # More than 0.30 (30%) rainfed and less than 0.02 (2%) irrigated 30m pixels in a 2km pixel will be classified
         # as "Rainfed cropland". Also, it should have <6% tree cover.
         # Irrigated
         # More than 0.02 (2%) irrigated 30m pixels in a 2km pixel will be classified as "Irrigated cropland"
@@ -727,8 +727,9 @@ def develop_excess_ET_filter(yearly_precip_dir, grow_season_ET_dir, output_dir,
     """
     Developing a yearly filter for rainfed cropET (effective precip) training data. Using this filter, we will exclude
     pixels where total ET (openET ensemble) in a growing season is higher than total precipitation from last year. These
-    filtered out pixels are using more water from storage than precipitation. But we only want to consider pixels where
-    ET mostly comes from precipitation (values 1 in this processed dataset) with some supplement from storage.
+    filtered out pixels that are using more water from storage than precipitation. But we only want to consider pixels
+    where ET mostly comes from precipitation, with some supplement from storage that has been built from precipitation
+    over the growing season of that particular year.
 
     :param yearly_precip_dir: Input directory of yearly total precipitation data.
     :param grow_season_ET_dir: Input directory of growing season ET data.

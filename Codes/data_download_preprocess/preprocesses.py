@@ -722,16 +722,18 @@ def process_AWC_data(input_dir, westUS_shape, output_dir, ref_raster=WestUS_rast
                                        ref_raster=ref_raster)
 
 
-def develop_excess_ET_filter(yearly_precip_dir, grow_season_ET_dir, output_dir,
+def develop_excess_ET_filter(monthly_precip_dir, output_dir_precip_water_yr, grow_season_ET_dir, output_dir,
                              skip_processing=False):
     """
     Developing a yearly filter for rainfed cropET (effective precip) training data. Using this filter, we will exclude
-    pixels where total ET (openET ensemble) in a growing season is higher than total precipitation from last year. These
+    pixels where total ET (openET ensemble) in a growing season is higher than precipitation of that water year
+    (precipitation from from last year. These
     filtered out pixels that are using more water from storage than precipitation. But we only want to consider pixels
     where ET mostly comes from precipitation, with some supplement from storage that has been built from precipitation
     over the growing season of that particular year.
 
-    :param yearly_precip_dir: Input directory of yearly total precipitation data.
+    :param monthly_precip_dir: Input directory of monthly total precipitation data (the code is written for prism monthly data).
+    :param output_dir_precip_water_yr: Output directory to save summed water year precipitation data.
     :param grow_season_ET_dir: Input directory of growing season ET data.
     :param output_dir: Filepath of output directory to save processed data.
     :param skip_processing: Set to True if want to skip processing this dataset.
@@ -739,29 +741,37 @@ def develop_excess_ET_filter(yearly_precip_dir, grow_season_ET_dir, output_dir,
     :return: None.
     """
     if not skip_processing:
-        makedirs([output_dir])
+        makedirs([output_dir_precip_water_yr, output_dir])
         # we will compare growing season ET for a year with previous year's total precip.
         # so, there is a year lag in precip_years list
-        precip_years = [1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011,
-                        2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019]
-        ET_years = [2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011,
-                    2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020]
+        years = [2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011,
+                 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020]
 
-        for precip_yr, et_yr in zip(precip_years, ET_years):
-            print(f'procesing Excess_ET_filter data for year {et_yr}')
+        for yr in years:
+            print(f'procesing Excess_ET_filter data for year {yr}')
 
-            precip_data = glob(os.path.join(yearly_precip_dir, f'*{precip_yr}*.tif'))[0]
-            et_data = glob(os.path.join(grow_season_ET_dir, f'*{et_yr}*.tif'))[0]
+            # # summing precipitation for water year (previous year's October to current year's september
+            # the searching operation is based on prism monthly data format
+            precip_data_prev_years = glob(os.path.join(monthly_precip_dir, f'*{yr - 1}_1[0-2].*tif'))
+            precip_data_current_years = glob(os.path.join(monthly_precip_dir, f'*{yr}_[1-9].*tif'))
+            precip_water_yr_list = precip_data_prev_years + precip_data_current_years
 
-            precip_arr, file = read_raster_arr_object(precip_data)
-            et_arr = read_raster_arr_object(et_data, get_file=False)
+            summed_precip_arr, _ = \
+                sum_rasters(raster_list=precip_water_yr_list,
+                            raster_dir=None,
+                            output_raster=os.path.join(output_dir_precip_water_yr, f'prism_precip_water_yr_{yr}'),
+                            ref_raster=precip_water_yr_list[0])
 
-            # setting value 1 to pixels where previous year's total precip is greater than this year's
+            # getting growing season et data for current year
+            et_data = glob(os.path.join(grow_season_ET_dir, f'*{yr}*.tif'))[0]
+            et_arr, file = read_raster_arr_object(et_data)
+
+            # setting value 1 to pixels where water year's total precip is greater than this year's
             # total growing season ET
-            # we will only take training raindfed cropET (effective precip) data where the values are 1
-            new_arr = np.where((precip_arr < et_arr) | np.isnan(precip_arr), -9999, 1)
+            # we will only take training rainfed cropET (effective precip) data where the values are 1
+            new_arr = np.where((summed_precip_arr < et_arr) | np.isnan(summed_precip_arr), -9999, 1)
 
-            output_raster = os.path.join(output_dir, f'Excess_ET_filter_{et_yr}.tif')
+            output_raster = os.path.join(output_dir, f'Excess_ET_filter_{yr}.tif')
             write_array_to_raster(raster_arr=new_arr, raster_file=file, transform=file.transform,
                                   output_path=output_raster, dtype=np.float32)
     else:
@@ -942,7 +952,8 @@ def run_all_preprocessing(skip_prism_processing=True,
                                 skip_processing=skip_gridmet_RET_precessing)
 
     # processing excess ET filter
-    develop_excess_ET_filter(yearly_precip_dir='../../Data_main/Raster_data/PRISM_Precip/WestUS',
+    develop_excess_ET_filter(monthly_precip_dir='../../Data_main/Raster_data/PRISM_Precip/WestUS_monthly',
+                             output_dir_precip_water_yr = '../../Data_main/Raster_data/PRISM_Precip/WestUS_water_year',
                              grow_season_ET_dir='../../Data_main/Raster_data/OpenET_ensemble/WestUS_grow_season',
                              output_dir='../../Data_main/Raster_data/Excess_ET_filter',
                              skip_processing=skip_excess_ET_filter_processing)

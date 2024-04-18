@@ -426,7 +426,7 @@ def sum_rasters(raster_dir, output_raster, raster_list=None, search_by='*.tif', 
     :param ref_raster: Reference raster filepath. Set default to WestUS_raster.
     :param nodata: no_data_value set as -9999.
 
-    :return: Summed raster.
+    :return: Summed array and output raster.
     """
     if raster_dir is not None:
         input_rasters = glob(os.path.join(raster_dir, search_by))
@@ -447,6 +447,8 @@ def sum_rasters(raster_dir, output_raster, raster_list=None, search_by='*.tif', 
 
     write_array_to_raster(raster_arr=sum_arr, raster_file=ref_file, transform=ref_file.transform,
                           output_path=output_raster)
+
+    return sum_arr, output_raster
 
 
 def mean_rasters(raster_dir, output_raster, raster_list=None, search_by='*.tif', ref_raster=WestUS_raster,

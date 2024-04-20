@@ -3,7 +3,6 @@ import sys
 from os.path import dirname, abspath
 sys.path.insert(0, dirname(dirname(dirname(abspath(__file__)))))
 
-from Codes.utils.raster_ops import shapefile_to_raster
 from Codes.results_analysis.analysis_utils import run_annual_csv_processing_KS_CO, run_annual_csv_processing_AZ,\
     run_annual_csv_processing_NV, compile_annual_pumping_netGW_all_basins
 
@@ -17,13 +16,13 @@ basin_name_dict = {'GMD4': 'GMD4, KS', 'GMD3': 'GMD3, KS', 'RPB': 'Republican Ba
 if __name__ == '__main__':
     # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
     # boolean switches to process data for each region
-    skip_process_gmd4_data = True   # Groundwater Management District 4, KS
-    skip_process_gmd3_data = True  # Groundwater Management District 3, KS
-    skip_process_rpb_data = True   # Republican River Basin, Co
-    skip_process_hqr_data = True   # Harquahala INA, AZ
-    skip_process_doug_data = True  # Douglas AMA, AZ
-    skip_process_dv_data = True   # Diamond valley, NV
-    skip_compile_AF_annual_data = True  # all basins
+    skip_process_gmd4_data = False   # Groundwater Management District 4, KS
+    skip_process_gmd3_data = False  # Groundwater Management District 3, KS
+    skip_process_rpb_data = False   # Republican River Basin, Co
+    skip_process_hqr_data = False   # Harquahala INA, AZ
+    skip_process_doug_data = False  # Douglas AMA, AZ
+    skip_process_dv_data = False   # Diamond valley, NV
+    skip_compile_AF_annual_data = False  # all basins
 
     # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
     # # # For Groundwater Management District 4 (GMD4), Kansas

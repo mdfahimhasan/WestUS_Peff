@@ -164,16 +164,18 @@ def estimate_sw_mm_HUC12(years_list, HUC12_input_shapefile, irrigated_CropET_wit
         pass
 
 
-def distribute_SW_irrigation_to_pixels(years_list, HUC12_shapefile, irrigated_CropET_with_canal_coverage_dir,
+def distribute_SW_consmp_use_to_pixels(years_list, HUC12_shapefile, HUC12_Irr_eff_shapefile,
+                                       irrigated_CropET_with_canal_coverage_dir,
                                        sw_dist_outdir, ref_raster=WestUS_raster,
                                        resolution=model_res, skip_processing=False):
     """
-    Distribute HUC12 level surface water irrigation (unit mm/growing season) to irrigated pixels that have 
+    Distribute HUC12 level surface water consumptive use (unit mm/growing season) to irrigated pixels that have
     canal coverage (within 2 km buffer of canal).
-    
+
     :param years_list:  A list of year_list to process data for.
     :param HUC12_shapefile: Filepath of HUC12 shapefile with total canal covered pixels, total
                              irrigated cropET data, and SW irrigation data in mm.
+    :param HUC12_Irr_eff_shapefile: Filepath of HUC12 shapefile with annual irrigation efficiency data for each basin.
     :param irrigated_CropET_with_canal_coverage_dir: Directory path of irrigated cropET growing season
                                                     rasters (overlaid with canal coverage raster).
     :param sw_dist_outdir: Output directory to save sw distributed rasters.
@@ -221,6 +223,15 @@ def distribute_SW_irrigation_to_pixels(years_list, HUC12_shapefile, irrigated_Cr
                                                  use_attr=True, attribute=attr_to_use,
                                                  ref_raster=ref_raster, resolution=resolution)
 
+            # converting irrigation efficiency of HUC12 to raster
+            irr_eff_ras = f'irr_eff_{year}.tif'
+            attr_to_use = f'{year}'
+            irr_eff = shapefile_to_raster(input_shape=HUC12_Irr_eff_shapefile, output_dir=total_cropET_SW_dir,
+                                          raster_name=irr_eff_ras,
+                                          use_attr=True, attribute=attr_to_use,
+                                          ref_raster=ref_raster, resolution=resolution)
+            irr_eff_arr = read_raster_arr_object(irr_eff, get_file=False)
+
             # array operation to distribute total sw irrigation in a HUC12 to
             # all its irrigated pixels that have canal coverage
             irrig_cropET_canal_cover_arr = read_raster_arr_object(irrig_cropET_Huc12_tot, get_file=False)
@@ -229,25 +240,26 @@ def distribute_SW_irrigation_to_pixels(years_list, HUC12_shapefile, irrigated_Cr
 
             # the total sw irrigation will be distributed to a pixel based on its ratio
             # of irrigated cropET in a pixel/total irrigated cropET in the HUC12
-            sw_dist_arr = np.where((sw_irrig_arr != 0) | (irrig_cropET_canal_cover_arr != 0) | (total_irrig_cropET_arr != 0),
-                                    sw_irrig_arr * (irrig_cropET_canal_cover_arr/total_irrig_cropET_arr), -9999)
+            # Also, multiplying with irrigation efficiency to get consumptive SW use
+            sw_cnsmp_use_arr = np.where((sw_irrig_arr != 0) | (irrig_cropET_canal_cover_arr != 0) | (total_irrig_cropET_arr != 0),
+                                    sw_irrig_arr * irr_eff_arr * (irrig_cropET_canal_cover_arr/total_irrig_cropET_arr), -9999)
 
             sw_initial_output_dir = os.path.join(sw_dist_outdir, 'SW_dist_initial')
             makedirs([sw_initial_output_dir])
-            sw_dist_raster_initial = os.path.join(sw_initial_output_dir, f'sw_irrigation_{year}_initial.tif')
-            write_array_to_raster(raster_arr=sw_dist_arr, raster_file=ref_file, transform=ref_file.transform,
+            sw_dist_raster_initial = os.path.join(sw_initial_output_dir, f'sw_cnsmp_use_{year}_initial.tif')
+            write_array_to_raster(raster_arr=sw_cnsmp_use_arr, raster_file=ref_file, transform=ref_file.transform,
                                   output_path=sw_dist_raster_initial)
 
             # assigning zero values to pixels with no surface water irrigation.
             # this is specially an important step for regions with groundwater pumping
             # but no surface irrigation (during calculation of netGW)
             # regions out of Western US (sea and others) are assigned no data value
-            sw_dist_arr = np.where(~np.isnan(sw_dist_arr), sw_dist_arr, 0)
-            sw_dist_arr = np.where(ref_arr == 0, sw_dist_arr, ref_arr)  # assigning no data value
+            sw_cnsmp_use_arr = np.where(~np.isnan(sw_cnsmp_use_arr), sw_cnsmp_use_arr, 0)
+            sw_cnsmp_use_arr = np.where(ref_arr == 0, sw_cnsmp_use_arr, ref_arr)  # assigning no data value
 
-            sw_dist_raster = os.path.join(sw_dist_outdir, f'sw_irrigation_{year}.tif')
-            write_array_to_raster(raster_arr=sw_dist_arr, raster_file=ref_file, transform=ref_file.transform,
-                                  output_path=sw_dist_raster)
+            sw_cnsmp_use_raster = os.path.join(sw_dist_outdir, f'sw_cnsmp_use_{year}.tif')
+            write_array_to_raster(raster_arr=sw_cnsmp_use_arr, raster_file=ref_file, transform=ref_file.transform,
+                                  output_path=sw_cnsmp_use_raster)
 
     else:
         pass

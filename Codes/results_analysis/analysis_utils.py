@@ -835,20 +835,14 @@ def extract_pumping_estimate_with_lat_lon(years, input_csv, input_data_dir, resa
     df.to_csv(output_csv, index=False)
 
 
-def process_and_aggregate_irrigated_acres_KS(years, irr_cropland_input_dir, irr_frac_input_dir, basin_shp, basin_name,
-                                             in_situ_acreage_csv, main_output_dir, output_csv, resolution=model_res):
+def process_and_aggregate_irrigated_acres(years, irr_cropland_input_dir, irr_frac_input_dir, basin_shp, basin_name,
+                                          in_situ_areacsv, main_output_dir, output_csv, resolution=model_res,
+                                          in_situ_shp_list_CO=None):
     # creating output dirs
     basin_irr_frac_output_dir = os.path.join(main_output_dir, 'irr_frac')
     basin_irr_cropland_output_dir = os.path.join(main_output_dir, 'irr_cropland')
 
     makedirs([basin_irr_frac_output_dir, basin_irr_cropland_output_dir])
-
-    # loading and summing (annually) in-situ acreage data
-    acre_df = pd.read_csv(in_situ_acreage_csv)
-    basin_code = 3 if basin_name == 'gmd3' else 4  # we are only considering gmd4 or gmd3 for this project. The database has all gmds' data
-    acre_df = acre_df[acre_df['gmd'] == basin_code]
-    acre_df_agg = acre_df.groupby('Year')['Acres'].sum().reset_index()
-    acre_df_agg = acre_df_agg.rename(columns={'Acres': 'In situ Acres'})
 
     # empty dictionary to store results
     acre_dict = {'Year': [], 'Irr data Acres': []}
@@ -880,7 +874,7 @@ def process_and_aggregate_irrigated_acres_KS(years, irr_cropland_input_dir, irr_
                                                                  crs='EPSG:4269', output_datatype=gdal.GDT_Float32,
                                                                  use_ref_width_height=False)
 
-        # calculating irrigated acreage
+        # calculating irrigated area
         irr_frac_arr, file = read_raster_arr_object(basin_irr_frac_data)
         irr_cropland_arr = read_raster_arr_object(basin_irr_cropland_data, get_file=False)
 
@@ -896,19 +890,75 @@ def process_and_aggregate_irrigated_acres_KS(years, irr_cropland_input_dir, irr_
     # converting dictionary to dataframe
     irr_acre_df = pd.DataFrame(acre_dict)
 
-    # compiling in-situ irrigated acreage records and irrigated acreage from irrigated datasets
-    acre_df_agg = acre_df_agg.merge(irr_acre_df, on='Year')
+    # loading and summing (annually) in-situ area data
+    if in_situ_areacsv is not None:  # only required for GMD3, GMD4 in KS and Diamond Valley, CO
+        insitu_df = pd.read_csv(in_situ_areacsv)
 
-    # converting acres to sq meter (SI unit)
-    acre_df_agg['In situ m2'] = acre_df_agg['In situ Acres'] * 4046.8564224  # sq meter
-    acre_df_agg['Irr data m2'] = acre_df_agg['Irr data Acres'] * 4046.8564224  # sq meter
+    # for Kansas basins
+    if basin_name in ['gmd3', 'gmd4']:
+        basin_code = 3 if basin_name == 'gmd3' else 4  # we are only considering gmd4 or gmd3 for this project. The database has all gmds' data
+
+        insitu_df = insitu_df[insitu_df['gmd'] == basin_code]
+        df_agg = insitu_df.groupby('Year')['Acres'].sum().reset_index()
+        df_agg = df_agg.rename(columns={'Acres': 'In situ Acres'})
+
+        # compiling in-situ irrigated area records and irrigated area from irrigated datasets
+        df_agg = df_agg.merge(irr_acre_df, on='Year')
+
+        # converting acres to sq meter (SI unit)
+        df_agg['In situ m2'] = df_agg['In situ Acres'] * 4046.8564224  # sq meter
+        df_agg['Irr data m2'] = df_agg['Irr data Acres'] * 4046.8564224  # sq meter
+
+    # for Nevada basins
+    elif basin_name == 'dv':
+        insitu_df = insitu_df.groupby('year')['area_m2'].sum().reset_index()
+        insitu_df = insitu_df .rename(columns={'year': 'Year', 'area_m2': 'In situ m2'})
+
+        # compiling in-situ irrigated area records and irrigated area from irrigated datasets
+        df_agg = insitu_df.merge(irr_acre_df, on='Year')
+
+        # converting sq meter (SI unit) to Acres and vice versa
+        df_agg['In situ Acres'] = df_agg['In situ m2'] / 4046.8564224  # sq meter
+        df_agg['Irr data m2'] = df_agg['Irr data Acres'] * 4046.8564224  # sq meter
+
+    # for Colorado basins
+    elif (basin_name == 'rpb') & (in_situ_shp_list_CO is not None):
+        # loading and summing (annually) in-situ acreage data
+        in_situ_dict = {'Year': [], 'In situ m2': []}
+
+        for shp in in_situ_shp_list_CO:  # looping through each year's shapefile and estimating acres
+            gdf = gpd.read_file(shp)
+
+            year = os.path.basename(shp).split('.')[0][-4:]
+            area = gdf.geometry.area.sum()  # unit m2
+
+            # appending result to dictionary
+            in_situ_dict['Year'].append(int(year))
+            in_situ_dict['In situ m2'].append(area)
+
+        # converting dictionary to dataframe
+        in_situ_df = pd.DataFrame(in_situ_dict)
+
+        # compiling in-situ irrigated acreage records and irrigated acreage from irrigated datasets
+        df_agg = irr_acre_df.merge(in_situ_df, on='Year')
+
+        # converting acres to sq meter (SI unit) and sq meter to acres
+        df_agg['Irr data m2'] = df_agg['Irr data Acres'] * 4046.8564224  # sq meter
+        df_agg['In situ Acres'] = df_agg['In situ m2'] / 4046.8564224  # Acres
+
+    else:
+        print('Check input arguments')
 
     # assigning basin name
-    basin_name = 'GMD3, KS' if basin_name == 'gmd3' else 'GMD4, KS'
-    acre_df_agg['basin_name'] = [basin_name] * len(acre_df_agg)
+    basin_name_dict = {'gmd3': 'GMD3, KS', 'gmd4': 'GMD4, KS', 'dv': 'Diamond Valley, NV', 'rpb': 'Republican Basin, CO'}
+    basin_name = basin_name_dict[basin_name]
+    df_agg['basin_name'] = [basin_name] * len(df_agg)
+
+    # re-arranging columns as KS data
+    df_agg = df_agg[['Year', 'In situ Acres', 'Irr data Acres', 'In situ m2', 'Irr data m2', 'basin_name']]
 
     # save
-    acre_df_agg.to_csv(output_csv, index=False)
+    df_agg.to_csv(output_csv, index=False)
 
 
 def compile_irr_acres_all_basins(annual_csv_list, output_csv):

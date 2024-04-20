@@ -2,15 +2,15 @@ import sys
 from os.path import dirname, abspath
 
 sys.path.insert(0, dirname(dirname(dirname(abspath(__file__)))))
-
+from Codes.utils.raster_ops import shapefile_to_raster
 from Codes.sw_irrig.SW_utils import create_canal_coverage_raster, estimate_sw_mm_HUC12, \
-    distribute_SW_irrigation_to_pixels
+    distribute_SW_consmp_use_to_pixels
 
 WestUS_raster = '../../Data_main/reference_rasters/Western_US_refraster_2km.tif'
 
 if __name__ == '__main__':
-    skip_canal_coverage_creation = False  ######
-    skip_estimate_sw_mm_data = False  ######
+    skip_canal_coverage_creation = True  ######
+    skip_estimate_sw_mm_data = True  ######
     skip_sw_dist = False  ######
 
     # # # # #  STEP 1 # # # # #
@@ -45,14 +45,16 @@ if __name__ == '__main__':
                          skip_precessing=skip_estimate_sw_mm_data)
 
     # # # # #  STEP 3 # # # # #
-    # # distribute HUC12 level sw irrigation (mm, area averaged) to irrigated pixels
+    # # distribute HUC12 level sw consumptive use (mm, area averaged) to irrigated pixels
     print('# # # # #  STEP 3 # # # # #')
 
     HUC12_shapefile_with_tot_SW_irrigation = '../../Data_main/USGS_water_use_data/USGS_new_wateruse_data_HUC12/HUC12_WestUS_Annual_SW_irrig_cropET.shp'
+    HUC12_Irr_eff_shapefile = '../../Data_main/USGS_water_use_data/USGS_new_wateruse_data_HUC12/HUC12_WestUS_with_Irr_Eff.shp'
     original_irrig_cropET_grow_season_dir = '../../Data_main/Raster_data/Canal_coverage/irrigated_cropET_with_canal_cover'
     sw_dist_outdir = '../../Data_main/Raster_data/SW_irrigation'
 
-    distribute_SW_irrigation_to_pixels(years_list=years_list, HUC12_shapefile=HUC12_shapefile_with_tot_SW_irrigation,
+    distribute_SW_consmp_use_to_pixels(years_list=years_list, HUC12_shapefile=HUC12_shapefile_with_tot_SW_irrigation,
+                                       HUC12_Irr_eff_shapefile=HUC12_Irr_eff_shapefile,
                                        irrigated_CropET_with_canal_coverage_dir=original_irrig_cropET_grow_season_dir,
                                        sw_dist_outdir=sw_dist_outdir,
                                        ref_raster=WestUS_raster, skip_processing=skip_sw_dist)

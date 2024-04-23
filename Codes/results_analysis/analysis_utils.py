@@ -764,6 +764,15 @@ def compile_annual_pumping_netGW_all_basins(annual_csv_list, output_csv):
     compiled_annual_df['sim_pumping_m3'] = compiled_annual_df['netGW_m3'] / avg_irrig_efficiency
     compiled_annual_df['sim_mean_pumping_mm'] = compiled_annual_df['mean netGW_mm'] / avg_irrig_efficiency
 
+    # Error range with 70-90% efficiency
+    compiled_annual_df['sim_pumping_m3_70'] = compiled_annual_df['netGW_m3'] / 0.70
+    compiled_annual_df['sim_pumping_m3_90'] = compiled_annual_df['netGW_m3'] / 0.90
+    compiled_annual_df['error_range_m3'] = compiled_annual_df['sim_pumping_m3_90'] - compiled_annual_df['sim_pumping_m3_70']
+
+    compiled_annual_df['sim_mean_pumping_mm_70'] = compiled_annual_df['mean netGW_mm'] / 0.70
+    compiled_annual_df['sim_mean_pumping_mm_90'] = compiled_annual_df['mean netGW_mm'] / 0.90
+    compiled_annual_df['error_range_mm'] = compiled_annual_df['sim_mean_pumping_mm_90'] - compiled_annual_df['sim_mean_pumping_mm_70']
+
     # setting all zero values to np.nan
     compiled_annual_df = compiled_annual_df.replace({0: np.nan})
 

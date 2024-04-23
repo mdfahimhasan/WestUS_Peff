@@ -89,7 +89,7 @@ def make_line_plot_v2(y1, y2, y3, year, fontsize, xlabel_line, ylabel_line, line
     ax.legend(loc=legend_pos, fontsize=(fontsize-2))
 
 
-def make_BOI_netGW_vs_pumping_vs_USGS_scatter_plot(df, x1, y1, hue, xlabel1, ylabel1, fontsize, lim,
+def make_BOI_netGW_vs_pumping_vs_USGS_scatter_plot(df, x1, y1, error_col, hue, xlabel1, ylabel1, fontsize, lim,
                                                    scientific_ticks=True, scilimits=(4, 4),
                                                    basin_labels=('GMD4, KS', 'GMD3, KS', 'Republican Basin, CO',
                                                                  'Harquahala INA, AZ', 'Douglas AMA, AZ', 'Diamond Valley, NV'),
@@ -107,6 +107,7 @@ def make_BOI_netGW_vs_pumping_vs_USGS_scatter_plot(df, x1, y1, hue, xlabel1, yla
         fig, ax = plt.subplots(1, 2, figsize=figsize)
         plt.rcParams['font.size'] = fontsize
 
+        ax[0].errorbar(df[x1], df[y1], xerr=df[error_col], fmt='none', ecolor='gray', alpha=0.2)
         sns.scatterplot(data=df, x=x1, y=y1, hue=hue, marker='s', ax=ax[0], palette=basin_colors)
         ax[0].legend_.remove()
         ax[0].plot([0, 1], [0, 1], 'gray', transform=ax[0].transAxes)
@@ -172,10 +173,10 @@ def make_BOI_netGW_vs_pumping_vs_USGS_scatter_plot(df, x1, y1, hue, xlabel1, yla
             fig.savefig(savepath, dpi=300)
 
 
-def make_scatter_plot(df, x1, y1, hue, xlabel, ylabel, fontsize, lim,
-                      basin_labels, figsize=(10, 6),
-                      scientific_ticks=True, scilimits=(4, 4),
-                      savepath=None):
+def make_scatter_plot_irr_area(df, x, y, hue, xlabel, ylabel, fontsize, lim,
+                               basin_labels, figsize=(10, 6),
+                               scientific_ticks=True, scilimits=(4, 4),
+                               savepath=None):
     basin_colors = {'GMD4, KS': '#4c72b0',
                     'GMD3, KS': '#dd8452',
                     'Republican Basin, CO': '#55a868',
@@ -186,7 +187,7 @@ def make_scatter_plot(df, x1, y1, hue, xlabel, ylabel, fontsize, lim,
     fig, ax = plt.subplots(figsize=figsize)
     plt.rcParams['font.size'] = fontsize
 
-    sns.scatterplot(data=df, x=x1, y=y1, hue=hue, ax=ax, palette=basin_colors)
+    sns.scatterplot(data=df, x=x, y=y, hue=hue, ax=ax, palette=basin_colors)
     ax.legend_.remove()
     ax.plot([0, 1], [0, 1], 'gray', transform=ax.transAxes)
     ax.set_ylabel(ylabel)
@@ -205,6 +206,33 @@ def make_scatter_plot(df, x1, y1, hue, xlabel, ylabel, fontsize, lim,
                    handles[0:]]  # Skip the first handle as it's the legend title
 
     ax.legend(handles=new_handles, labels=list(basin_labels), title='basin', loc='upper left', fontsize=fontsize)
+
+    plt.tight_layout()
+
+    if savepath is not None:
+        fig.savefig(savepath, dpi=300)
+
+
+def make_scatter_plot(df, x, y,
+                      xlabel, ylabel, fontsize, lim,
+                      alpha=0.4, edgecolor='blue', facecolor=None,
+                      figsize=(10, 6),
+                      scientific_ticks=True, scilimits=(4, 4),
+                      savepath=None):
+
+    fig, ax = plt.subplots(figsize=figsize)
+    plt.rcParams['font.size'] = fontsize
+
+    sns.scatterplot(data=df, x=x, y=y, alpha=alpha, edgecolor=edgecolor, facecolor=facecolor, ax=ax)
+    ax.plot([0, 1], [0, 1], 'gray', transform=ax.transAxes)
+    ax.set_ylabel(ylabel)
+    ax.set_xlabel(xlabel)
+    ax.set_xlim(lim)
+    ax.set_ylim(lim)
+
+    if scientific_ticks:
+        ax.ticklabel_format(style='sci', scilimits=scilimits)
+        ax.tick_params(axis='both', labelsize=fontsize)
 
     plt.tight_layout()
 

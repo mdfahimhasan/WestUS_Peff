@@ -203,12 +203,12 @@ def classify_irrigated_rainfed_cropland(rainfed_fraction_dir, irrigated_fraction
             rain_arr, rain_file = read_raster_arr_object(rainfed_frac_data)
             irrig_arr, irrig_file = read_raster_arr_object(irrigated_frac_data)
 
-            # classification using defined rainfed and irrigated fraction threshold. -9999 is no data
+            # classification using defined rainfed, irrigated fraction, and tree fraction threshold. -9999 is no data
             rainfed_cropland = np.where((rain_arr >= rainfed_frac_threshold) &
                                         ((irrig_arr <= irrigated_frac_threshold) | (np.isnan(irrig_arr)))
                                          & (tree_arr <= tree_threshold), 1, -9999)
 
-            irrigated_cropland = np.where((irrig_arr >= irrigated_frac_threshold) & (tree_arr <= tree_threshold), 1, -9999)
+            irrigated_cropland = np.where((irrig_arr >= irrigated_frac_threshold), 1, -9999)
 
             # saving classified data
             output_rainfed_cropland_raster = os.path.join(rainfed_cropland_output_dir, f'Rainfed_cropland_{year}.tif')

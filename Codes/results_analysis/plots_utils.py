@@ -9,7 +9,7 @@ def make_scatter_line_plots(x1, y1,
                             make_line_plot=True,
                             x2=None, y2=None,
                             year=None,
-                            xlabel_line=None, ylabel_line=None,
+                            xlabel=None, ylabel=None,
                             line_label_1=None, line_label_2=None):
 
     # R2 and RMSE calculation
@@ -37,8 +37,8 @@ def make_scatter_line_plots(x1, y1,
         ax[1].plot(year, x2, label=line_label_1, marker='o')
         ax[1].plot(year, y2, label=line_label_2, marker='o')
         ax[1].set_xticks(year, rotation=45)
-        ax[1].set_ylabel(ylabel_line)
-        ax[1].set_xlabel(xlabel_line)
+        ax[1].set_ylabel(ylabel)
+        ax[1].set_xlabel(xlabel)
         ax[1].legend(loc='upper left', fontsize=(fontsize-2))
 
         plt.tight_layout()
@@ -60,7 +60,7 @@ def make_scatter_line_plots(x1, y1,
                  bbox=dict(boxstyle='round', facecolor='white', edgecolor='lightgray', alpha=0.8))
 
 
-def make_line_plot_v1(y1, y2, year, fontsize, xlabel_line, ylabel_line, line_label_1, line_label_2,
+def make_line_plot_v1(y1, y2, year, fontsize, xlabel, ylabel, line_label_1, line_label_2,
                       figsize=(10, 4), legend_pos='upper left'):
 
     # line plot (annual mean mm/year)
@@ -69,12 +69,12 @@ def make_line_plot_v1(y1, y2, year, fontsize, xlabel_line, ylabel_line, line_lab
     ax.plot(year, y2, label=line_label_2, marker='^', linewidth=1)
     ax.set_xticks(year)
     ax.set_xticklabels(labels=year, rotation=45)
-    ax.set_ylabel(ylabel_line)
-    ax.set_xlabel(xlabel_line)
+    ax.set_ylabel(ylabel)
+    ax.set_xlabel(xlabel)
     ax.legend(loc=legend_pos, fontsize=(fontsize-2))
 
 
-def make_line_plot_v2(y1, y2, y3, year, fontsize, xlabel_line, ylabel_line, line_label_1, line_label_2, line_label_3,
+def make_line_plot_v2(y1, y2, y3, year, fontsize, xlabel, ylabel, line_label_1, line_label_2, line_label_3,
                       figsize=(10, 4), legend_pos='upper left'):
 
     # line plot (annual mean mm/year)
@@ -84,8 +84,8 @@ def make_line_plot_v2(y1, y2, y3, year, fontsize, xlabel_line, ylabel_line, line
     ax.plot(year, y3, label=line_label_3, marker='^', linewidth=1)
     ax.set_xticks(year)
     ax.set_xticklabels(labels=year, rotation=45)
-    ax.set_ylabel(ylabel_line)
-    ax.set_xlabel(xlabel_line)
+    ax.set_ylabel(ylabel)
+    ax.set_xlabel(xlabel)
     ax.legend(loc=legend_pos, fontsize=(fontsize-2))
 
 

@@ -95,28 +95,11 @@ def estimate_sw_mm_HUC12(years_list, HUC12_input_shapefile, irrigated_CropET_wit
         HUC12_gdf = gpd.read_file(HUC12_input_shapefile)
 
         # an empty dictionary of lists to store the results
-        results = {'huc12': [],
-                   'pixel_2000': [], 'ET2000_mm': [],
-                   'pixel_2001': [], 'ET2001_mm': [],
-                   'pixel_2002': [], 'ET2002_mm': [],
-                   'pixel_2003': [], 'ET2003_mm': [],
-                   'pixel_2004': [], 'ET2004_mm': [],
-                   'pixel_2005': [], 'ET2005_mm': [],
-                   'pixel_2006': [], 'ET2006_mm': [],
-                   'pixel_2007': [], 'ET2007_mm': [],
-                   'pixel_2008': [], 'ET2008_mm': [],
-                   'pixel_2009': [], 'ET2009_mm': [],
-                   'pixel_2010': [], 'ET2010_mm': [],
-                   'pixel_2011': [], 'ET2011_mm': [],
-                   'pixel_2012': [], 'ET2012_mm': [],
-                   'pixel_2013': [], 'ET2013_mm': [],
-                   'pixel_2014': [], 'ET2014_mm': [],
-                   'pixel_2015': [], 'ET2015_mm': [],
-                   'pixel_2016': [], 'ET2016_mm': [],
-                   'pixel_2017': [], 'ET2017_mm': [],
-                   'pixel_2018': [], 'ET2018_mm': [],
-                   'pixel_2019': [], 'ET2019_mm': [],
-                   'pixel_2020': [], 'ET2020_mm': []}
+        results = {'huc12': [], 'ET2000_mm': [], 'ET2001_mm': [], 'ET2002_mm': [], 'ET2003_mm': [],
+                   'ET2004_mm': [], 'ET2005_mm': [], 'ET2006_mm': [], 'ET2007_mm': [], 'ET2008_mm': [],
+                   'ET2009_mm': [], 'ET2010_mm': [], 'ET2011_mm': [], 'ET2012_mm': [], 'ET2013_mm': [],
+                   'ET2014_mm': [], 'ET2015_mm': [], 'ET2016_mm': [], 'ET2017_mm': [], 'ET2018_mm': [],
+                   'ET2019_mm': [], 'ET2020_mm': []}
 
         for year in years_list:  # looping through growing season irrigated cropET data to extract watershed/HUC12
             # level information
@@ -130,11 +113,9 @@ def estimate_sw_mm_HUC12(years_list, HUC12_input_shapefile, irrigated_CropET_wit
 
                 # performing zonal statistics to collect data
                 ET_stat = zonal_stats(huc12_geom, irrig_cropET_with_canal, stats='sum')
-                pixel_stat = zonal_stats(huc12_geom, irrig_cropET_with_canal, stats='count')
 
                 # appending the result to the empty lists
                 results[f'ET{year}_mm'].append(ET_stat[0]['sum'])   # sum of total irrigated crop ET in the HUC12
-                results[f'pixel_{year}'].append(pixel_stat[0]['count'])  # count of total canal-covered irrigated crop ET pixels in the HUC12
 
                 if year == years_list[0]:  # will populate HUC12 no. list only once. Otherwise it will keep appending for each year
                     results['huc12'].append(row['huc12'])
@@ -153,9 +134,8 @@ def estimate_sw_mm_HUC12(years_list, HUC12_input_shapefile, irrigated_CropET_wit
         area_mm2_single_pixel = (2193 * 1000) * (2193 * 1000)  # unit in mm2
 
         for year in years_list:
-            sw_mm3 = HUC12_gdf_merged[f'{year}'] * 3785411784000  # conversion from MGD to mm3/grow season
-            area_irrig_pixels = area_mm2_single_pixel * HUC12_gdf_merged[f'pixel_{year}']   # unit mm2
-            HUC12_gdf_merged[f'sw_{year}_mm'] = sw_mm3 / area_irrig_pixels   # unit mm/grow season
+            sw_mm3 = HUC12_gdf_merged[f'{year}'] * 3785411784000  # conversion from MG/grow season to mm3/grow season
+            HUC12_gdf_merged[f'sw_{year}_mm'] = sw_mm3 / area_mm2_single_pixel   # unit mm/grow season
 
         # saving finalized shapefile
         HUC12_gdf_merged.to_file(HUC12_output_shapefile)

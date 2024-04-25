@@ -61,16 +61,17 @@ def make_scatter_line_plots(x1, y1,
 
 
 def make_line_plot_v1(y1, y2, year, fontsize, xlabel, ylabel, line_label_1, line_label_2,
-                      figsize=(10, 4), legend_pos='upper left'):
+                      figsize=(10, 4), lim=None, legend_pos='upper left'):
 
     # line plot (annual mean mm/year)
     fig, ax = plt.subplots(figsize=figsize)
-    ax.plot(year, y1, label=line_label_1, marker='^', linewidth=1)
-    ax.plot(year, y2, label=line_label_2, marker='^', linewidth=1)
+    ax.plot(year, y1, label=line_label_1, color='tab:blue', marker='^', linewidth=1)
+    ax.plot(year, y2, label=line_label_2, color='tab:green', marker='^', linewidth=1)
     ax.set_xticks(year)
     ax.set_xticklabels(labels=year, rotation=45)
     ax.set_ylabel(ylabel)
     ax.set_xlabel(xlabel)
+    ax.set_ylim(lim)
     ax.legend(loc=legend_pos, fontsize=(fontsize-2))
 
 
@@ -79,9 +80,9 @@ def make_line_plot_v2(y1, y2, y3, year, fontsize, xlabel, ylabel, line_label_1, 
 
     # line plot (annual mean mm/year)
     fig, ax = plt.subplots(figsize=figsize)
-    ax.plot(year, y1, label=line_label_1, marker='^', linewidth=1)
-    ax.plot(year, y2, label=line_label_2, marker='^', linewidth=1)
-    ax.plot(year, y3, label=line_label_3, marker='^', linewidth=1)
+    ax.plot(year, y1, label=line_label_1, color='tab:blue', marker='^', linewidth=1)
+    ax.plot(year, y2, label=line_label_2, color='tab:orange', marker='^', linewidth=1)
+    ax.plot(year, y3, label=line_label_3, color='tab:green', marker='^', linewidth=1)
     ax.set_xticks(year)
     ax.set_xticklabels(labels=year, rotation=45)
     ax.set_ylabel(ylabel)

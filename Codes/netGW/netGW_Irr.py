@@ -16,7 +16,7 @@ WestUS_raster = '../../Data_main/reference_rasters/Western_US_refraster_2km.tif'
 GEE_merging_refraster_large_grids = '../../Data_main/reference_rasters/GEE_merging_refraster_larger_grids.tif'
 
 
-def estimate_netGW_Irr(years_list, effective_precip_dir, irrigated_cropET_dir,
+def estimate_netGW_Irr(years_list, effective_precip_dir_pp, irrigated_cropET_dir,
                        irrigated_fraction_dir, sw_cnsmp_use_dir, output_dir,
                        ref_raster=WestUS_raster, skip_processing=False):
     """
@@ -25,7 +25,7 @@ def estimate_netGW_Irr(years_list, effective_precip_dir, irrigated_cropET_dir,
     season surface water irrigation that has been distributed).
 
     :param years_list: A list of year_list to process data for.
-    :param effective_precip_dir: Directory path for growing season effective precipitation.
+    :param effective_precip_dir_pp: Directory path for growing season effective precipitation (post processed version).
                                 (source: effective precipitation ML model)
     :param irrigated_cropET_dir: Directory path for growing season irrigated cropET.
                                 (source: OpenET ensemble overlaid with irrigation masks)
@@ -48,7 +48,7 @@ def estimate_netGW_Irr(years_list, effective_precip_dir, irrigated_cropET_dir,
 
             # loading effective precipitation, irrigated cropET, irrigated fraction,
             # and surface water irrigation datasets
-            eff_precip = glob(os.path.join(effective_precip_dir, f'*{year}*.tif'))[0]
+            eff_precip = glob(os.path.join(effective_precip_dir_pp, f'*{year}*.tif'))[0]
             irrigated_cropET = glob(os.path.join(irrigated_cropET_dir, f'*{year}*.tif'))[0]
             irrigated_fraction = glob(os.path.join(irrigated_fraction_dir, f'*{year}*.tif'))[0]
             sw_cnsmp_data = glob(os.path.join(sw_cnsmp_use_dir, f'*{year}*.tif'))[0]
@@ -63,7 +63,7 @@ def estimate_netGW_Irr(years_list, effective_precip_dir, irrigated_cropET_dir,
 
             # the processed net ET irrigation estimates are averaged over only irrigated areas in a pixel.
             # before subtracting sw irrigation from this value to get netGW_irrig, the net_et_irrig need to be area
-            # averaged. This will lead to area-averaged netGW estimate which can be compared to area-averaged pumping.
+            # averaged for 2km pixel. This will lead to area-averaged netGW estimate which can be compared to area-averaged pumping.
             # multiplying with irrigated fraction will give the 2km pixel averaged net et irrigation estimates
             net_et_irrig_aa = np.where(~np.isnan(net_et_irrig), net_et_irrig * irrigated_frac_arr, -9999)
 
@@ -95,6 +95,6 @@ if __name__ == '__main__':
     netGW_irrigation_output_dir = '../../Data_main/Raster_data/NetGW_irrigation/WesternUS'
 
     skip_westUS_netGW_processing = False  ######
-    estimate_netGW_Irr(years_list=years, effective_precip_dir=effective_precip, irrigated_cropET_dir=irrigated_cropET,
+    estimate_netGW_Irr(years_list=years, effective_precip_dir_pp=effective_precip, irrigated_cropET_dir=irrigated_cropET,
                        irrigated_fraction_dir=irrigated_fraction, sw_cnsmp_use_dir=sw_irrigation_dir,
                        output_dir=netGW_irrigation_output_dir, skip_processing=skip_westUS_netGW_processing)

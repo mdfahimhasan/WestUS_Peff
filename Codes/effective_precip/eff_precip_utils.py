@@ -239,7 +239,6 @@ def create_nan_pos_dict_for_irrigated_cropET(irrigated_cropET_dir, output_dir, s
             name = os.path.basename(data).split('.')[0]
             year = os.path.basename(data).split('_')[2]
             month = os.path.basename(data).split('_')[3].split('.')[0]
-
             arr = read_raster_arr_object(data, get_file=False).flatten()
             nan_pos_dict[name] = np.isnan(arr)
 
@@ -280,8 +279,8 @@ def create_monthly_effective_precip_rasters(trained_model, input_csv_dir, exclud
             irrig_cropET_nan = glob(os.path.join(irrig_cropET_nan_pos_dir, f'*{year}_{month}.pkl*'))[0]
             nan_pos_dict = pickle.load(open(irrig_cropET_nan, mode='rb'))
 
-            for var, nan_pos in nan_pos_dict.items():
-                pred_arr[nan_pos_dict[var]] = ref_file.nodata
+            nan_key = f'Irrigated_cropET_{year}_{month}'
+            pred_arr[nan_pos_dict[nan_key]] = ref_file.nodata
 
             # reshaping the prediction raster for Western US and saving
             pred_arr = pred_arr.reshape(ref_shape)
@@ -294,10 +293,10 @@ def create_monthly_effective_precip_rasters(trained_model, input_csv_dir, exclud
         pass
 
 
-def sum_monthly_effective_precip_rasters(years_list, monthly_effective_precip_dir,
-                                         irrigated_cropET_dir,
-                                         grow_season_effective_precip_output_dir,
-                                         skip_processing=False):
+def sum_monthly_effective_precip_to_grow_season(years_list, monthly_effective_precip_dir,
+                                                irrigated_cropET_dir,
+                                                grow_season_effective_precip_output_dir,
+                                                skip_processing=False):
     """
     Sum monthly effective precip predictions by the ML model to grow season effective precip.
 
@@ -337,6 +336,3 @@ def sum_monthly_effective_precip_rasters(years_list, monthly_effective_precip_di
             summed_raster = os.path.join(grow_season_effective_precip_output_dir, f'effective_precip_{year}.tif')
             write_array_to_raster(raster_arr=sum_arr, raster_file=file, transform=file.transform,
                                   output_path=summed_raster)
-
-
-

@@ -18,17 +18,6 @@ KS_ROI_refraster = '../../Data_main/Data_Drivers_of_ET/refrasters/2km/KS_ROI_ref
 NE_ROI_refraster = '../../Data_main/Data_Drivers_of_ET/refrasters/2km/NE_ROI_refraster.tif'
 TX_ROI_refraster = '../../Data_main/Data_Drivers_of_ET/refrasters/2km/TX_ROI_refraster.tif'
 
-
-# from Codes.utils.raster_ops import create_ref_raster, clip_resample_reproject_raster
-#
-# clip_resample_reproject_raster(input_raster='F:/WestUS_NetGW/Data_main/Raster_data/GRIDMET_Precip/WestUS_grow_season/GRIDMET_Precip_2016.tif',
-#                                input_shape=TX_ROI_shape,
-#                                 output_raster_dir='../../scratch',
-#                                 raster_name='TX_test.tif', clip_and_resample=True,
-#                                 resolution=res, ref_raster=None)
-# create_ref_raster(input_raster='F:/WestUS_NetGW/scratch/TX_test.tif',
-#                   output_ref_raster=r'F:\WestUS_NetGW\Data_main\Data_Drivers_of_ET\refrasters\2km\TX_ROI_refraster.tif')
-
 # Original input data directories
 USDA_CDL_yearly = '../../Data_main/Raster_data/USDA_CDL/WestUS_yearly'
 irrigated_cropland = '../../Data_main/Raster_data/Irrigated_cropland'

@@ -10,13 +10,24 @@ no_data_value = -9999
 
 res = 0.01976293625031605786  # in deg, ~2 km
 
-GMD_KS_shape = '../../Data_main/Data_Drivers_of_ET/ROIs/For_2km/KS_GMD.shp'
+KS_ROI_shape = '../../Data_main/Data_Drivers_of_ET/ROIs/For_2km/KS_ROI.shp'
 NE_ROI_shape = '../../Data_main/Data_Drivers_of_ET/ROIs/For_2km/NE_ROI.shp'
 TX_ROI_shape = '../../Data_main/Data_Drivers_of_ET/ROIs/For_2km/TX_ROI.shp'
 
-GMD_KS_refraster = '../../Data_main/Data_Drivers_of_ET/refrasters/2km/gmd_KS_refraster.tif'
+KS_ROI_refraster = '../../Data_main/Data_Drivers_of_ET/refrasters/2km/KS_ROI_refraster.tif'
 NE_ROI_refraster = '../../Data_main/Data_Drivers_of_ET/refrasters/2km/NE_ROI_refraster.tif'
 TX_ROI_refraster = '../../Data_main/Data_Drivers_of_ET/refrasters/2km/TX_ROI_refraster.tif'
+
+
+# from Codes.utils.raster_ops import create_ref_raster, clip_resample_reproject_raster
+#
+# clip_resample_reproject_raster(input_raster='F:/WestUS_NetGW/Data_main/Raster_data/GRIDMET_Precip/WestUS_grow_season/GRIDMET_Precip_2016.tif',
+#                                input_shape=TX_ROI_shape,
+#                                 output_raster_dir='../../scratch',
+#                                 raster_name='TX_test.tif', clip_and_resample=True,
+#                                 resolution=res, ref_raster=None)
+# create_ref_raster(input_raster='F:/WestUS_NetGW/scratch/TX_test.tif',
+#                   output_ref_raster=r'F:\WestUS_NetGW\Data_main\Data_Drivers_of_ET\refrasters\2km\TX_ROI_refraster.tif')
 
 # Original input data directories
 USDA_CDL_yearly = '../../Data_main/Raster_data/USDA_CDL/WestUS_yearly'
@@ -40,7 +51,7 @@ if __name__== '__main__':
 
     # # For Groundwater Management District, Kansas
     compile_annual_irr_rainfed_ET(years=years_to_process, area_code='KS',
-                                  area_shape=GMD_KS_shape, area_ref_raster=GMD_KS_refraster,
+                                  area_shape=KS_ROI_shape, area_ref_raster=KS_ROI_refraster,
                                   cdl_input_dir=USDA_CDL_yearly,
                                   irrigated_cropland_input_dir=irrigated_cropland,
                                   rainfed_cropland_input_dir=rainfed_cropland,

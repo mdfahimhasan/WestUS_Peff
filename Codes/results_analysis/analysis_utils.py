@@ -7,6 +7,7 @@ import geopandas as gpd
 
 from Codes.utils.system_ops import makedirs
 from Codes.utils.vector_ops import clip_vector
+from Codes.utils.ml_ops import create_train_test_dataframe
 from Codes.utils.raster_ops import read_raster_arr_object, write_array_to_raster, shapefile_to_raster, \
     clip_resample_reproject_raster, make_lat_lon_array_from_raster
 
@@ -247,6 +248,7 @@ def compile_pixelwise_netGW_to_annual_df(years, basin_netGW_dir, output_csv):
     # converting netGW mm to AF
     area_mm2_single_pixel = (2193 * 1000) * (2193 * 1000)  # unit in mm2
     df['netGW_AF'] = df['netGW_mm'] * area_mm2_single_pixel * 0.000000000000810714  # 1 mm3 = 0.000000000000810714 AF
+    df.dropna(inplace=True)
 
     # summing using groupby()
     df_agg = df.groupby('year')[['netGW_mm', 'netGW_AF']].sum().reset_index()
@@ -406,7 +408,7 @@ def aggregate_netGW_insitu_usgs_pumping_to_annualCSV_AZ(pixel_netGW_csv, annual_
     area_mm2_single_pixel = (2193 * 1000) * (2193 * 1000)  # unit in mm2
     yearly_df['mean netGW_mm'] = yearly_df['netGW_mm'] * area_mm2_single_pixel / area_basin_mm2
     yearly_df['mean pumping_mm'] = yearly_df['pumping_AF'] * 1233481837547.5 / area_basin_mm2  # AF >> mm3 >> mean mm
-    yearly_df['mean USGS_mm'] = (yearly_df['USGS_AF'] * 1233481837547.5 / area_basin_mm2)   # AF >> mm3 >> mean mm
+    yearly_df['mean USGS_mm'] = yearly_df['USGS_AF'] * 1233481837547.5 / area_basin_mm2   # AF >> mm3 >> mean mm
 
     # saving final csv
     yearly_df.to_csv(output_annual_csv, index=False)
@@ -478,13 +480,13 @@ def aggregate_netGW_insitu_usgs_pumping_to_annualCSV_NV(years, basin_netGW_dir,
     # # calculating mean netGW + mean pumping + mean USGS pumping (in mm)
     yearly_df['mean netGW_mm'] = yearly_df['netGW_AF'] * 1233481837548 / area_basin_mm2
     yearly_df['mean pumping_mm'] = yearly_df['pumping_AF'] * 1233481837548 / area_basin_mm2
-    yearly_df['mean USGS_mm'] = (yearly_df['USGS_AF'] * 1233481837547.5 / area_basin_mm2)  # AF >> mm3 >> mean mm
+    yearly_df['mean USGS_mm'] = yearly_df['USGS_AF'] * 1233481837547.5 / area_basin_mm2  # AF >> mm3 >> mean mm
 
     yearly_df.to_csv(output_csv, index=False)
 
 
-def aggregate_netGW_insitu_usgs_pumping_to_annualCSV_CA_ID(annual_netGW_csv, annual_usgs_GW_csv, irr_eff,
-                                                           area_basin_mm2, output_annual_csv):
+def aggregate_netGW_usgs_pumping_to_annualCSV_CA_ID(annual_netGW_csv, annual_usgs_GW_csv, irr_eff,
+                                                    area_basin_mm2, output_annual_csv):
     """
     Aggregate annual netGW and usgs pumping estimates for a basin
     to a annual csv.     *** used for Central Valley, CA and Snake River Basin, ID  ***
@@ -518,7 +520,7 @@ def aggregate_netGW_insitu_usgs_pumping_to_annualCSV_CA_ID(annual_netGW_csv, ann
     # calculating mean netGW + mean USGS pumping (in mm)
     area_mm2_single_pixel = (2193 * 1000) * (2193 * 1000)  # unit in mm2
     yearly_df['mean netGW_mm'] = yearly_df['netGW_mm'] * area_mm2_single_pixel / area_basin_mm2
-    yearly_df['mean USGS_mm'] = (yearly_df['USGS_AF'] * 1233481837547.5 / area_basin_mm2)   # AF >> mm3 >> mean mm
+    yearly_df['mean USGS_mm'] = yearly_df['USGS_AF'] * 1233481837547.5 / area_basin_mm2   # AF >> mm3 >> mean mm
 
     # estimating pumping from netGW (consumptive use)
     yearly_df['sim_pumping_m3'] = yearly_df['netGW_m3'] / irr_eff
@@ -847,6 +849,7 @@ def run_annual_csv_processing_CA_ID(years, basin_code, basin_shp, westUS_netGW_d
         basin_area_dict = {
                            'cv': 52592338000 * (1000 * 1000),  # in mm2
                            'srb': 39974555000 * (1000 * 1000),  # in mm2
+
                            }
 
         # creating output directories for different processes
@@ -893,11 +896,11 @@ def run_annual_csv_processing_CA_ID(years, basin_code, basin_shp, westUS_netGW_d
         # # Compile the basin's total annual netGW and USGS pumping to a common csv
         print('# # # # #  STEP 5 # # # # #')
 
-        aggregate_netGW_insitu_usgs_pumping_to_annualCSV_CA_ID(annual_netGW_csv=annual_netGW_output_csv,
-                                                               annual_usgs_GW_csv=usgs_annual_GW_estimates_csv,
-                                                               irr_eff=irr_eff,
-                                                               area_basin_mm2=basin_area_dict[basin_code],
-                                                               output_annual_csv=final_annual_csv)
+        aggregate_netGW_usgs_pumping_to_annualCSV_CA_ID(annual_netGW_csv=annual_netGW_output_csv,
+                                                        annual_usgs_GW_csv=usgs_annual_GW_estimates_csv,
+                                                        irr_eff=irr_eff,
+                                                        area_basin_mm2=basin_area_dict[basin_code],
+                                                        output_annual_csv=final_annual_csv)
 
     else:
         pass
@@ -1153,5 +1156,154 @@ def compile_irr_acres_all_basins(annual_csv_list, output_csv):
         compiled_annual_df = pd.concat([compiled_annual_df, df])
 
     compiled_annual_df.to_csv(output_csv, index=False)
+
+
+def compile_annual_irr_rainfed_ET(years, area_code, area_shape, area_ref_raster,
+                                  cdl_input_dir, irrigated_cropland_input_dir,
+                                  rainfed_cropland_input_dir, irrigated_cropET_input_dir,
+                                  rainfed_cropET_input_dir,
+                                  output_csv,
+                                  skip_processing=False, resolution=model_res):
+    """
+    Compile annual irrigated + rainfed cropland, irrigated + rainfed cropET, and cdl dataset into a csv.
+
+    :param years: List of years' data to include in the dataframe.
+    :param area_code: A shortname of area/state that will be used to save the data, e.g., 'KS' or 'TX'.
+    :param area_shape: Filepath of the shapefile of the area.
+    :param area_ref_raster: Filepath of the refraster of the area.
+    :param cdl_input_dir: Filepath of cdl input dir.
+    :param irrigated_cropland_input_dir: Filepath of irrigated cropland input dir.
+    :param rainfed_cropland_input_dir: Filepath of rainfed cropland input dir.
+    :param irrigated_cropET_input_dir: Filepath of growing season irrigated cropET input dir.
+    :param rainfed_cropET_input_dir: Filepath of growing season rainfed cropET input dir.
+    :param output_csv: Filepath of output annual csv.
+    :param skip_processing: Set to True to skip this step..
+    :param resolution: Target resolution. Default set to model resolution.
+
+    :return: None.
+    """
+    if not skip_processing:
+        print(f'processing datasets + annual csv for {area_code}...')
+
+        # creating output directories
+        USDA_CDL_output_dir = f'../../Data_main/results_eval/rainfed_cropET_compare/{area_code}/USDA_CDL'
+        irrigated_cropland_output_dir = f'../../Data_main/results_eval/rainfed_cropET_compare/{area_code}/Irrigated_cropland'
+        rainfed_cropland_output_dir = f'../../Data_main/results_eval/rainfed_cropET_compare/{area_code}//Rainfed_cropland'
+        irrigated_cropET_output_dir = f'../../Data_main/results_eval/rainfed_cropET_compare/{area_code}/Irrigated_cropET/grow_season'
+        rainfed_cropET_output_dir = f'../../Data_main/results_eval/rainfed_cropET_compare/{area_code}/Rainfed_cropET/grow_season'
+
+        makedirs([USDA_CDL_output_dir, irrigated_cropland_output_dir, rainfed_cropland_output_dir,
+                  irrigated_cropET_output_dir, rainfed_cropET_output_dir])
+
+        # clipping + resampling of cdl data
+        cdl_datasets = glob(os.path.join(cdl_input_dir, '*.tif'))
+
+        for cdl in cdl_datasets:
+            if any(str(i) in cdl for i in years):
+                clip_resample_reproject_raster(input_raster=cdl, input_shape=area_shape,
+                                               output_raster_dir=USDA_CDL_output_dir,
+                                               raster_name=None, clip_and_resample=True,
+                                               resolution=resolution, ref_raster=area_ref_raster)
+
+        # clipping + resampling of irrigated cropland data
+        irrig_cropland_datasets = glob(os.path.join(irrigated_cropland_input_dir, '*.tif'))
+        clipped_output_dir = os.path.join(irrigated_cropland_output_dir, 'interim')
+
+        for cropland in irrig_cropland_datasets:
+            if any(str(i) in cropland for i in years):
+                clipped_raster = clip_resample_reproject_raster(input_raster=cropland, input_shape=area_shape,
+                                                                output_raster_dir=clipped_output_dir,
+                                                                raster_name=None, clip_and_resample=True,
+                                                                resolution=resolution, ref_raster=area_ref_raster)
+
+                # replacing nan values where reference raster is zero with zero
+                ref_arr, ref_file = read_raster_arr_object(area_ref_raster)
+                clipped_arr = read_raster_arr_object(clipped_raster, get_file=False)
+
+                clipped_arr = np.where(np.isnan(clipped_arr) & (ref_arr == 0), ref_arr, clipped_arr)
+
+                output_raster = os.path.join(irrigated_cropland_output_dir, os.path.basename(clipped_raster))
+                write_array_to_raster(raster_arr=clipped_arr, raster_file=ref_file, transform=ref_file.transform,
+                                      output_path=output_raster)
+
+        # clipping + resampling of rainfed cropland data
+        rain_cropland_datasets = glob(os.path.join(rainfed_cropland_input_dir, '*.tif'))
+        clipped_output_dir = os.path.join(rainfed_cropland_output_dir, 'interim')
+
+        for cropland in rain_cropland_datasets:
+            if any(str(i) in cropland for i in years):
+                clipped_raster = clip_resample_reproject_raster(input_raster=cropland, input_shape=area_shape,
+                                                                output_raster_dir=clipped_output_dir,
+                                                                raster_name=None, clip_and_resample=True,
+                                                                resolution=resolution, ref_raster=area_ref_raster)
+
+                # replacing nan values where reference raster is zero with zero
+                ref_arr, ref_file = read_raster_arr_object(area_ref_raster)
+                clipped_arr = read_raster_arr_object(clipped_raster, get_file=False)
+
+                clipped_arr = np.where(np.isnan(clipped_arr) & (ref_arr == 0), ref_arr, clipped_arr)
+
+                output_raster = os.path.join(rainfed_cropland_output_dir, os.path.basename(clipped_raster))
+                write_array_to_raster(raster_arr=clipped_arr, raster_file=ref_file, transform=ref_file.transform,
+                                      output_path=output_raster)
+
+        # clipping + resampling of irrigated cropET data
+        irrig_cropET_grow_season_datasets = glob(os.path.join(irrigated_cropET_input_dir, '*.tif'))
+        clipped_output_dir = os.path.join(irrigated_cropET_output_dir, 'interim')
+
+        for cropET in irrig_cropET_grow_season_datasets:
+            clipped_raster = clip_resample_reproject_raster(input_raster=cropET, input_shape=area_shape,
+                                                            output_raster_dir=clipped_output_dir,
+                                                            raster_name=None, clip_and_resample=True,
+                                                            resolution=resolution, ref_raster=area_ref_raster)
+
+            # replacing nan values where reference raster is zero with zero
+            ref_arr, ref_file = read_raster_arr_object(area_ref_raster)
+            clipped_arr = read_raster_arr_object(clipped_raster, get_file=False)
+
+            clipped_arr = np.where(np.isnan(clipped_arr) & (ref_arr == 0), ref_arr, clipped_arr)
+
+            output_raster = os.path.join(irrigated_cropET_output_dir, os.path.basename(clipped_raster))
+            write_array_to_raster(raster_arr=clipped_arr, raster_file=ref_file, transform=ref_file.transform,
+                                  output_path=output_raster)
+
+        # clipping + resampling of rainfed cropET data
+        rain_cropET_grow_season_datasets = glob(os.path.join(rainfed_cropET_input_dir, '*.tif'))
+        clipped_output_dir = os.path.join(rainfed_cropET_output_dir, 'interim')
+        for cropET in rain_cropET_grow_season_datasets:
+            clipped_raster = clip_resample_reproject_raster(input_raster=cropET, input_shape=area_shape,
+                                                            output_raster_dir=clipped_output_dir,
+                                                            raster_name=None, clip_and_resample=True,
+                                                            resolution=resolution, ref_raster=area_ref_raster)
+
+            # replacing nan values where reference raster is zero with zero
+            ref_arr, ref_file = read_raster_arr_object(area_ref_raster)
+            clipped_arr = read_raster_arr_object(clipped_raster, get_file=False)
+
+            clipped_arr = np.where(np.isnan(clipped_arr) & (ref_arr == 0), ref_arr, clipped_arr)
+
+            output_raster = os.path.join(rainfed_cropET_output_dir, os.path.basename(clipped_raster))
+            write_array_to_raster(raster_arr=clipped_arr, raster_file=ref_file, transform=ref_file.transform,
+                                  output_path=output_raster)
+
+        # Compiling annual data to CSV
+        yearly_data_path_dict = {'USDA_CDL': USDA_CDL_output_dir,
+                                 'Irrigated': irrigated_cropland_output_dir,
+                                 'Rainfed': rainfed_cropland_output_dir,
+                                 'Irrigated_cropET': irrigated_cropET_output_dir,
+                                 'Rainfed_cropET': rainfed_cropET_output_dir}
+
+        datasets_to_include = ['Irrigated_cropET', 'Rainfed_cropET', 'USDA_CDL', 'Irrigated', 'Rainfed']
+
+        makedirs([os.path.dirname(output_csv)])
+
+        create_train_test_dataframe(years_list=years,
+                                    month_range=None,
+                                    monthly_data_path_dict=None,
+                                    yearly_data_path_dict=yearly_data_path_dict,
+                                    static_data_path_dict=None,
+                                    datasets_to_include=datasets_to_include,
+                                    output_parquet=output_csv,
+                                    skip_processing=False)
 
 

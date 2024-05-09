@@ -22,12 +22,12 @@ TX_ROI_refraster = '../../Data_main/Data_Drivers_of_ET/refrasters/2km/TX_ROI_ref
 USDA_CDL_yearly = '../../Data_main/Raster_data/USDA_CDL/WestUS_yearly'
 irrigated_cropland = '../../Data_main/Raster_data/Irrigated_cropland'
 rainfed_cropland = '../../Data_main/Raster_data/Rainfed_cropland'
-irrigated_cropET_grow_season = '../../Data_main/Raster_data/Irrigated_cropET/WestUS_grow_season'
-rainfed_cropET_grow_season = '../../Data_main/Raster_data/Rainfed_cropET/WestUS_grow_season'
+irrigated_cropET_grow_season = '../../Data_main/Raster_data/Irrigated_cropET/WestUS_monthly'
+rainfed_cropET_grow_season = '../../Data_main/Raster_data/Rainfed_cropET/WestUS_monthly'
 
 years_to_process = [2016, 2017, 2018, 2019, 2020]
 
-if __name__  == '__main__':
+if __name__== '__main__':
     # Process switches
     skip_process_KS_data = False
     skip_process_NE_data = False

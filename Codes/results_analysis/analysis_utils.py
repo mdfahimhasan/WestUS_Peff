@@ -1165,7 +1165,8 @@ def compile_annual_irr_rainfed_ET(years, area_code, area_shape, area_ref_raster,
                                   output_csv,
                                   skip_processing=False, resolution=model_res):
     """
-    Compile annual irrigated + rainfed cropland, irrigated + rainfed cropET, and cdl dataset into a csv.
+    Compile annual irrigated + rainfed cropland, annual cdl, and monthly (growing season months)
+    irrigated + rainfed cropET dataset into a csv.
 
     :param years: List of years' data to include in the dataframe.
     :param area_code: A shortname of area/state that will be used to save the data, e.g., 'KS' or 'TX'.
@@ -1174,8 +1175,8 @@ def compile_annual_irr_rainfed_ET(years, area_code, area_shape, area_ref_raster,
     :param cdl_input_dir: Filepath of cdl input dir.
     :param irrigated_cropland_input_dir: Filepath of irrigated cropland input dir.
     :param rainfed_cropland_input_dir: Filepath of rainfed cropland input dir.
-    :param irrigated_cropET_input_dir: Filepath of growing season irrigated cropET input dir.
-    :param rainfed_cropET_input_dir: Filepath of growing season rainfed cropET input dir.
+    :param irrigated_cropET_input_dir: Filepath of monthly irrigated cropET input dir.
+    :param rainfed_cropET_input_dir: Filepath of monthly rainfed cropET input dir.
     :param output_csv: Filepath of output annual csv.
     :param skip_processing: Set to True to skip this step..
     :param resolution: Target resolution. Default set to model resolution.
@@ -1189,8 +1190,8 @@ def compile_annual_irr_rainfed_ET(years, area_code, area_shape, area_ref_raster,
         USDA_CDL_output_dir = f'../../Data_main/results_eval/rainfed_cropET_compare/{area_code}/USDA_CDL'
         irrigated_cropland_output_dir = f'../../Data_main/results_eval/rainfed_cropET_compare/{area_code}/Irrigated_cropland'
         rainfed_cropland_output_dir = f'../../Data_main/results_eval/rainfed_cropET_compare/{area_code}//Rainfed_cropland'
-        irrigated_cropET_output_dir = f'../../Data_main/results_eval/rainfed_cropET_compare/{area_code}/Irrigated_cropET/grow_season'
-        rainfed_cropET_output_dir = f'../../Data_main/results_eval/rainfed_cropET_compare/{area_code}/Rainfed_cropET/grow_season'
+        irrigated_cropET_output_dir = f'../../Data_main/results_eval/rainfed_cropET_compare/{area_code}/Irrigated_cropET/monthly'
+        rainfed_cropET_output_dir = f'../../Data_main/results_eval/rainfed_cropET_compare/{area_code}/Rainfed_cropET/monthly'
 
         makedirs([USDA_CDL_output_dir, irrigated_cropland_output_dir, rainfed_cropland_output_dir,
                   irrigated_cropET_output_dir, rainfed_cropET_output_dir])
@@ -1287,19 +1288,20 @@ def compile_annual_irr_rainfed_ET(years, area_code, area_shape, area_ref_raster,
                                   output_path=output_raster)
 
         # Compiling annual data to CSV
+        monthly_data_path_dict = {'Irrigated_cropET': irrigated_cropET_output_dir,
+                                 'Rainfed_cropET': rainfed_cropET_output_dir}
+
         yearly_data_path_dict = {'USDA_CDL': USDA_CDL_output_dir,
                                  'Irrigated': irrigated_cropland_output_dir,
-                                 'Rainfed': rainfed_cropland_output_dir,
-                                 'Irrigated_cropET': irrigated_cropET_output_dir,
-                                 'Rainfed_cropET': rainfed_cropET_output_dir}
+                                 'Rainfed': rainfed_cropland_output_dir}
 
         datasets_to_include = ['Irrigated_cropET', 'Rainfed_cropET', 'USDA_CDL', 'Irrigated', 'Rainfed']
 
         makedirs([os.path.dirname(output_csv)])
 
         create_train_test_dataframe(years_list=years,
-                                    month_range=None,
-                                    monthly_data_path_dict=None,
+                                    month_range=(4, 10),
+                                    monthly_data_path_dict=monthly_data_path_dict,
                                     yearly_data_path_dict=yearly_data_path_dict,
                                     static_data_path_dict=None,
                                     datasets_to_include=datasets_to_include,

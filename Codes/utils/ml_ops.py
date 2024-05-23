@@ -1,25 +1,30 @@
 import os
 import sys
+import csv
 import joblib
 import timeit
+import numpy as np
 import pandas as pd
 from glob import glob
-from pprint import pprint
 import dask.dataframe as ddf
 import matplotlib.pyplot as plt
+from timeit import default_timer as timer
+
+import lightgbm as lgb
 from lightgbm import LGBMRegressor
+
+from hyperopt import hp, tpe, Trials, fmin, STATUS_OK
+
 from sklearn.preprocessing import OneHotEncoder
-from sklearn.ensemble import RandomForestRegressor
 from sklearn.model_selection import train_test_split
 from sklearn.inspection import permutation_importance
 from sklearn.inspection import PartialDependenceDisplay as PDisp
-from sklearn.model_selection import RandomizedSearchCV, GridSearchCV, KFold, RepeatedKFold
 from os.path import dirname, abspath
 sys.path.insert(0, dirname(dirname(dirname(abspath(__file__)))))
 
 from Codes.utils.system_ops import makedirs
 from Codes.utils.stats_ops import calculate_rmse, calculate_r2
-from Codes.utils.raster_ops import read_raster_arr_object, write_array_to_raster
+from Codes.utils.raster_ops import read_raster_arr_object
 
 no_data_value = -9999
 model_res = 0.02000000000000000389  # in deg, 2 km
@@ -332,10 +337,87 @@ def split_train_val_test_set_by_year(input_csv, pred_attr, exclude_columns,
     return x_train_df, x_test_df, y_train_df, y_test_df
 
 
-def tune_hyperparameter(x, y, model='rf', n_folds=5, repeated_Kfold=False, n_repeats=5,
-                        random_search=True, n_iter=50, n_jobs=-1):
+def objective_func_bayes(params, train_set, iteration_csv, n_fold):
     """
-    Hyperparameter optimization using RandomizedSearchCV/GridSearchCV.
+    Objective function for Bayesian optimization using Hyperopt and LightGBM.
+
+    :param params: Hyperparameter space to use while optimizing.
+    :param train_set: A LGBM dataset. Constructed within the bayes_hyperparam_opt() func using x_train and y_train.
+    :param iteration_csv : Filepath of a csv where hyperparameter iteration step will be stored.
+    :param n_fold : KFold cross validation number. Usually 5 or 10.
+
+    :return : A dictionary after each iteration holding rmse, params, run_time, etc.
+    """
+    global ITERATION
+    ITERATION += 1
+
+    start = timer()
+
+    # converting the train_set (dataframe) to LightGBM Dataset
+    train_set = lgb.Dataset(train_set.iloc[:, :-1], label=train_set.iloc[:, -1])
+
+    # retrieve the boosting type and subsample (if not present set subsample to 1)
+    subsample = params['boosting_type'].get('subsample', 1)
+    params['subsample'] = subsample
+    params['boosting_type'] = params['boosting_type']['boosting_type']
+
+    # inserting a new parameter in the dictionary to handle 'goss'
+    # the new version of LIGHTGBM handles 'goss' as 'boosting_type' = 'gdbt' & 'data_sample_strategy' = 'goss'
+    if params['boosting_type'] == 'goss':
+        params['boosting_type'] = 'gbdt'
+        params['data_sample_strategy'] = 'goss'
+
+    # ensure integer type for integer hyperparameters
+    for parameter_name in ['n_estimators', 'num_leaves', 'min_child_samples', 'max_depth']:
+        params[parameter_name] = int(params[parameter_name])
+
+    # callbacks
+    callbacks = [
+                 # lgb.early_stopping(stopping_rounds=50),
+                 lgb.log_evaluation(period=0)
+                ]
+
+    # perform n_fold cross validation
+    # ** not using num_boost_round and early stopping as we are providing n_estimators in the param_space **
+    cv_results = lgb.cv(params, train_set,
+                        # num_boost_round=10000,
+                        nfold=n_fold,
+                        stratified=False, metrics='rmse', seed=50,
+                        callbacks=callbacks)
+
+    run_time = timer() - start
+
+    # best score extraction
+    # the try-except block was inserted because of two versions of LIGHTGBM is desktop and server. The server
+    # version used keyword 'valid rmse-mean' while the desktop version was using 'rmse-mean'
+    try:
+        best_rmse = np.min(cv_results['valid rmse-mean'])  # valid rmse-mean stands for mean RMSE value across all the folds for each boosting round
+    except:
+        best_rmse = np.min(cv_results['rmse-mean'])
+
+    # result of each iteration will be store in the iteration_csv
+    if ITERATION == 1:
+        makedirs([os.path.dirname(iteration_csv)])
+
+        write_to = open(iteration_csv, 'w')
+        writer = csv.writer(write_to)
+        writer.writerows([['loss', 'params', 'iteration', 'run_time'],
+                         [best_rmse, params, ITERATION, run_time]])
+        write_to.close()
+
+    else:  # when ITERATION > 0, will append result on the existing csv/file
+        write_to = open(iteration_csv, 'a')
+        writer = csv.writer(write_to)
+        writer.writerow([best_rmse, params, ITERATION, run_time])
+
+    # dictionary with information for evaluation
+    return {'loss': best_rmse, 'params': params,
+            'iteration': ITERATION, 'train_time': run_time, 'status': STATUS_OK}
+
+
+def bayes_hyperparam_opt(x_train, y_train, iteration_csv,  n_fold=10, max_evals=1000, skip_processing=False):
+    """
+    Hyperparameter optimization using Bayesian optimization method.
 
     *****
     good resources for building LGBM model
@@ -343,135 +425,85 @@ def tune_hyperparameter(x, y, model='rf', n_folds=5, repeated_Kfold=False, n_rep
     https://lightgbm.readthedocs.io/en/latest/pythonapi/lightgbm.LGBMRegressor.html
     https://lightgbm.readthedocs.io/en/latest/Parameters.html
     https://neptune.ai/blog/lightgbm-parameters-guide
+
+    Bayesian Hyperparameter Optimization:
+    details at: https://towardsdatascience.com/a-conceptual-explanation-of-bayesian-model-based-hyperparameter-optimization-for-machine-learning-b8172278050f
+
+    coding help from:
+    1. https://github.com/WillKoehrsen/hyperparameter-optimization/blob/master/Bayesian%20Hyperparameter%20Optimization%20of%20Gradient%20Boosting%20Machine.ipynb
+    2. https://www.kaggle.com/code/prashant111/bayesian-optimization-using-hyperopt
     *****
 
-    Parameters:
-    x_val, y_val : x_val (predictor) and y_val (target) arrays from split_train_test_ratio function.
-    model : Model for which hyperparameters will be tuned. Can only tune hyperparameters for RF regressor now.
-            Default set to 'rf'.
-    n_folds : Number of folds in K Fold CV. Default set to 5.
-    repeated_Kfold : Set to True if want to perform repeated Kfold. If False (default), will run for KFold.
-    n_repeats : If repeated_Kfold is True, number of repeats. Default set to 5.
-    random_search : Set to False if want to perform GridSearchCV. Default set to True to perform RandomizedSearchCV.
-    n_iter : Number of parameter combinations to be tested in RandomizedSearchCV if random_search is True.
-    n_jobs (rf/gbdt param): The number of jobs to run in parallel. Defaults to -1(using all processors).
+    :param x_train, y_train : Predictor and target arrays from split_train_test_ratio() function.
+    :param n_fold : Number of folds in K Fold CV. Default set to 10.
+    :param max_evals : Maximum number of evaluations during hyperparameter optimization. Default set to 1000.
+    :param skip_processing: Set to True to skip hyperparameter tuning. Default set to False.
 
-    Returns : Optimized Hyperparameters.
+    :return : Best hyperparameters' dictionary.
     """
-    global regressor
+    if not skip_processing:
+        print(f'performing bayesian hyperparameter optimization...')
 
-    print(f'Finding optimal hyperparameters...')
+        # merging x_train and y_train into a single dataset
+        train_set = pd.concat([x_train, y_train], axis=1)
 
-    # creating parameter dictionary
-    # hyperparameters are optimized from param_to_optimize_dict
-    # if hyperparamter optimization is off/not needed uses paramters from default_params_dict
-    # ******* after hyperparamter optimization, assign optimized values to default_params_dict***************
-    param_to_optimize_dict = {'rf': {'n_estimators': [100, 200, 300, 400, 500],
-                                     'max_depth': [7, 10, 15, 20],
-                                     'max_features': [6, 7, 10, 'log2'],
-                                     'min_samples_leaf': [5e-4, 1e-5, 1e-3, 6, 12, 20, 25],
-                                     'min_samples_split': [6, 7, 8, 10],
-                                     'max_samples': [None, 0.9, 0.8, 0.7]
-                                     },
-                              'lgbm': {'n_estimators': [100, 200, 250],
-                                       'max_depth': [7, 10, 13],
-                                       'learning_rate': [0.01, 0.05],
-                                       'subsample': [0.8, 0.7, 0.6],
-                                       'colsample_bytree': [0.8, 0.7],
-                                       'colsample_bynode': [0.8, 0.7],
-                                       'path_smooth': [0.1, 0.2, 0.3],
-                                       'num_leaves': [30, 50, 70],
-                                       'min_child_samples': [20, 25, 40],
-                                       #                                    'data_sample_strategy' : ['goss']
-                                       }
-                              }
-    param_dict = param_to_optimize_dict
-    print('Model Name:', model)
-    pprint(param_dict[model])
+        # creating hyperparameter space for LGBM models
+        param_space = {'boosting_type': hp.choice('boosting_type',
+                                                  [{'boosting_type': 'gbdt', 'subsample': hp.uniform('gbdt_subsample', 0.5, 0.8)},
+                                                   {'boosting_type': 'dart', 'subsample': hp.uniform('dart_subsample', 0.5, 0.8)},
+                                                   {'boosting_type': 'goss', 'subsample': 1.0}]),
+                       'n_estimators': hp.quniform('n_estimators', 100, 400, 25),
+                       'max_depth': hp.uniform('max_depth', 5, 15),
+                       'learning_rate': hp.loguniform('learning_rate', np.log(0.01), np.log(0.1)),
+                       'colsample_bytree': hp.uniform('colsample_bytree', 0.6, 1.0),
+                       'colsample_bynode': hp.uniform('colsample_bynode', 0.6, 1.0),
+                       'path_smooth': hp.uniform('path_smooth', 0.1, 0.5),
+                       'num_leaves': hp.quniform('num_leaves', 30, 70, 5),
+                       'min_child_samples': hp.quniform('min_child_samples', 20, 50, 5)}
 
-    # creating model structures
-    if model == 'rf':
-        regressor = RandomForestRegressor(random_state=0, n_jobs=n_jobs, bootstrap=True, oob_score=True)
+        # optimization algorithm
+        tpe_algorithm = tpe.suggest  # stand for Tree-structured Parzen Estimator. A surrogate of the objective function.
+                                     # the hyperparameter tuning approach, Sequential model-based optimization (SMBO), will
+                                     # try to try to closely match the surrogate function to the objective function
 
-    elif model == 'lgbm':
-        # the boosting_type has been set to 'goss' for faster training. Can use 'gdbt'/'dart'. Change params_dict accordingly
-        regressor = LGBMRegressor(tree_learner='serial', random_state=0,
-                                  deterministic=True, force_row_wise=True, n_jobs=n_jobs)
+        # keeping track of results
+        bayes_trials = Trials()  # The Trials object will hold everything returned from the objective function in the
+                                 # .results attribute. It also holds other information from the search, but we return
+                                 # everything we need from the objective.
+
+        # creating a wrapper function to bring all arguments of objective_func_bayes() under a single argument
+        def objective_wrapper(params):
+            return objective_func_bayes(params, train_set, iteration_csv, n_fold)
+
+        # implementation of Sequential model-based optimization (SMBO)
+        global ITERATION
+        ITERATION = 0
+
+        # run optimization
+        best = fmin(fn=objective_wrapper, space=param_space, algo=tpe_algorithm,
+                    max_evals=max_evals, trials=bayes_trials, rstate=np.random.default_rng(50))
+
+        # sorting the trials to get the set of hyperparams with lowest loss
+        bayes_trials_results = sorted(bayes_trials.results[1:],
+                                      key=lambda x: x['loss'],
+                                      reverse=False)  # the indexing in the results is done to remove {'status': 'new'} at 0 index
+        best_hyperparams = bayes_trials_results[0]['params']
+
+        print('\n')
+        print('best hyperparameter set', '\n', best_hyperparams, '\n')
+        print('best RMSE:', bayes_trials.results[1]['loss'])
+
+        return best_hyperparams
+
     else:
-        raise Exception("model should be 'rf'/'lgbm'. Other types are not supported currently")
-
-    scoring_metrics = ['r2', 'neg_root_mean_squared_error', 'neg_mean_absolute_error']
-
-    # Hyperparameter optimization block
-    # KFold or repeated KFold
-    if repeated_Kfold:
-        kfold = RepeatedKFold(n_splits=n_folds, n_repeats=n_repeats, random_state=0)
-    else:
-        kfold = KFold(n_splits=n_folds, shuffle=True, random_state=0)
-
-    # Random search or grid search
-    if random_search:
-        fitted_model = RandomizedSearchCV(estimator=regressor, param_distributions=param_dict[model], n_iter=n_iter,
-                                          cv=kfold, verbose=1, random_state=0, n_jobs=n_jobs,
-                                          scoring=scoring_metrics, refit=scoring_metrics[1], return_train_score=True)
-    else:
-        fitted_model = GridSearchCV(estimator=regressor, param_grid=param_dict[model], cv=kfold, verbose=1,
-                                    n_jobs=n_jobs,
-                                    scoring=scoring_metrics, refit=scoring_metrics[1], return_train_score=True)
-
-    fitted_model.fit(x, y)  # this will be x_val and y_val if tune_hyperparameter=True
-
-    print('\n')
-    print('best parameters for RMSE value', '\n')
-    pprint(fitted_model.best_params_)
-    print('\n')
-    print('Train Results....')
-    best_rmse = fitted_model.cv_results_['mean_train_neg_root_mean_squared_error'][fitted_model.best_index_]
-    best_r2 = fitted_model.cv_results_['mean_train_r2'][fitted_model.best_index_]
-    best_MAE = fitted_model.cv_results_['mean_train_neg_mean_absolute_error'][fitted_model.best_index_]
-    print('Best tuning-train RMSE: {:.3f}'.format(best_rmse))
-    print('Best tuning-train R2: {:.3f}'.format(best_r2))
-    print('Best tuning-train MAE: {:.3f}'.format(best_MAE))
-
-    print('\n')
-    print('Test Results....')
-    best_rmse = fitted_model.cv_results_['mean_test_neg_root_mean_squared_error'][fitted_model.best_index_]
-    best_r2 = fitted_model.cv_results_['mean_test_r2'][fitted_model.best_index_]
-    best_MAE = fitted_model.cv_results_['mean_test_neg_mean_absolute_error'][fitted_model.best_index_]
-    print('Best tuning-test RMSE: {:.3f}'.format(best_rmse))
-    print('Best tuning-test R2: {:.3f}'.format(best_r2))
-    print('Best tuning-test MAE: {:.3f}'.format(best_MAE))
-
-    if model == 'rf':
-        param_dict = {'n_estimators': fitted_model.best_params_['n_estimators'],
-                      'max_depth': fitted_model.best_params_['max_depth'],
-                      'max_features': fitted_model.best_params_['max_features'],
-                      'min_samples_leaf': fitted_model.best_params_['min_samples_leaf'],
-                      'min_samples_split': fitted_model.best_params_['min_samples_split'],
-                      'max_samples': fitted_model.best_params_['max_samples']
-                      }
-    elif model == 'lgbm':
-        param_dict = {'n_estimators': fitted_model.best_params_['n_estimators'],
-                      'max_depth': fitted_model.best_params_['max_depth'],
-                      'learning_rate': fitted_model.best_params_['learning_rate'],
-                      'subsample': fitted_model.best_params_['subsample'],
-                      'colsample_bytree': fitted_model.best_params_['colsample_bytree'],
-                      'colsample_bynode': fitted_model.best_params_['colsample_bynode'],
-                      'path_smooth': fitted_model.best_params_['path_smooth'],
-                      'num_leaves': fitted_model.best_params_['num_leaves'],
-                      'min_child_samples': fitted_model.best_params_['min_child_samples'],
-                      #                       'data_sample_strategy' : fitted_model.best_params_['data_sample_strategy']
-                      }
-
-    return param_dict
+        pass
 
 
-def train_model(x_train, y_train, params_dict, model='rf', n_jobs=-1,
+def train_model(x_train, y_train, params_dict, n_jobs=-1,
                 load_model=False, save_model=False, save_folder=None, model_save_name=None,
-                tune_hyperparameters=False, repeated_Kfold=False, n_folds=5, n_iter=10, n_repeats=5):
+                skip_tune_hyperparameters=False, iteration_csv=None, n_fold=10, max_evals=1000):
     """
-    Train a Random Forest Regressor model with given hyperparameters.
-
+    Train a LightGBM regressor model with given hyperparameters.
 
     *******
     # To run the model without saving/loading the trained model, use load_model=False, save_model=False, save_folder=None,
@@ -482,90 +514,48 @@ def train_model(x_train, y_train, params_dict, model='rf', n_jobs=-1,
         save_folder='give the saved folder path', model_save_name='give the saved name'.
     *******
 
-
-    params:
-    x_train, y_train : x_train (predictor) and y_train (target) arrays from split_train_test_ratio function.
-    model : str of type of model. The code can only run random forest regession model. Default set to 'rf'.
-    params_dict : ML model param dictionary. Currently supports 'random forest (RF)' and 'LGBM (lgbm)' Goss.
+    :param x_train, y_train : x_train (predictor) and y_train (target) arrays from split_train_test_ratio() function.
+    :param params_dict : ML model param dictionary. Currently supports LGBM model 'gbdt', 'goss', and 'dart'.
                   **** when tuning hyperparameters set params_dict=None.
-                  For RF the dictionary should be like the folowing with user defined values-
-                    param_dict = {'n_estimators': 200,
-                                  'max_depth': 8,
-                                  'max_features': 'log2',
-                                  'min_samples_leaf': 6,
-                                  'min_samples_split': 4,
-                                  'max_samples': None
-                                 }
-                For LGBM the dictionary shoudl be like the folowing with user defined values-
-                    param_dict = {'n_estimators': 250,
-                                  'max_depth': 13,
-                                  'learning_rate': 0.05,
-                                  'subsample': 0.7,
+                    For LGBM the dictionary should be like the following with user defined values-
+                    param_dict = {'boosting_type': 'gbdt',
+                                  'colsample_bynode': 0.7,
                                   'colsample_bytree': 0.8,
-                                  'colsample_bynode': 0.7 ,
-                                  'path_smooth': 0.2,
-                                  'num_leaves': 70,
+                                  'learning_rate': 0.05,
+                                  'max_depth': 13,
                                   'min_child_samples': 40,
-                                  'data_sample_strategy' : 'goss'
-                                  }
+                                  'n_estimators': 250,
+                                  'num_leaves': 70,
+                                  'path_smooth': 0.2,
+                                  'subsample': 0.7}
+    :param n_jobs: The number of jobs to run in parallel. Default set to to -1 (using all processors).
+    :param load_model : Set to True if want to load saved model. Default set to False.
+    :param save_model : Set to True if want to save model. Default set to False.
+    :param save_folder : Filepath of folder to save model. Default set to None for save_model=False..
+    :param model_save_name : Model's name to save with. Default set to None for save_model=False.
+    :param skip_tune_hyperparameters: Set to True to skip hyperparameter tuning. Default set to False.
+    :param iteration_csv : Filepath of a csv where hyperparameter iteration step will be stored.
+    :param n_fold : Number of folds in K Fold CV. Default set to 10.
+    :param max_evals : Maximum number of evaluations during hyperparameter optimization. Default set to 1000.
 
-    n_jobs (rf/lgbm param): The number of jobs to run in parallel. Default set to to -1 (using all processors).
-    load_model : Set to True if want to load saved model. Default set to False.
-    save_model : Set to True if want to save model. Default set to False.
-    save_folder : Filepath of folder to save model. Default set to None for save_model=False..
-    model_save_name : Model's name to save with. Default set to None for save_model=False.
-
-    returns: trained RF regression model.
+    :return: trained LGBM regression model.
     """
-    global regressor_model
+    global reg_model
 
     if not load_model:
-        print(f'Training {model} mode...')
+        print(f'Training model...')
         start_time = timeit.default_timer()
-        if tune_hyperparameters:
-            params_dict = tune_hyperparameter(x=x_train, y=y_train, model=model,
-                                              n_folds=n_folds, repeated_Kfold=repeated_Kfold,
-                                              n_repeats=n_repeats, n_iter=n_iter,
-                                              random_search=True, n_jobs=n_jobs)
+        if not skip_tune_hyperparameters:
+            params_dict = bayes_hyperparam_opt(x_train, y_train, iteration_csv,
+                                               n_fold=n_fold, max_evals=max_evals,
+                                               skip_processing=skip_tune_hyperparameters)
 
-        if model == 'rf':
-            n_estimators = params_dict['n_estimators']
-            max_depth = params_dict['max_depth']
-            max_features = params_dict['max_features']
-            min_samples_leaf = params_dict['min_samples_leaf']
-            min_samples_split = params_dict['min_samples_split']
-            max_samples = params_dict['max_samples']
-            regressor_model = RandomForestRegressor(n_estimators=n_estimators, max_features=max_features,
-                                                    max_depth=max_depth,
-                                                    min_samples_leaf=min_samples_leaf,
-                                                    min_samples_split=min_samples_split,
-                                                    max_samples=max_samples, random_state=0, n_jobs=n_jobs,
-                                                    bootstrap=True,
-                                                    oob_score=True)
-        elif model == 'lgbm':
-            n_estimators = params_dict['n_estimators']
-            max_depth = params_dict['max_depth']
-            learning_rate = params_dict['learning_rate']
-            subsample = params_dict['subsample']
-            colsample_bytree = params_dict['colsample_bytree']
-            colsample_bynode = params_dict['colsample_bynode']
-            path_smooth = params_dict['path_smooth']
-            num_leaves = params_dict['num_leaves']
-            min_child_samples = params_dict['min_child_samples']
+        # Configuring the regressor with the parameters
+        reg_model = LGBMRegressor(tree_learner='serial', random_state=0,
+                                  deterministic=True, force_row_wise=True,
+                                  n_jobs=n_jobs, **params_dict)
 
-            # data_sample_strategy = 'goss'  # using 'goss' by default here as we are using 'GOSS' Gradient boosting methods
-
-            # Configuring the regressor with the parameters
-            regressor_model = LGBMRegressor(n_estimators=n_estimators, max_depth=max_depth, learning_rate=learning_rate,
-                                            subsample=subsample, colsample_bytree=colsample_bytree,
-                                            colsample_bynode=colsample_bynode, path_smooth=path_smooth,
-                                            num_leaves=num_leaves,
-                                            min_child_samples=min_child_samples,
-                                            # data_sample_strategy=data_sample_strategy,
-                                            tree_learner='serial', random_state=0,
-                                            deterministic=True, force_row_wise=True, n_jobs=n_jobs)
-
-        trained_model = regressor_model.fit(x_train, y_train)
+        trained_model = reg_model.fit(x_train, y_train)
         y_pred = trained_model.predict(x_train)
 
         print('Train RMSE = {:.3f}'.format(calculate_rmse(Y_pred=y_pred, Y_obsv=y_train)))
@@ -585,7 +575,7 @@ def train_model(x_train, y_train, params_dict, model='rf', n_jobs=-1,
         run_str = f'model training time {runtime} mins'
         print('model training time {:.3f} mins'.format(runtime))
 
-        if tune_hyperparameters:  # saving hyperparameter tuning + model training time
+        if not skip_tune_hyperparameters:  # saving hyperparameter tuning + model training time
             runtime_save = os.path.join(save_folder, model_save_name + '_tuning_training_runtime.txt')
             with open(runtime_save, 'w') as file:
                 file.write(run_str)

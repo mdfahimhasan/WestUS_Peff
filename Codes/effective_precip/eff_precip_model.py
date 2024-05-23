@@ -81,19 +81,19 @@ predictor_years = [2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2
                    2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020]
 
 if __name__ == '__main__':
-    model_version = 'v9'  ######
+    model_version = 'v10'  ######
 
     skip_effective_precip_training_data_filtering = True  ######
     skip_train_test_df_creation = True  ######
-    skip_train_test_split = True  ######
-    load_model = True  ######
-    save_model = False  ######
+    skip_train_test_split = False  ######
+    load_model = False  ######
+    save_model = True  ######
     skip_plot_pdp = True  ######
     skip_plot_perm_import = True  ######
     skip_processing_monthly_predictor_dataframe = True  ######
     skip_processing_nan_pos_irrig_cropET = True  ######
-    skip_estimate_monthly_eff_precip_WestUS = True  ######
-    skip_sum_effective_precip = True  ######
+    skip_estimate_monthly_eff_precip_WestUS = False  ######
+    skip_sum_effective_precip = False  ######
 
     # ****************************** Filtering training data for effective precip (westUS) *********************************
 
@@ -139,29 +139,32 @@ if __name__ == '__main__':
 
     # ******************************** Model training and performance evaluation (westUS) **********************************
 
-    # # model training
+    # # model training  (if hyperparameter tuning is on, the default parameter dictionary will be disregarded)
     print('########## Model training')
-    lgbm_param_dict = {'n_estimators': 250,
-                       'max_depth': 13,
-                       'learning_rate': 0.05,
-                       'subsample': 0.7,
-                       'colsample_bytree': 0.8,
+    lgbm_param_dict = {'boosting_type': 'gbdt',
                        'colsample_bynode': 0.7,
-                       'path_smooth': 0.2,
-                       'num_leaves': 70,
+                       'colsample_bytree': 0.8,
+                       'learning_rate': 0.05,
+                       'max_depth': 13,
                        'min_child_samples': 40,
-                       # 'data_sample_strategy': 'goss'
-                       }
+                       'n_estimators': 250,
+                       'num_leaves': 70,
+                       'path_smooth': 0.2,
+                       'subsample': 0.7}
 
     save_model_to_dir = '../../Eff_Precip_Model_Run/Model_trained'
     makedirs([save_model_to_dir])
 
     model_name = f'effective_precip_{model_version}.joblib'
+    skip_tune_hyperparameters = False
+    max_evals=1000
+    param_iteration_csv = '../../Eff_Precip_Model_Run/hyperparam_tune/hyerparam_iteration.csv'
 
-    lgbm_reg_trained = train_model(x_train=x_train, y_train=y_train, params_dict=lgbm_param_dict, model='lgbm', n_jobs=-1,
+    lgbm_reg_trained = train_model(x_train=x_train, y_train=y_train, params_dict=lgbm_param_dict, n_jobs=-1,
                                    load_model=load_model, save_model=save_model, save_folder=save_model_to_dir,
-                                   model_save_name=model_name, tune_hyperparameters=False, repeated_Kfold=False,
-                                   n_folds=5, n_iter=10, n_repeats=5)
+                                   model_save_name=model_name,
+                                   skip_tune_hyperparameters=skip_tune_hyperparameters,
+                                   iteration_csv=param_iteration_csv, n_fold=10, max_evals=max_evals)
     print(lgbm_reg_trained)
     print('########## Model performance')
 

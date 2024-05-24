@@ -22,10 +22,10 @@ if __name__ == '__main__':
     skip_process_hqr_data = True   # Harquahala INA, AZ
     skip_process_doug_data = True  # Douglas AMA, AZ
     skip_process_dv_data = True  # Diamond Valley, NV
-    skip_compile_AF_annual_data = True  # all basins
+    skip_compile_AF_annual_data = False  # all basins
 
     skip_process_cv_data = True  # Central Valley, CA  (netGW + USGS pumping data only, no actual pumping)
-    skip_process_srb_data = False  # Snake River Basin, ID (netGW + USGS pumping data only, no actual pumping)
+    skip_process_srb_data = True  # Snake River Basin, ID (netGW + USGS pumping data only, no actual pumping)
 
     # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
     # # # For Groundwater Management District 4 (GMD4), Kansas

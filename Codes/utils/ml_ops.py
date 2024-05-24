@@ -687,8 +687,18 @@ def plot_permutation_importance(trained_model, x_test, y_test, output_dir, plot_
             x_test_df = x_test
             y_test_df = y_test
 
+        # ensure arrays are writable  (the numpy conversion code block was added after a conda env upgrade threw 'WRITABLE array'
+        #                              error, took chatgpt's help to figure this out. The error meant - permutation_importance() was
+        #                              trying to change the array but could not as it was writable before. This code black makes the
+        #                              arrays writable)
+        x_test_np = x_test_df.to_numpy()
+        y_test_np = y_test_df.to_numpy()
+
+        x_test_np.setflags(write=True)
+        y_test_np.setflags(write=True)
+
         # generating permutation importance score on test set
-        result_test = permutation_importance(trained_model, x_test_df, y_test_df,
+        result_test = permutation_importance(trained_model, x_test_np, y_test_np,
                                              n_repeats=30, random_state=0, n_jobs=-1, scoring='r2')
 
         sorted_importances_idx = result_test.importances_mean.argsort()

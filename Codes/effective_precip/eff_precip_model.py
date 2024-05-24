@@ -7,7 +7,7 @@ from os.path import dirname, abspath
 sys.path.insert(0, dirname(dirname(dirname(abspath(__file__)))))
 
 from Codes.utils.system_ops import makedirs
-from Codes.utils.stats_ops import calculate_r2, calculate_rmse
+from Codes.utils.stats_ops import calculate_r2, calculate_rmse, calculate_mae
 from Codes.utils.plots import scatter_plot_of_same_vars, density_grid_plot_of_same_vars
 from Codes.utils.ml_ops import create_train_test_dataframe, split_train_val_test_set, train_model, \
     create_pdplots, plot_permutation_importance
@@ -85,11 +85,11 @@ if __name__ == '__main__':
 
     skip_effective_precip_training_data_filtering = True  ######
     skip_train_test_df_creation = True  ######
-    skip_train_test_split = False  ######
-    load_model = False  ######
-    save_model = True  ######
-    skip_plot_pdp = True  ######
-    skip_plot_perm_import = True  ######
+    skip_train_test_split = True  ######
+    load_model = True  ######
+    save_model = False  ######
+    skip_plot_pdp = False  ######
+    skip_plot_perm_import = False  ######
     skip_processing_monthly_predictor_dataframe = True  ######
     skip_processing_nan_pos_irrig_cropET = True  ######
     skip_estimate_monthly_eff_precip_WestUS = False  ######
@@ -142,22 +142,23 @@ if __name__ == '__main__':
     # # model training  (if hyperparameter tuning is on, the default parameter dictionary will be disregarded)
     print('########## Model training')
     lgbm_param_dict = {'boosting_type': 'gbdt',
-                       'colsample_bynode': 0.7,
-                       'colsample_bytree': 0.8,
-                       'learning_rate': 0.05,
-                       'max_depth': 13,
-                       'min_child_samples': 40,
-                       'n_estimators': 250,
+                       'colsample_bynode': 0.93,
+                       'colsample_bytree': 0.88,
+                       'learning_rate': 0.09,
+                       'max_depth': 14,
+                       'min_child_samples': 50,
+                       'n_estimators': 375,
                        'num_leaves': 70,
-                       'path_smooth': 0.2,
-                       'subsample': 0.7}
+                       'path_smooth': 0.27,
+                       'subsample': 1,
+                       'data_sample_strategy': 'goss'}
 
     save_model_to_dir = '../../Eff_Precip_Model_Run/Model_trained'
     makedirs([save_model_to_dir])
 
     model_name = f'effective_precip_{model_version}.joblib'
-    skip_tune_hyperparameters = False
-    max_evals=1000
+    skip_tune_hyperparameters = True
+    max_evals = 600
     param_iteration_csv = '../../Eff_Precip_Model_Run/hyperparam_tune/hyerparam_iteration.csv'
 
     lgbm_reg_trained = train_model(x_train=x_train, y_train=y_train, params_dict=lgbm_param_dict, n_jobs=-1,
@@ -175,8 +176,10 @@ if __name__ == '__main__':
     y_pred_train = lgbm_reg_trained.predict(x_train)
     train_rmse = calculate_rmse(Y_pred=y_pred_train, Y_obsv=y_train)
     train_r2 = calculate_r2(Y_pred=y_pred_train, Y_obsv=y_train)
+    train_mae =  calculate_mae(Y_pred=y_pred_train, Y_obsv=y_train)
 
-    print(f'Train RMSE = {round(train_rmse, 4)} for random split ')
+    print(f'Train RMSE = {round(train_rmse, 4)} for random split')
+    print(f'Train MAE = {round(train_mae, 4)} for random split')
     print(f'Train R2 = {round(train_r2, 4)} for random split')
     print('\n')
 
@@ -189,8 +192,10 @@ if __name__ == '__main__':
     y_pred_test = lgbm_reg_trained.predict(x_test)
     test_rmse = calculate_rmse(Y_pred=y_pred_test, Y_obsv=y_test)
     test_r2 = calculate_r2(Y_pred=y_pred_test, Y_obsv=y_test)
+    test_mae = calculate_mae(Y_pred=y_pred_test, Y_obsv=y_test)
 
-    print(f'Test RMSE = {round(test_rmse, 4)} for random split ')
+    print(f'Test RMSE = {round(test_rmse, 4)} for random split')
+    print(f'Test MAE = {round(test_mae, 4)} for random split ')
     print(f'Test R2 = {round(test_r2, 4)} for random split')
 
     # saving test prediction

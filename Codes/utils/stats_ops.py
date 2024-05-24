@@ -1,6 +1,6 @@
 import numpy as np
 import pandas as pd
-from sklearn.metrics import r2_score, mean_squared_error
+from sklearn.metrics import r2_score, mean_squared_error, mean_absolute_error
 
 
 def calculate_rmse(Y_pred, Y_obsv):
@@ -18,6 +18,23 @@ def calculate_rmse(Y_pred, Y_obsv):
     rmse_val = mean_squared_error(y_true=Y_obsv, y_pred=Y_pred, squared=False)
 
     return rmse_val
+
+
+def calculate_mae(Y_pred, Y_obsv):
+    """
+    Calculates MAE value of model prediction vs observed data.
+
+    :param Y_pred: prediction array or panda series object.
+    :param Y_obsv: observed array or panda series object.
+
+    :return: MAE value.
+    """
+    if isinstance(Y_pred, np.ndarray):
+        Y_pred = pd.Series(Y_pred)
+
+    mae_val = mean_absolute_error(y_true=Y_obsv, y_pred=Y_pred, )
+
+    return mae_val
 
 
 def calculate_r2(Y_pred, Y_obsv):

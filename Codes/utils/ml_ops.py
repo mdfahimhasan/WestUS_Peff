@@ -706,16 +706,24 @@ def plot_permutation_importance(trained_model, x_test, y_test, output_dir, plot_
         importances = pd.DataFrame(result_test.importances[sorted_importances_idx].T,
                                    columns=predictor_cols[sorted_importances_idx])
 
+        # renaming predictor names
+        rename_dict = {'GRIDMET_Precip' : 'Precipitation', 'GRIDMET_RET': 'Reference ET',
+                       'GRIDMET_vap_pres_def': 'Vapor pressure deficit', 'GRIDMET_max_RH': 'Max. relative humidity',
+                       'GRIDMET_short_rad': 'Downward shortwave radiation', 'DAYMET_sun_hr': 'Daylight duration',
+                       'Field_capacity': 'Field capacity', 'Sand_content': 'Sand content',
+                       'AWC': 'Available water capacity', 'DEM': 'Elevation', 'month': 'Month'}
+
+        importances = importances.rename(columns=rename_dict)
+
         # plotting
         plt.figure(figsize=(10, 8))
-        plt.rcParams.update({'font.size': 12})
+        plt.rcParams.update({'font.size': 8})
 
         ax = importances.plot.box(vert=False, whis=10)
-        ax.set_title('Permutation Importance (test set)')
         ax.axvline(x=0, color='k', linestyle='--')
         ax.set_xlabel('Relative change in accuracy')
         ax.figure.tight_layout()
 
-        plt.savefig(os.path.join(output_dir, plot_name), dpi=100)
+        plt.savefig(os.path.join(output_dir, plot_name), dpi=200)
     else:
         pass

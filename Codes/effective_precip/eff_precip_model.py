@@ -88,7 +88,7 @@ if __name__ == '__main__':
     skip_train_test_split = True  ######
     load_model = True  ######
     save_model = False  ######
-    skip_plot_pdp = False  ######
+    skip_plot_pdp = True  ######
     skip_plot_perm_import = False  ######
     skip_processing_monthly_predictor_dataframe = True  ######
     skip_processing_nan_pos_irrig_cropET = True  ######
@@ -206,29 +206,33 @@ if __name__ == '__main__':
     # plotting results
     plot_dir = '../../Eff_Precip_Model_Run/Plots'
 
-    scatter_plot_name = f'train_performance_scatter_{model_version}.tif'
+    scatter_plot_name = f'train_performance_scatter_{model_version}.png'
 
     scatter_plot_of_same_vars(Y_pred=y_pred_train, Y_obsv=y_train.to_numpy(),
                               alpha=0.03, color_format='o', marker_size=1,
-                              x_label='Eff. Precip. Observed (mm/month)', y_label='Eff. Precip. Predicted (mm/month)',
+                              x_label='Reference effective precipitation \n (mm/month)',
+                              y_label='Predicted effective precipitation \n (mm/month)',
                               title='For random train-test split',
                               plot_name=scatter_plot_name, savedir=plot_dir)
 
-    scatter_plot_name = f'test_performance_scatter_{model_version}.tif'
+    scatter_plot_name = f'test_performance_scatter_{model_version}.png'
     scatter_plot_of_same_vars(Y_pred=y_pred_test, Y_obsv=y_test.to_numpy(),
                               alpha=0.03, color_format='o', marker_size=1,
-                              x_label='Eff. Precip. Observed (mm/month)', y_label='Eff. Precip. Predicted (mm/month)',
+                              x_label='Reference effective precipitation \n (mm/month)',
+                              y_label='Predicted effective precipitation \n (mm/month)',
                               title='For random train-test split',
                               plot_name=scatter_plot_name, savedir=plot_dir)
 
-    density_plot_name = f'train_performance_density_{model_version}.tif'
+    density_plot_name = f'train_performance_density_{model_version}.png'
     density_grid_plot_of_same_vars(Y_pred=y_pred_train, Y_obsv=y_train.to_numpy().ravel(),
-                                   x_label='Eff. Precip. Observed (mm/month)', y_label='Eff. Precip. Predicted (mm/month)',
+                                   x_label='Reference effective precipitation \n (mm/month)',
+                                   y_label='Predicted effective precipitation \n (mm/month)',
                                    plot_name=density_plot_name, savedir=plot_dir, bins=80)
 
-    density_plot_name = f'test_performance_density_{model_version}.tif'
+    density_plot_name = f'test_performance_density_{model_version}.png'
     density_grid_plot_of_same_vars(Y_pred=y_pred_test, Y_obsv=y_test.to_numpy().ravel(),
-                                   x_label='Eff. Precip. Observed (mm/month)', y_label='Eff. Precip. Predicted (mm/month)',
+                                   x_label='Reference effective precipitation \n (mm/month)',
+                                   y_label='Predicted effective precipitation \n (mm/month)',
                                    plot_name=density_plot_name, savedir=plot_dir, bins=80)
 
     # partial dependence plots (pdp)
@@ -241,7 +245,7 @@ if __name__ == '__main__':
 
     create_pdplots(trained_model=lgbm_reg_trained, x_train=x_train,
                    features_to_include=features_in_pdp_plot, output_dir=plot_dir,
-                   plot_name=f'pdp_{model_version}.tif', skip_processing=skip_plot_pdp)
+                   plot_name=f'pdp_{model_version}.png', skip_processing=skip_plot_pdp)
 
     # permutation importance plot
     plot_permutation_importance(trained_model=lgbm_reg_trained, x_test=x_test, y_test=y_test,

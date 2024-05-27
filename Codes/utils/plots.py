@@ -30,7 +30,7 @@ def scatter_plot_of_same_vars(Y_pred, Y_obsv, x_label, y_label, plot_name, saved
     min_value = min(Y_pred.min(), Y_obsv.min())
     max_value = max(Y_pred.max(), Y_obsv.max())
 
-    plt.rcParams.update({'font.size': 16})
+    plt.rcParams.update({'font.size': 18})
     fig, ax = plt.subplots(figsize=(8, 6))
     fig.set_facecolor('none')
 
@@ -53,9 +53,6 @@ def scatter_plot_of_same_vars(Y_pred, Y_obsv, x_label, y_label, plot_name, saved
     ax.text(0.1, 0.9, s=f'R2={r2_val}', transform=ax.transAxes)
 
     makedirs([savedir])
-
-    if '.tif' not in plot_name:
-        plot_name = plot_name + '.tif'
 
     fig_loc = os.path.join(savedir, plot_name)
     fig.savefig(fig_loc, dpi=300)
@@ -88,20 +85,20 @@ def density_grid_plot_of_same_vars(Y_pred, Y_obsv, x_label, y_label, plot_name, 
     # numpy arrays
     heatmap, xedges, yedges = np.histogram2d(Y_obsv, Y_pred, bins=bins, density=False)
 
-    plt.rcParams.update({'font.size': 16})
+    plt.rcParams.update({'font.size': 18})
     fig, ax = plt.subplots(figsize=(8, 6))
     fig.set_facecolor('none')
 
     # Plot the density grid as a heatmap
     density_plot = ax.imshow(heatmap, origin='lower', extent=[min_value, max_value, min_value, max_value],
                              cmap='RdYlBu_r')
-    ax.set_xlabel(x_label, fontsize=22)  # 'Observed'
-    ax.set_ylabel(y_label, fontsize=22)  # 'Predicted'
+    ax.set_xlabel(x_label, fontsize=18)  # 'Observed'
+    ax.set_ylabel(y_label, fontsize=18)  # 'Predicted'
     ax.plot([0, 1], [0, 1], '-r', transform=ax.transAxes)
-    ax.tick_params(axis='both', labelsize=22)
+    ax.tick_params(axis='both', labelsize=18)
     cbar = fig.colorbar(mappable=density_plot)
-    cbar.ax.tick_params(labelsize=22)
-    cbar.set_label('Number of samples in each bin', size=22)
+    cbar.ax.tick_params(labelsize=18)
+    cbar.set_label('Number of samples in each bin', size=18)
     plt.tight_layout()
 
     if axis_lim:
@@ -118,9 +115,6 @@ def density_grid_plot_of_same_vars(Y_pred, Y_obsv, x_label, y_label, plot_name, 
     ax.text(0.1, 0.9, s=f'R2={r2_val}', transform=ax.transAxes, color='white')
 
     makedirs([savedir])
-
-    if '.tif' not in plot_name:
-        plot_name = plot_name + '.tif'
 
     fig_loc = os.path.join(savedir, plot_name)
     fig.savefig(fig_loc, dpi=300)
@@ -146,7 +140,7 @@ def scatter_plot(X, Y, x_label, y_label, plot_name, savedir, alpha=0.03,
 
     :return: A scatter plot of model prediction vs observed data.
     """
-    plt.rcParams.update({'font.size': 16})
+    plt.rcParams.update({'font.size': 18})
     fig, ax = plt.subplots(figsize=(8, 6))
     ax.plot(X, Y, color_format, alpha=alpha, markersize=marker_size)
     ax.plot([0, 1], [0, 1], '-r', transform=ax.transAxes)
@@ -158,9 +152,6 @@ def scatter_plot(X, Y, x_label, y_label, plot_name, savedir, alpha=0.03,
 
     if savedir is not None:
         makedirs([savedir])
-
-        if '.tif' not in plot_name:
-            plot_name = plot_name + '.tif'
 
         fig_loc = os.path.join(savedir, plot_name)
         fig.savefig(fig_loc, dpi=300)

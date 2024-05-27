@@ -759,7 +759,7 @@ def develop_excess_ET_filter(monthly_precip_dir, output_dir_precip_water_yr, gro
             summed_precip_arr, _ = \
                 sum_rasters(raster_list=precip_water_yr_list,
                             raster_dir=None,
-                            output_raster=os.path.join(output_dir_precip_water_yr, f'prism_precip_water_yr_{yr}'),
+                            output_raster=os.path.join(output_dir_precip_water_yr, f'prism_precip_water_yr_{yr}.tif'),
                             ref_raster=precip_water_yr_list[0])
 
             # getting growing season et data for current year

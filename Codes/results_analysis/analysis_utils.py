@@ -37,7 +37,7 @@ def clip_netGW_Irr_frac_for_basin(years, basin_shp, netGW_input_dir, basin_netGW
     """
 
     for year in years:
-        print(f'Clip growing season netGW for {year}...')
+        print(f'Clipping growing season netGW for {year}...')
 
         # netGW
         netGW_raster = glob(os.path.join(netGW_input_dir, f'*{year}*.tif'))[0]
@@ -52,7 +52,7 @@ def clip_netGW_Irr_frac_for_basin(years, basin_shp, netGW_input_dir, basin_netGW
                                        use_ref_width_height=False)
 
         if irr_frac_input_dir is not None:
-            print(f'Clip irrigated fraction for {year}...')
+            print(f'Clipping irrigated fraction for {year}...')
             # irrigation fraction
             irr_frac_raster = glob(os.path.join(irr_frac_input_dir, f'*{year}*.tif'))[0]
 
@@ -1031,7 +1031,7 @@ def process_and_aggregate_irrigated_acres(years, irr_cropland_input_dir, irr_fra
     acre_dict = {'Year': [], 'Irr data Acres': []}
 
     for year in years:
-        print(f'Clip irrigated cropland and fraction data for {year}...')
+        print(f'Clipping irrigated cropland and fraction data for {year}...')
 
         # irrigation fraction
         irr_frac_raster = glob(os.path.join(irr_frac_input_dir, f'*{year}*.tif'))[0]
@@ -1309,3 +1309,175 @@ def compile_annual_irr_rainfed_ET(years, area_code, area_shape, area_ref_raster,
                                     skip_processing=False)
 
 
+def clip_Peff_for_basin(years, basin_shp, Peff_input_dir, basin_Peff_output_dir, basin_code,
+                        month_range=None, resolution=model_res):
+    """
+    Clip effective precipitation estimates for growing seasons or months.
+
+    :param years: List of years to process data.
+    :param basin_shp: Filepath of basin shapefile.
+    :param Peff_input_dir: Directory path of Western US effective precipitation estimates (growing seasons or months).
+    :param basin_Peff_output_dir: Output directory path to save the clipped effective precipitation estimates for the basin.
+    :param basin_code: Basin keyword to add before the processed raster's name. Preferred to use from
+                          ['gmd3', 'gmd4', 'rpb', 'hqr', 'doug', 'dv', 'cv'].
+    :param month_range: Range of month to process data for. Example - (4, 11).
+                        Default set to None to process growing season effective precipitation data only.
+    :param resolution: model resolution.
+
+    :return: None.
+    """
+    makedirs([basin_Peff_output_dir])
+
+    for year in years:
+        if month_range is None:
+            print(f'Clipping effective precipitation for {year}...')
+
+            peff_raster = glob(os.path.join(Peff_input_dir, f'*{year}*.tif'))[0]
+
+            clip_resample_reproject_raster(input_raster=peff_raster, input_shape=basin_shp,
+                                           output_raster_dir=basin_Peff_output_dir,
+                                           keyword=basin_code, raster_name=None,
+                                           clip=True, resample=False, clip_and_resample=False,
+                                           targetaligned=True, resample_algorithm='near',
+                                           resolution=resolution,
+                                           crs='EPSG:4269', output_datatype=gdal.GDT_Float32,
+                                           use_ref_width_height=False)
+
+        else:  # for monthly effective precipitation estimates
+            months = list(range(month_range))
+
+            for month in months:
+                print(f'Clipping effective precipitation for {year=}, {month=} ...')
+
+                peff_raster = glob(os.path.join(Peff_input_dir, f'*{year}_{month}.*.tif'))[0]
+
+                clip_resample_reproject_raster(input_raster=peff_raster, input_shape=basin_shp,
+                                               output_raster_dir=basin_Peff_output_dir,
+                                               keyword=' ', raster_name=None,
+                                               clip=True, resample=False, clip_and_resample=False,
+                                               targetaligned=True, resample_algorithm='near',
+                                               resolution=resolution,
+                                               crs='EPSG:4269', output_datatype=gdal.GDT_Float32,
+                                               use_ref_width_height=False)
+
+
+def clip_water_yr_precip_basin(years, basin_shp, precip_input_dir, basin_precip_output_dir,
+                               basin_code, resolution=model_res):
+    """
+    Clip effective precipitation estimates for growing seasons or months for the basin.
+
+    :param years: List of years to process data.
+    :param basin_shp: Filepath of basin shapefile.
+    :param precip_input_dir: Directory path of Western US water year precipitation estimates.
+    :param basin_precip_output_dir: Output directory path to save the clipped water year precipitation estimates for the basin.
+    :param basin_code: Basin keyword to add before the processed raster's name. Preferred to use from
+                      ['gmd3', 'gmd4', 'rpb', 'hqr', 'doug', 'dv', 'cv'].
+    :param resolution: model resolution.
+
+    :return: None.
+    """
+    makedirs([basin_precip_output_dir])
+
+    for year in years:
+        print(f'Clipping water year precipitation for {year}...')
+
+        precip_raster = glob(os.path.join(precip_input_dir, f'*{year}*.tif'))[0]
+
+        clip_resample_reproject_raster(input_raster=precip_raster, input_shape=basin_shp,
+                                       output_raster_dir=basin_precip_output_dir,
+                                       keyword=basin_code, raster_name=None,
+                                       clip=True, resample=False, clip_and_resample=False,
+                                       targetaligned=True, resample_algorithm='near',
+                                       resolution=resolution,
+                                       crs='EPSG:4269', output_datatype=gdal.GDT_Float32,
+                                       use_ref_width_height=False)
+
+
+def compile_growS_peff_water_yr_precip_to_csv(years, basin_peff_dir, basin_water_yr_precip_dir, output_csv):
+    """
+    Compiling pixel-wise annual netGW and pumping data for a basin.
+
+    :param years: List of years to process data.
+    :param basin_peff_dir: Basin netGW directory.
+    :param basin_water_yr_precip_dir: Basin pumping (in AF) directory.
+    :param output_csv: Filepath of output csv.
+
+    :return:  Filepath of output csv.
+    """
+    makedirs([os.path.dirname(output_csv)])
+
+    print(f'Compiling growing season effective precipitation vs water year precipitation dataframe...')
+
+    # empty dictionary with to store data
+    extract_dict = {'year': [], 'peff': [], 'precip': [], 'basin_code': [], 'basin_name': []}
+
+    # basin name dict
+    basin_name_dict = {'gmd4': 'GMD4, KS', 'gmd3': 'GMD3, KS', 'rpb': 'Republican Basin, CO',
+                       'hqr': 'Harquahala INA, AZ', 'doug': 'Douglas AMA, AZ',
+                       'dv': 'Diamond Valley, NV', 'cv': 'Central Valley, CA'}
+
+    # lopping through each year and storing data in a list
+    for year in years:
+        peff_data = glob(os.path.join(basin_peff_dir, f'*{year}*.tif'))[0]
+        precip_data = glob(os.path.join(basin_water_yr_precip_dir, f'*{year}*.tif'))[0]
+
+        peff_arr = read_raster_arr_object(peff_data, get_file=False).flatten()
+        precip_arr = read_raster_arr_object(precip_data, get_file=False).flatten()
+
+        year_list = [year] * len(peff_arr)
+
+        basin_code = os.path.basename(peff_data).split('_')[0]
+        basin_code_list = [basin_code] * len(peff_arr)
+        basin_name = basin_name_dict[basin_code]
+        basin_name_list = [basin_name] * len(peff_arr)
+
+        extract_dict['peff'].extend(list(peff_arr))
+        extract_dict['precip'].extend(list(precip_arr))
+        extract_dict['year'].extend(year_list)
+        extract_dict['basin_code'].extend(basin_code_list)
+        extract_dict['basin_name'].extend(basin_name_list)
+
+    # converting dictionary to dataframe and saving to csv
+    df = pd.DataFrame(extract_dict)
+    df = df.dropna().reset_index(drop=True)
+    df.to_csv(output_csv, index=False)
+
+    return output_csv
+
+
+def run_growS_peff_water_yr_precip_compilation(years, basin_shp, Peff_input_dir, basin_Peff_output_dir,
+                                               precip_input_dir, basin_precip_output_dir,
+                                               basin_code, output_csv, skip_processing=False):
+    if not skip_processing:
+        clip_Peff_for_basin(years=years, basin_shp=basin_shp, Peff_input_dir=Peff_input_dir,
+                            basin_Peff_output_dir=basin_Peff_output_dir, basin_code=basin_code,
+                            month_range=None, resolution=model_res)
+        clip_water_yr_precip_basin(years=years, basin_shp=basin_shp, precip_input_dir=precip_input_dir,
+                                   basin_precip_output_dir=basin_precip_output_dir, basin_code=basin_code,
+                                   resolution=model_res)
+        compile_growS_peff_water_yr_precip_to_csv(years=years, basin_peff_dir=basin_Peff_output_dir,
+                                                  basin_water_yr_precip_dir=basin_precip_output_dir,
+                                                  output_csv=output_csv)
+    else: pass
+
+
+def compile_growS_peff_all_basins(annual_csv_list, output_csv):
+        """
+        Compile all basins' growing season effective precip and water year precipitation.
+
+        :param annual_csv_list: List of basins' annual csv filepaths.
+        :param output_csv: Filepath of compiled annual output csv.
+
+        :return: None.
+        """
+        # making the output directory if not available
+        makedirs([os.path.dirname(output_csv)])
+
+        # empty dataframe to store the results
+        compiled_annual_df = pd.DataFrame()
+
+        for csv in annual_csv_list:
+            df = pd.read_csv(csv)
+            compiled_annual_df = pd.concat([compiled_annual_df, df])
+
+        compiled_annual_df.to_csv(output_csv, index=False)

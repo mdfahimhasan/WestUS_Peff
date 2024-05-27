@@ -9,9 +9,6 @@ from Codes.results_analysis.analysis_utils import run_annual_csv_processing_KS_C
 model_res = 0.01976293625031605786  # in deg, ~2 km
 WestUS_shape = '../../Data_main/shapefiles/Western_US_ref_shapes/WestUS_states.shp'
 WestUS_raster = '../../Data_main/reference_rasters/Western_US_refraster_2km.tif'
-basin_name_dict = {'GMD4': 'GMD4, KS', 'GMD3': 'GMD3, KS', 'RPB': 'Republican Basin, CO',
-                   'Harquahala': 'Harquahala INA, AZ', 'Douglas': 'Douglas AMA, AZ',
-                   'Diamond': 'Diamond Valley, NV', 'Harney': 'Harney Basin, Or'}
 
 if __name__ == '__main__':
     # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #

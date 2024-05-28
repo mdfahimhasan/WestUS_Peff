@@ -616,41 +616,45 @@ def create_pdplots(trained_model, x_train, features_to_include, output_dir, plot
         deg_unit = r'$^\circ$'
         deg_cel_unit = r'$^\circ$C'
 
-        # creating a dictionary to rename input variables in the PDP plot
-        feature_dict = {
-            'Cropland_Frac': '% Cropland',
-            'MODIS_Day_LST': 'MODIS Land Surface Temp (K)', 'MODIS_LAI': 'MODIS LAI',
-            'MODIS_NDVI': 'MODIS NDVI', 'MODIS_NDWI': 'MODIS NDWI', 'PRISM_Precip': 'PRISM Precipitation (mm)',
-            'PRISM_Tmax': f'PRISM Max Temp ({deg_cel_unit})', 'PRISM_Tmin': f'PRISM Min Temp ({deg_cel_unit})',
-            'Ssebop_ETa': 'SseBop ET (mm)', 'GRIDMET_Precip': 'GRIDMET Precipitation (mm)',
-            'GRIDMET_RET': 'GRIDMET Reference ET (mm)', 'GRIDMET_vap_pres_def': 'GRIDMET Mean Vapour Pressure Deficit (kpa)',
-            'GRIDMET_max_RH': 'GRIDMET Max Relative Humidity (%)', 'GRIDMET_min_RH': 'GRIDMET Min Relative Humidity (%)',
-            'GRIDMET_wind_vel': 'GRIDMET Wind Velocity (m/s)', 'GRIDMET_short_rad': 'GRIDMET Downward Shortwave Radiation (W/m^2)',
-            'DAYMET_sun_hr': 'DAYMET Daylight Duration (hr)', 'Bulk_density': 'Bulk Density (kg/m^3)',
-            'Clay_content': 'Clay Content (%)', 'Field_capacity': 'Field Capacity (%)', 'Sand_content': 'Sand Content (%)',
-            'Slope': 'Slope (%)', 'AWC': 'Available Water Capacity (mm)',
-            'Latitude': f'Latitude ({deg_unit})', 'Longitude': f'Longitude ({deg_unit})'
-        }
-
-        # renaming columns
-        x_train = x_train.rename(columns=feature_dict)
-
         # plotting
         if features_to_include == 'All':  # to plot PDP for all attributes
             features_to_include = list(x_train.columns)
 
+        plt.rcParams['font.size'] = 30
+
         pdisp = PDisp.from_estimator(trained_model, x_train, features=features_to_include,
                                      percentiles=(0.05, 1), subsample=0.8, grid_resolution=20,
                                      n_jobs=-1, random_state=0)
-        # replacing Y axis labels
+
+        # creating a dictionary to rename PDP plot labels
+        feature_dict = {
+            'GRIDMET_Precip': 'Precipitation (mm)',
+            'GRIDMET_RET': 'Reference ET (mm)', 'GRIDMET_vap_pres_def': 'Vapour pressure deficit (kpa)',
+            'GRIDMET_max_RH': 'Max. relative humidity (%)', 'GRIDMET_min_RH': 'Min relative humidity (%)',
+            'GRIDMET_wind_vel': 'Wind velocity (m/s)', 'GRIDMET_short_rad': 'Downward shortwave radiation (W/$m^2$)',
+            'DAYMET_sun_hr': 'Daylight duration (hr)', 'Bulk_density': 'Bulk Density (kg/$m^3$)',
+            'Clay_content': 'Clay content (%)', 'Field_capacity': 'Field Capacity (%)', 'Sand_content': 'Sand Content (%)',
+            'AWC': 'Available water capacity (mm)', 'DEM': 'Elevation', 'month': 'month',
+            'Latitude': f'Latitude ({deg_unit})', 'Longitude': f'Longitude ({deg_unit})'
+        }
+
+        # replacing x and y axis labels
+        row_num = range(0, pdisp.axes_.shape[0])
+        col_num = range(0, pdisp.axes_.shape[1])
+
+        feature_idx = 0
+        for r in row_num:
+            for c in col_num:
+                pdisp.axes_[r][c].set_xlabel(feature_dict[features_to_include[feature_idx]])
+                feature_idx += 1
+
         for row_idx in range(0, pdisp.axes_.shape[0]):
             pdisp.axes_[row_idx][0].set_ylabel('Effective Precipitation')
 
         fig = plt.gcf()
-        plt.rcParams['font.size'] = 20  # doesn't work
-        fig.set_size_inches(30, 25)
+        fig.set_size_inches(30, 30)
         fig.tight_layout(rect=[0, 0.05, 1, 0.95])
-        fig.savefig(os.path.join(output_dir, plot_name), dpi=100, bbox_inches='tight')
+        fig.savefig(os.path.join(output_dir, plot_name), dpi=300, bbox_inches='tight')
     else:
         pass
 
@@ -716,7 +720,7 @@ def plot_permutation_importance(trained_model, x_test, y_test, output_dir, plot_
         importances = importances.rename(columns=rename_dict)
 
         # plotting
-        plt.figure(figsize=(10, 8))
+        plt.figure(figsize=(6, 4))
         plt.rcParams.update({'font.size': 8})
 
         ax = importances.plot.box(vert=False, whis=10)

@@ -48,7 +48,7 @@ static_data_path_dict = {'Bulk_density': '../../Data_main/Raster_data/Bulk_densi
                          'Latitude': '../../Data_main/Raster_data/Latitude/WestUS',
                          'Longitude': '../../Data_main/Raster_data/Longitude/WestUS'}
 
-# datasets to include in the dataframe
+# datasets to include in the dataframe (not all will go into the final model)
 datasets_to_include = ['Effective_precip_train',
                        'PRISM_Precip', 'PRISM_Tmax', 'PRISM_Tmin',
                        'GRIDMET_Precip', 'GRIDMET_RET', 'GRIDMET_vap_pres_def', 'GRIDMET_max_RH',
@@ -88,8 +88,8 @@ if __name__ == '__main__':
     skip_train_test_split = True  ######
     load_model = True  ######
     save_model = False  ######
-    skip_plot_pdp = True  ######
-    skip_plot_perm_import = False  ######
+    skip_plot_pdp = False  ######
+    skip_plot_perm_import = True  ######
     skip_processing_monthly_predictor_dataframe = True  ######
     skip_processing_nan_pos_irrig_cropET = True  ######
     skip_estimate_monthly_eff_precip_WestUS = False  ######
@@ -236,12 +236,9 @@ if __name__ == '__main__':
                                    plot_name=density_plot_name, savedir=plot_dir, bins=80)
 
     # partial dependence plots (pdp)
-    deg_unit = r'$^\circ$'
-    features_in_pdp_plot = ['GRIDMET Precipitation (mm)', 'GRIDMET Reference ET (mm)',
-                            'GRIDMET Mean Vapour Pressure Deficit (kpa)',
-                            'GRIDMET Max Relative Humidity (%)',
-                            'GRIDMET Downward Shortwave Radiation (W/m^2)',
-                            'Field Capacity (%)', 'DEM', 'month']
+    features_in_pdp_plot = ['GRIDMET_RET', 'GRIDMET_Precip', 'GRIDMET_max_RH', 'GRIDMET_short_rad',
+                            'DEM', 'DAYMET_sun_hr', 'GRIDMET_vap_pres_def',
+                            'Sand_content', 'month', 'Field_capacity', 'AWC']
 
     create_pdplots(trained_model=lgbm_reg_trained, x_train=x_train,
                    features_to_include=features_in_pdp_plot, output_dir=plot_dir,

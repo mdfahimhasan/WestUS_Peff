@@ -645,8 +645,11 @@ def create_pdplots(trained_model, x_train, features_to_include, output_dir, plot
         feature_idx = 0
         for r in row_num:
             for c in col_num:
-                pdisp.axes_[r][c].set_xlabel(feature_dict[features_to_include[feature_idx]])
-                feature_idx += 1
+                if pdisp.axes_[r][c] is not None:
+                    pdisp.axes_[r][c].set_xlabel(feature_dict[features_to_include[feature_idx]])
+                    feature_idx += 1
+                else:
+                    pass
 
         for row_idx in range(0, pdisp.axes_.shape[0]):
             pdisp.axes_[row_idx][0].set_ylabel('Effective Precipitation')

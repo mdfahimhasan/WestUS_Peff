@@ -301,7 +301,8 @@ def aggregate_USGS_pumping_annual_csv(years, usgs_GW_shp_for_basin, convert_to_c
     # transposing to bring years in a columns
     usgs_df_T = usgs_df.T
     usgs_df_T['year'] = usgs_df_T.index
-    usgs_df_T['year'] = usgs_df_T['year'].astype(int)  # the 'year' needs to be converted to int for following merging operation
+    usgs_df_T['year'] = usgs_df_T['year'].astype(
+        int)  # the 'year' needs to be converted to int for following merging operation
     usgs_df_T = usgs_df_T.reset_index(drop=True)
 
     usgs_df_T['USGS_AF'] = usgs_df_T.drop('year', axis=1).sum(axis=1)
@@ -351,7 +352,7 @@ def aggregate_netGW_insitu_usgs_pumping_to_annualCSV_KS_CO(pixel_netGW_pumping_c
     area_mm2_single_pixel = (2193 * 1000) * (2193 * 1000)  # unit in mm2
     yearly_df['mean netGW_mm'] = yearly_df['netGW_mm'] * area_mm2_single_pixel / area_basin_mm2
     yearly_df['mean pumping_mm'] = yearly_df['pumping_mm'] * area_mm2_single_pixel / area_basin_mm2
-    yearly_df['mean USGS_mm'] = (yearly_df['USGS_AF'] * 1233481837547.5 / area_basin_mm2)   # AF >> mm3 >> mean mm
+    yearly_df['mean USGS_mm'] = (yearly_df['USGS_AF'] * 1233481837547.5 / area_basin_mm2)  # AF >> mm3 >> mean mm
 
     # saving final csv
     yearly_df.to_csv(output_annual_csv, index=False)
@@ -408,7 +409,7 @@ def aggregate_netGW_insitu_usgs_pumping_to_annualCSV_AZ(pixel_netGW_csv, annual_
     area_mm2_single_pixel = (2193 * 1000) * (2193 * 1000)  # unit in mm2
     yearly_df['mean netGW_mm'] = yearly_df['netGW_mm'] * area_mm2_single_pixel / area_basin_mm2
     yearly_df['mean pumping_mm'] = yearly_df['pumping_AF'] * 1233481837547.5 / area_basin_mm2  # AF >> mm3 >> mean mm
-    yearly_df['mean USGS_mm'] = yearly_df['USGS_AF'] * 1233481837547.5 / area_basin_mm2   # AF >> mm3 >> mean mm
+    yearly_df['mean USGS_mm'] = yearly_df['USGS_AF'] * 1233481837547.5 / area_basin_mm2  # AF >> mm3 >> mean mm
 
     # saving final csv
     yearly_df.to_csv(output_annual_csv, index=False)
@@ -520,7 +521,7 @@ def aggregate_netGW_usgs_pumping_to_annualCSV_CA_ID(annual_netGW_csv, annual_usg
     # calculating mean netGW + mean USGS pumping (in mm)
     area_mm2_single_pixel = (2193 * 1000) * (2193 * 1000)  # unit in mm2
     yearly_df['mean netGW_mm'] = yearly_df['netGW_mm'] * area_mm2_single_pixel / area_basin_mm2
-    yearly_df['mean USGS_mm'] = yearly_df['USGS_AF'] * 1233481837547.5 / area_basin_mm2   # AF >> mm3 >> mean mm
+    yearly_df['mean USGS_mm'] = yearly_df['USGS_AF'] * 1233481837547.5 / area_basin_mm2  # AF >> mm3 >> mean mm
 
     # estimating pumping from netGW (consumptive use)
     yearly_df['sim_pumping_m3'] = yearly_df['netGW_m3'] / irr_eff
@@ -563,10 +564,10 @@ def run_annual_csv_processing_KS_CO(years, basin_code, basin_shp,
     if not skip_processing:
         # area of basins
         basin_area_dict = {
-                           'gmd4': 12737667189.642 * (1000 * 1000),  # in mm2
-                           'gmd3': 21820149683.491 * (1000 * 1000),  # in mm2
-                           'rpb': 22753400088.854 * (1000 * 1000),  # in mm2
-                           }
+            'gmd4': 12737667189.642 * (1000 * 1000),  # in mm2
+            'gmd3': 21820149683.491 * (1000 * 1000),  # in mm2
+            'rpb': 22753400088.854 * (1000 * 1000),  # in mm2
+        }
 
         # creating output directories for different processes
         # pumping AF and mm raster directories will be created inside the pumping_AF_pts_to_mm_raster() function
@@ -669,9 +670,9 @@ def run_annual_csv_processing_AZ(years, basin_code, basin_shp,
     if not skip_processing:
         # area of basins
         basin_area_dict = {
-                           'hqr': 1982641859.510 * (1000 * 1000),  # in mm2
-                           'doug': 2459122191.981 * (1000 * 1000),  # in mm2
-                           }
+            'hqr': 1982641859.510 * (1000 * 1000),  # in mm2
+            'doug': 2459122191.981 * (1000 * 1000),  # in mm2
+        }
 
         # creating output directories for different processes
         # pumping AF and mm raster directories will be created inside the pumping_AF_pts_to_mm_raster() function
@@ -734,7 +735,8 @@ def run_annual_csv_processing_AZ(years, basin_code, basin_shp,
         print('# # # # #  STEP 6 # # # # #')
 
         aggregate_netGW_insitu_usgs_pumping_to_annualCSV_AZ(pixel_netGW_csv=pixelwise_output_csv,
-                                                            annual_pumping_csv=annual_pumping_csv, basin_code=basin_code,
+                                                            annual_pumping_csv=annual_pumping_csv,
+                                                            basin_code=basin_code,
                                                             annual_usgs_GW_csv=usgs_annual_GW_estimates_csv,
                                                             area_basin_mm2=basin_area_dict[basin_code],
                                                             output_annual_csv=final_annual_csv)
@@ -847,10 +849,10 @@ def run_annual_csv_processing_CA_ID(years, basin_code, basin_shp, westUS_netGW_d
     if not skip_processing:
         # area of basins
         basin_area_dict = {
-                           'cv': 52592338000 * (1000 * 1000),  # in mm2
-                           'srb': 39974555000 * (1000 * 1000),  # in mm2
+            'cv': 52592338000 * (1000 * 1000),  # in mm2
+            'srb': 39974555000 * (1000 * 1000),  # in mm2
 
-                           }
+        }
 
         # creating output directories for different processes
         # pumping AF and mm raster directories will be created inside the pumping_AF_pts_to_mm_raster() function
@@ -941,11 +943,13 @@ def compile_annual_pumping_netGW_all_basins(annual_csv_list, output_csv):
     # Error range with 70-90% efficiency
     compiled_annual_df['sim_pumping_m3_70'] = compiled_annual_df['netGW_m3'] / 0.70
     compiled_annual_df['sim_pumping_m3_90'] = compiled_annual_df['netGW_m3'] / 0.90
-    compiled_annual_df['error_range_m3'] = compiled_annual_df['sim_pumping_m3_70'] - compiled_annual_df['sim_pumping_m3_90']
+    compiled_annual_df['error_range_m3'] = compiled_annual_df['sim_pumping_m3_70'] - compiled_annual_df[
+        'sim_pumping_m3_90']
 
     compiled_annual_df['sim_mean_pumping_mm_70'] = compiled_annual_df['mean netGW_mm'] / 0.70
     compiled_annual_df['sim_mean_pumping_mm_90'] = compiled_annual_df['mean netGW_mm'] / 0.90
-    compiled_annual_df['error_range_mm'] = compiled_annual_df['sim_mean_pumping_mm_70'] - compiled_annual_df['sim_mean_pumping_mm_90']
+    compiled_annual_df['error_range_mm'] = compiled_annual_df['sim_mean_pumping_mm_70'] - compiled_annual_df[
+        'sim_mean_pumping_mm_90']
 
     # setting all zero values to np.nan
     compiled_annual_df = compiled_annual_df.replace({0: np.nan})
@@ -1061,8 +1065,9 @@ def process_and_aggregate_irrigated_acres(years, irr_cropland_input_dir, irr_fra
         irr_frac_arr, file = read_raster_arr_object(basin_irr_frac_data)
         irr_cropland_arr = read_raster_arr_object(basin_irr_cropland_data, get_file=False)
 
-        area_acres_single_pixel = (2.193 ** 2) * 247.105   # unit in acres
-        irr_acreage_arr = np.where((irr_frac_arr != -9999), irr_frac_arr * irr_cropland_arr * area_acres_single_pixel, -9999)
+        area_acres_single_pixel = (2.193 ** 2) * 247.105  # unit in acres
+        irr_acreage_arr = np.where((irr_frac_arr != -9999), irr_frac_arr * irr_cropland_arr * area_acres_single_pixel,
+                                   -9999)
 
         total_irr_acreage = np.nansum(irr_acreage_arr)
 
@@ -1095,7 +1100,7 @@ def process_and_aggregate_irrigated_acres(years, irr_cropland_input_dir, irr_fra
     # for Nevada basins
     elif basin_name == 'dv':
         insitu_df = insitu_df.groupby('year')['area_m2'].sum().reset_index()
-        insitu_df = insitu_df .rename(columns={'year': 'Year', 'area_m2': 'In situ m2'})
+        insitu_df = insitu_df.rename(columns={'year': 'Year', 'area_m2': 'In situ m2'})
 
         # compiling in-situ irrigated area records and irrigated area from irrigated datasets
         df_agg = insitu_df.merge(irr_acre_df, on='Year')
@@ -1133,7 +1138,8 @@ def process_and_aggregate_irrigated_acres(years, irr_cropland_input_dir, irr_fra
         print('Check input arguments')
 
     # assigning basin name
-    basin_name_dict = {'gmd3': 'GMD3, KS', 'gmd4': 'GMD4, KS', 'dv': 'Diamond Valley, NV', 'rpb': 'Republican Basin, CO'}
+    basin_name_dict = {'gmd3': 'GMD3, KS', 'gmd4': 'GMD4, KS', 'dv': 'Diamond Valley, NV',
+                       'rpb': 'Republican Basin, CO'}
     basin_name = basin_name_dict[basin_name]
     df_agg['basin_name'] = [basin_name] * len(df_agg)
 
@@ -1289,7 +1295,7 @@ def compile_annual_irr_rainfed_ET(years, area_code, area_shape, area_ref_raster,
 
         # Compiling annual data to CSV
         monthly_data_path_dict = {'Irrigated_cropET': irrigated_cropET_output_dir,
-                                 'Rainfed_cropET': rainfed_cropET_output_dir}
+                                  'Rainfed_cropET': rainfed_cropET_output_dir}
 
         yearly_data_path_dict = {'USDA_CDL': USDA_CDL_output_dir,
                                  'Irrigated': irrigated_cropland_output_dir,
@@ -1344,12 +1350,12 @@ def clip_Peff_for_basin(years, basin_shp, Peff_input_dir, basin_Peff_output_dir,
                                            use_ref_width_height=False)
 
         else:  # for monthly effective precipitation estimates
-            months = list(range(month_range))
+            months = list(range(month_range[0], month_range[1]))
 
             for month in months:
                 print(f'Clipping effective precipitation for {year=}, {month=} ...')
 
-                peff_raster = glob(os.path.join(Peff_input_dir, f'*{year}_{month}.*.tif'))[0]
+                peff_raster = glob(os.path.join(Peff_input_dir, f'*{year}_{month}*.tif'))[0]
 
                 clip_resample_reproject_raster(input_raster=peff_raster, input_shape=basin_shp,
                                                output_raster_dir=basin_Peff_output_dir,
@@ -1393,23 +1399,27 @@ def clip_water_yr_precip_basin(years, basin_shp, precip_input_dir, basin_precip_
                                        use_ref_width_height=False)
 
 
-def compile_growS_peff_water_yr_precip_to_csv(years, basin_peff_dir, basin_water_yr_precip_dir, output_csv):
+def compile_basin_growS_peff_water_yr_precip_to_csv(years, basin_peff_dir, basin_water_yr_precip_dir,
+                                                    basin_code, output_csv):
     """
-    Compiling pixel-wise annual netGW and pumping data for a basin.
+    Compiling pixel-wise growing season effective precipitation and water year precipitation data for a basin into a csv.
 
     :param years: List of years to process data.
     :param basin_peff_dir: Basin netGW directory.
     :param basin_water_yr_precip_dir: Basin pumping (in AF) directory.
+    :param basin_code: Basin keyword to add before the processed raster's name. Preferred to use from
+                  ['gmd3', 'gmd4', 'rpb', 'hqr', 'doug', 'dv', 'cv'].
     :param output_csv: Filepath of output csv.
 
     :return:  Filepath of output csv.
     """
     makedirs([os.path.dirname(output_csv)])
 
-    print(f'Compiling growing season effective precipitation vs water year precipitation dataframe...')
+    print(f'Compiling growing season effective precipitation vs water year precipitation into a csv...')
 
     # empty dictionary with to store data
-    extract_dict = {'year': [], 'peff': [], 'precip': [], 'basin_code': [], 'basin_name': []}
+    extract_dict = {'peff': [], 'precip': [],
+                    'index': []}  # the index column keep track of pixel which will be used for aggregation to mean
 
     # basin name dict
     basin_name_dict = {'gmd4': 'GMD4, KS', 'gmd3': 'GMD3, KS', 'rpb': 'Republican Basin, CO',
@@ -1424,23 +1434,23 @@ def compile_growS_peff_water_yr_precip_to_csv(years, basin_peff_dir, basin_water
         peff_arr = read_raster_arr_object(peff_data, get_file=False).flatten()
         precip_arr = read_raster_arr_object(precip_data, get_file=False).flatten()
 
-        year_list = [year] * len(peff_arr)
-
-        basin_code = os.path.basename(peff_data).split('_')[0]
-        basin_code_list = [basin_code] * len(peff_arr)
-        basin_name = basin_name_dict[basin_code]
-        basin_name_list = [basin_name] * len(peff_arr)
-
         extract_dict['peff'].extend(list(peff_arr))
         extract_dict['precip'].extend(list(precip_arr))
-        extract_dict['year'].extend(year_list)
-        extract_dict['basin_code'].extend(basin_code_list)
-        extract_dict['basin_name'].extend(basin_name_list)
+        extract_dict['index'].extend(
+            range(len(list(precip_arr))))  # for each data, the indexing will start from 0 up to the max num of pixels
 
     # converting dictionary to dataframe and saving to csv
     df = pd.DataFrame(extract_dict)
-    df = df.dropna().reset_index(drop=True)
-    df.to_csv(output_csv, index=False)
+
+    # aggregation by mean
+    df_avg = df.groupby(by='index')[['peff', 'precip']].mean()  # groupby() mean avoid nan values (-9999) by default
+
+    # assigning basin name
+    df_avg['basin_code'] = [basin_code] * len(df_avg)
+    df_avg['basin_name'] = [basin_name_dict[basin_code]] * len(df_avg)
+
+    df_avg.dropna(inplace=True)
+    df_avg.to_csv(output_csv, index=False)
 
     return output_csv
 
@@ -1448,6 +1458,10 @@ def compile_growS_peff_water_yr_precip_to_csv(years, basin_peff_dir, basin_water
 def run_growS_peff_water_yr_precip_compilation(years, basin_shp, Peff_input_dir, basin_Peff_output_dir,
                                                precip_input_dir, basin_precip_output_dir,
                                                basin_code, output_csv, skip_processing=False):
+    """
+    Driver function for processing growing season effective precipitation and water year precipitation for each basin
+    and compiling data into a csv.
+    """
     if not skip_processing:
         clip_Peff_for_basin(years=years, basin_shp=basin_shp, Peff_input_dir=Peff_input_dir,
                             basin_Peff_output_dir=basin_Peff_output_dir, basin_code=basin_code,
@@ -1455,29 +1469,108 @@ def run_growS_peff_water_yr_precip_compilation(years, basin_shp, Peff_input_dir,
         clip_water_yr_precip_basin(years=years, basin_shp=basin_shp, precip_input_dir=precip_input_dir,
                                    basin_precip_output_dir=basin_precip_output_dir, basin_code=basin_code,
                                    resolution=model_res)
-        compile_growS_peff_water_yr_precip_to_csv(years=years, basin_peff_dir=basin_Peff_output_dir,
-                                                  basin_water_yr_precip_dir=basin_precip_output_dir,
-                                                  output_csv=output_csv)
-    else: pass
+        compile_basin_growS_peff_water_yr_precip_to_csv(years=years, basin_peff_dir=basin_Peff_output_dir,
+                                                        basin_water_yr_precip_dir=basin_precip_output_dir,
+                                                        basin_code=basin_code, output_csv=output_csv)
+    else:
+        pass
 
 
-def compile_growS_peff_all_basins(annual_csv_list, output_csv):
-        """
-        Compile all basins' growing season effective precip and water year precipitation.
+def compile_basin_monthly_peff_to_csv(years, month_range, basin_peff_dir, basin_code, output_csv):
+    """
+    Compiling pixel-wise monthly effective precipitation data for a basin into a csv.
+
+    :param years: List of years to process data.
+    :param month_range: Range of month to process data for. Example - (4, 11).
+    :param basin_peff_dir: Basin netGW directory.
+    :param basin_code: Basin keyword to add before the processed raster's name. Preferred to use from
+                  ['gmd3', 'gmd4', 'rpb', 'hqr', 'doug', 'dv', 'cv'].
+    :param output_csv: Filepath of output csv.
+
+    :return:  Filepath of output csv.
+    """
+    makedirs([os.path.dirname(output_csv)])
+
+    print(f'Compiling monthly effective precipitation into a csv...')
+
+    # empty dictionary with to store data
+    extract_dict = {'peff': [], 'month': [],
+                    'index': []}  # the index column keep track of pixel which will be used for aggregation to mean
+
+    # basin name dict
+    basin_name_dict = {'gmd4': 'GMD4, KS', 'gmd3': 'GMD3, KS', 'rpb': 'Republican Basin, CO',
+                       'hqr': 'Harquahala INA, AZ', 'doug': 'Douglas AMA, AZ',
+                       'dv': 'Diamond Valley, NV', 'cv': 'Central Valley, CA'}
+
+    # lopping through each year and storing data in a list
+    for year in years:
+        months = list(range(month_range[0], month_range[1]))
+
+        for month in months:
+            peff_data = glob(os.path.join(basin_peff_dir, f'*{year}_{month}*.tif'))[0]
+
+            peff_arr = read_raster_arr_object(peff_data, get_file=False).flatten()
+
+            extract_dict['peff'].extend(list(peff_arr))
+            extract_dict['index'].extend(range(len(list(peff_arr))))  # for each data, the indexing will start from 0 up to the max num of pixels
+
+            month_list = [month] * len(list(peff_arr))
+            extract_dict['month'].extend(month_list)
+
+    # converting dictionary to dataframe and saving to csv
+    df = pd.DataFrame(extract_dict)
+
+    # aggregation by mean
+    df_avg = df.groupby(by=['index', 'month'])['peff'].mean()  # groupby() mean avoid nan values (-9999) by default
+
+    # assigning month index as a month column
+    df_avg = df_avg.reset_index()  # assings index as columns
+    df_avg = df_avg.drop(columns=['index'])
+
+    # assigning basin name
+    df_avg['basin_code'] = [basin_code] * len(df_avg)
+    df_avg['basin_name'] = [basin_name_dict[basin_code]] * len(df_avg)
+
+    df_avg.dropna(inplace=True)
+    df_avg.to_csv(output_csv, index=False)
+
+    return output_csv
+
+
+def run_monthly_peff_compilation(years, basin_shp, Peff_input_dir, basin_Peff_output_dir,
+                                 basin_code, output_csv, month_range=(4, 11), skip_processing=False):
+    """
+    Driver function for processing growing season effective precipitation and water year precipitation for each basin
+    and compiling data into a csv.
+    """
+    if not skip_processing:
+        clip_Peff_for_basin(years=years, basin_shp=basin_shp, Peff_input_dir=Peff_input_dir,
+                            basin_Peff_output_dir=basin_Peff_output_dir, basin_code=basin_code,
+                            month_range=month_range, resolution=model_res)
+        compile_basin_monthly_peff_to_csv(years=years, month_range=month_range,
+                                          basin_peff_dir=basin_Peff_output_dir,
+                                          basin_code=basin_code, output_csv=output_csv)
+    else:
+        pass
+
+
+def compile_peff_csv_all_basins(annual_csv_list, output_csv):
+    """
+        Compile csv files of all basins' effective precip into a single csv.
 
         :param annual_csv_list: List of basins' annual csv filepaths.
         :param output_csv: Filepath of compiled annual output csv.
 
         :return: None.
         """
-        # making the output directory if not available
-        makedirs([os.path.dirname(output_csv)])
+    # making the output directory if not available
+    makedirs([os.path.dirname(output_csv)])
 
-        # empty dataframe to store the results
-        compiled_annual_df = pd.DataFrame()
+    # empty dataframe to store the results
+    compiled_annual_df = pd.DataFrame()
 
-        for csv in annual_csv_list:
-            df = pd.read_csv(csv)
-            compiled_annual_df = pd.concat([compiled_annual_df, df])
+    for csv in annual_csv_list:
+        df = pd.read_csv(csv)
+        compiled_annual_df = pd.concat([compiled_annual_df, df])
 
-        compiled_annual_df.to_csv(output_csv, index=False)
+    compiled_annual_df.to_csv(output_csv, index=False)

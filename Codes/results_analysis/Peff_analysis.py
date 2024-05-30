@@ -5,7 +5,7 @@ from os.path import dirname, abspath
 sys.path.insert(0, dirname(dirname(dirname(abspath(__file__)))))
 
 from Codes.results_analysis.analysis_utils import run_growS_peff_water_yr_precip_compilation, \
-    run_monthly_peff_compilation, compile_peff_csv_all_basins
+    run_monthly_peff_precip_compilation, compile_peff_precip_csv_all_basins
 
 model_res = 0.01976293625031605786  # in deg, ~2 km
 WestUS_shape = '../../Data_main/shapefiles/Western_US_ref_shapes/WestUS_states.shp'
@@ -38,7 +38,7 @@ if __name__ == '__main__':
         growS_peff_dir = f'../../Data_main/Raster_data/Effective_precip_prediction_WestUS/{model_version}_grow_season'
         water_yr_precip_dir = '../../Data_main/Raster_data/PRISM_Precip/WestUS_water_year'
         basin_Peff_output_dir = f'../../Data_main/results_eval/peff/grow_season/{basin_code}'
-        basin_precip_output_dir = f'../../Data_main/results_eval/precip_water_yr/{basin_code}'
+        basin_precip_output_dir = f'../../Data_main/results_eval/precip/water_yr/{basin_code}'
         output_csv = f'../../Data_main/results_eval/peff/grow_season/{basin_code}.csv'
 
         run_growS_peff_water_yr_precip_compilation(years=years, basin_shp=basin_shp,
@@ -61,7 +61,7 @@ if __name__ == '__main__':
         growS_peff_dir = f'../../Data_main/Raster_data/Effective_precip_prediction_WestUS/{model_version}_grow_season'
         water_yr_precip_dir = '../../Data_main/Raster_data/PRISM_Precip/WestUS_water_year'
         basin_Peff_output_dir = f'../../Data_main/results_eval/peff/grow_season/{basin_code}'
-        basin_precip_output_dir = f'../../Data_main/results_eval/precip_water_yr/{basin_code}'
+        basin_precip_output_dir = f'../../Data_main/results_eval/precip/water_yr/{basin_code}'
         output_csv = f'../../Data_main/results_eval/peff/grow_season/{basin_code}.csv'
 
         run_growS_peff_water_yr_precip_compilation(years=years, basin_shp=basin_shp,
@@ -85,7 +85,7 @@ if __name__ == '__main__':
         growS_peff_dir = f'../../Data_main/Raster_data/Effective_precip_prediction_WestUS/{model_version}_grow_season'
         water_yr_precip_dir = '../../Data_main/Raster_data/PRISM_Precip/WestUS_water_year'
         basin_Peff_output_dir = f'../../Data_main/results_eval/peff/grow_season/{basin_code}'
-        basin_precip_output_dir = f'../../Data_main/results_eval/precip_water_yr/{basin_code}'
+        basin_precip_output_dir = f'../../Data_main/results_eval/precip/water_yr/{basin_code}'
         output_csv = f'../../Data_main/results_eval/peff/grow_season/{basin_code}.csv'
 
         run_growS_peff_water_yr_precip_compilation(years=years, basin_shp=basin_shp,
@@ -109,7 +109,7 @@ if __name__ == '__main__':
         growS_peff_dir = f'../../Data_main/Raster_data/Effective_precip_prediction_WestUS/{model_version}_grow_season'
         water_yr_precip_dir = '../../Data_main/Raster_data/PRISM_Precip/WestUS_water_year'
         basin_Peff_output_dir = f'../../Data_main/results_eval/peff/grow_season/{basin_code}'
-        basin_precip_output_dir = f'../../Data_main/results_eval/precip_water_yr/{basin_code}'
+        basin_precip_output_dir = f'../../Data_main/results_eval/precip/water_yr/{basin_code}'
         output_csv = f'../../Data_main/results_eval/peff/grow_season/{basin_code}.csv'
 
         run_growS_peff_water_yr_precip_compilation(years=years, basin_shp=basin_shp,
@@ -132,7 +132,7 @@ if __name__ == '__main__':
         growS_peff_dir = f'../../Data_main/Raster_data/Effective_precip_prediction_WestUS/{model_version}_grow_season'
         water_yr_precip_dir = '../../Data_main/Raster_data/PRISM_Precip/WestUS_water_year'
         basin_Peff_output_dir = f'../../Data_main/results_eval/peff/grow_season/{basin_code}'
-        basin_precip_output_dir = f'../../Data_main/results_eval/precip_water_yr/{basin_code}'
+        basin_precip_output_dir = f'../../Data_main/results_eval/precip/water_yr/{basin_code}'
         output_csv = f'../../Data_main/results_eval/peff/grow_season/{basin_code}.csv'
 
         run_growS_peff_water_yr_precip_compilation(years=years, basin_shp=basin_shp,
@@ -156,7 +156,7 @@ if __name__ == '__main__':
         growS_peff_dir = f'../../Data_main/Raster_data/Effective_precip_prediction_WestUS/{model_version}_grow_season'
         water_yr_precip_dir = '../../Data_main/Raster_data/PRISM_Precip/WestUS_water_year'
         basin_Peff_output_dir = f'../../Data_main/results_eval/peff/grow_season/{basin_code}'
-        basin_precip_output_dir = f'../../Data_main/results_eval/precip_water_yr/{basin_code}'
+        basin_precip_output_dir = f'../../Data_main/results_eval/precip/water_yr/{basin_code}'
         output_csv = f'../../Data_main/results_eval/peff/grow_season/{basin_code}.csv'
 
         run_growS_peff_water_yr_precip_compilation(years=years, basin_shp=basin_shp,
@@ -180,7 +180,7 @@ if __name__ == '__main__':
         growS_peff_dir = f'../../Data_main/Raster_data/Effective_precip_prediction_WestUS/{model_version}_grow_season'
         water_yr_precip_dir = '../../Data_main/Raster_data/PRISM_Precip/WestUS_water_year'
         basin_Peff_output_dir = f'../../Data_main/results_eval/peff/grow_season/{basin_code}'
-        basin_precip_output_dir = f'../../Data_main/results_eval/precip_water_yr/{basin_code}'
+        basin_precip_output_dir = f'../../Data_main/results_eval/precip/water_yr/{basin_code}'
         output_csv = f'../../Data_main/results_eval/peff/grow_season/{basin_code}.csv'
 
         run_growS_peff_water_yr_precip_compilation(years=years, basin_shp=basin_shp,
@@ -205,7 +205,7 @@ if __name__ == '__main__':
                       '../../Data_main/results_eval/peff/grow_season/cv.csv']
         output_csv = '../../Data_main/results_eval/peff/grow_season/all_basins.csv'
 
-        compile_peff_csv_all_basins(annual_csv_list=basin_csvs, output_csv=output_csv)
+        compile_peff_precip_csv_all_basins(annual_csv_list=basin_csvs, output_csv=output_csv)
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
@@ -220,7 +220,8 @@ if __name__ == '__main__':
     skip_process_doug_data = False  # Douglas AMA, AZ
     skip_process_dv_data = False  # Diamond Valley, NV
     skip_process_cv_data = False  # Central Valley, CA
-    skip_compile_all_basin_data = False  # all basins
+    skip_compile_all_basin_peff_data = False  # all basins
+    skip_compile_all_basin_mv_avg_precip_data = False  # all basins
 
     # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
     # # # For Groundwater Management District 4 (GMD4), Kansas
@@ -232,15 +233,23 @@ if __name__ == '__main__':
         basin_code = 'gmd4'
         basin_shp = '../../Data_main/shapefiles/Basins_of_interest/GMD4.shp'
         monthly_peff_dir = f'../../Data_main/Raster_data/Effective_precip_prediction_WestUS/{model_version}_monthly'
+        monthly_precip_dir = f'../../Data_main/Raster_data/PRISM_Precip/WestUS_monthly'
         basin_Peff_output_dir = f'../../Data_main/results_eval/peff/monthly/{basin_code}'
-        output_csv = f'../../Data_main/results_eval/peff/monthly/{basin_code}.csv'
+        basin_precip_output_dir = f'../../Data_main/results_eval/precip/monthly/{basin_code}'
+        peff_output_csv = f'../../Data_main/results_eval/peff/monthly/{basin_code}.csv'
+        precip_output_csv = f'../../Data_main/results_eval/precip/monthly/{basin_code}.csv'
+        precip_moving_avg_output_csv = f'../../Data_main/results_eval/precip/monthly/{basin_code}_mv_avg.csv'
 
-        run_monthly_peff_compilation(years=years, month_range=(4, 11),
-                                     basin_shp=basin_shp,
-                                     Peff_input_dir=monthly_peff_dir,
-                                     basin_Peff_output_dir=basin_Peff_output_dir,
-                                     basin_code=basin_code, output_csv=output_csv,
-                                     skip_processing=skip_process_gmd4_data)
+        run_monthly_peff_precip_compilation(years=years,
+                                            basin_shp=basin_shp,
+                                            Peff_input_dir=monthly_peff_dir,
+                                            precip_input_dir=monthly_precip_dir,
+                                            basin_Peff_output_dir=basin_Peff_output_dir,
+                                            basin_precip_output_dir=basin_precip_output_dir,
+                                            basin_code=basin_code, peff_output_csv=peff_output_csv,
+                                            precip_output_csv=precip_output_csv,
+                                            precip_moving_avg_output_csv=precip_moving_avg_output_csv,
+                                            skip_processing=skip_process_gmd4_data)
 
     # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
     # # # For Groundwater Management District 3 (GMD3), Kansas
@@ -252,15 +261,23 @@ if __name__ == '__main__':
         basin_code = 'gmd3'
         basin_shp = '../../Data_main/shapefiles/Basins_of_interest/GMD3.shp'
         monthly_peff_dir = f'../../Data_main/Raster_data/Effective_precip_prediction_WestUS/{model_version}_monthly'
+        monthly_precip_dir = f'../../Data_main/Raster_data/PRISM_Precip/WestUS_monthly'
         basin_Peff_output_dir = f'../../Data_main/results_eval/peff/monthly/{basin_code}'
-        output_csv = f'../../Data_main/results_eval/peff/monthly/{basin_code}.csv'
+        basin_precip_output_dir = f'../../Data_main/results_eval/precip/monthly/{basin_code}'
+        peff_output_csv = f'../../Data_main/results_eval/peff/monthly/{basin_code}.csv'
+        precip_output_csv = f'../../Data_main/results_eval/precip/monthly/{basin_code}.csv'
+        precip_moving_avg_output_csv = f'../../Data_main/results_eval/precip/monthly/{basin_code}_mv_avg.csv'
 
-        run_monthly_peff_compilation(years=years, month_range=(4, 11),
-                                     basin_shp=basin_shp,
-                                     Peff_input_dir=monthly_peff_dir,
-                                     basin_Peff_output_dir=basin_Peff_output_dir,
-                                     basin_code=basin_code, output_csv=output_csv,
-                                     skip_processing=skip_process_gmd3_data)
+        run_monthly_peff_precip_compilation(years=years,
+                                            basin_shp=basin_shp,
+                                            Peff_input_dir=monthly_peff_dir,
+                                            precip_input_dir=monthly_precip_dir,
+                                            basin_Peff_output_dir=basin_Peff_output_dir,
+                                            basin_precip_output_dir=basin_precip_output_dir,
+                                            basin_code=basin_code, peff_output_csv=peff_output_csv,
+                                            precip_output_csv=precip_output_csv,
+                                            precip_moving_avg_output_csv=precip_moving_avg_output_csv,
+                                            skip_processing=skip_process_gmd3_data)
 
     # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
     # # # For Republican River Basin (RPB), Colorado
@@ -273,15 +290,23 @@ if __name__ == '__main__':
         basin_code = 'rpb'
         basin_shp = '../../Data_main/shapefiles/Basins_of_interest/Republican_Basin.shp'
         monthly_peff_dir = f'../../Data_main/Raster_data/Effective_precip_prediction_WestUS/{model_version}_monthly'
+        monthly_precip_dir = f'../../Data_main/Raster_data/PRISM_Precip/WestUS_monthly'
         basin_Peff_output_dir = f'../../Data_main/results_eval/peff/monthly/{basin_code}'
-        output_csv = f'../../Data_main/results_eval/peff/monthly/{basin_code}.csv'
+        basin_precip_output_dir = f'../../Data_main/results_eval/precip/monthly/{basin_code}'
+        peff_output_csv = f'../../Data_main/results_eval/peff/monthly/{basin_code}.csv'
+        precip_output_csv = f'../../Data_main/results_eval/precip/monthly/{basin_code}.csv'
+        precip_moving_avg_output_csv = f'../../Data_main/results_eval/precip/monthly/{basin_code}_mv_avg.csv'
 
-        run_monthly_peff_compilation(years=years, month_range=(4, 11),
-                                     basin_shp=basin_shp,
-                                     Peff_input_dir=monthly_peff_dir,
-                                     basin_Peff_output_dir=basin_Peff_output_dir,
-                                     basin_code=basin_code, output_csv=output_csv,
-                                     skip_processing=skip_process_rpb_data)
+        run_monthly_peff_precip_compilation(years=years,
+                                            basin_shp=basin_shp,
+                                            Peff_input_dir=monthly_peff_dir,
+                                            precip_input_dir=monthly_precip_dir,
+                                            basin_Peff_output_dir=basin_Peff_output_dir,
+                                            basin_precip_output_dir=basin_precip_output_dir,
+                                            basin_code=basin_code, peff_output_csv=peff_output_csv,
+                                            precip_output_csv=precip_output_csv,
+                                            precip_moving_avg_output_csv=precip_moving_avg_output_csv,
+                                            skip_processing=skip_process_rpb_data)
 
     # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
     # # # For Harquahala INA, Arizona
@@ -294,15 +319,23 @@ if __name__ == '__main__':
         basin_code = 'hqr'
         basin_shp = '../../Data_main/shapefiles/Basins_of_interest/Harquahala_INA.shp'
         monthly_peff_dir = f'../../Data_main/Raster_data/Effective_precip_prediction_WestUS/{model_version}_monthly'
+        monthly_precip_dir = f'../../Data_main/Raster_data/PRISM_Precip/WestUS_monthly'
         basin_Peff_output_dir = f'../../Data_main/results_eval/peff/monthly/{basin_code}'
-        output_csv = f'../../Data_main/results_eval/peff/monthly/{basin_code}.csv'
+        basin_precip_output_dir = f'../../Data_main/results_eval/precip/monthly/{basin_code}'
+        peff_output_csv = f'../../Data_main/results_eval/peff/monthly/{basin_code}.csv'
+        precip_output_csv = f'../../Data_main/results_eval/precip/monthly/{basin_code}.csv'
+        precip_moving_avg_output_csv = f'../../Data_main/results_eval/precip/monthly/{basin_code}_mv_avg.csv'
 
-        run_monthly_peff_compilation(years=years, month_range=(4, 11),
-                                     basin_shp=basin_shp,
-                                     Peff_input_dir=monthly_peff_dir,
-                                     basin_Peff_output_dir=basin_Peff_output_dir,
-                                     basin_code=basin_code, output_csv=output_csv,
-                                     skip_processing=skip_process_hqr_data)
+        run_monthly_peff_precip_compilation(years=years,
+                                            basin_shp=basin_shp,
+                                            Peff_input_dir=monthly_peff_dir,
+                                            precip_input_dir=monthly_precip_dir,
+                                            basin_Peff_output_dir=basin_Peff_output_dir,
+                                            basin_precip_output_dir=basin_precip_output_dir,
+                                            basin_code=basin_code, peff_output_csv=peff_output_csv,
+                                            precip_output_csv=precip_output_csv,
+                                            precip_moving_avg_output_csv=precip_moving_avg_output_csv,
+                                            skip_processing=skip_process_hqr_data)
 
     # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
     # # # For Douglas AMA, Arizona
@@ -314,15 +347,23 @@ if __name__ == '__main__':
         basin_code = 'doug'
         basin_shp = '../../Data_main/shapefiles/Basins_of_interest/Douglas_AMA.shp'
         monthly_peff_dir = f'../../Data_main/Raster_data/Effective_precip_prediction_WestUS/{model_version}_monthly'
+        monthly_precip_dir = f'../../Data_main/Raster_data/PRISM_Precip/WestUS_monthly'
         basin_Peff_output_dir = f'../../Data_main/results_eval/peff/monthly/{basin_code}'
-        output_csv = f'../../Data_main/results_eval/peff/monthly/{basin_code}.csv'
+        basin_precip_output_dir = f'../../Data_main/results_eval/precip/monthly/{basin_code}'
+        peff_output_csv = f'../../Data_main/results_eval/peff/monthly/{basin_code}.csv'
+        precip_output_csv = f'../../Data_main/results_eval/precip/monthly/{basin_code}.csv'
+        precip_moving_avg_output_csv = f'../../Data_main/results_eval/precip/monthly/{basin_code}_mv_avg.csv'
 
-        run_monthly_peff_compilation(years=years, month_range=(4, 11),
-                                     basin_shp=basin_shp,
-                                     Peff_input_dir=monthly_peff_dir,
-                                     basin_Peff_output_dir=basin_Peff_output_dir,
-                                     basin_code=basin_code, output_csv=output_csv,
-                                     skip_processing=skip_process_doug_data)
+        run_monthly_peff_precip_compilation(years=years,
+                                            basin_shp=basin_shp,
+                                            Peff_input_dir=monthly_peff_dir,
+                                            precip_input_dir=monthly_precip_dir,
+                                            basin_Peff_output_dir=basin_Peff_output_dir,
+                                            basin_precip_output_dir=basin_precip_output_dir,
+                                            basin_code=basin_code, peff_output_csv=peff_output_csv,
+                                            precip_output_csv=precip_output_csv,
+                                            precip_moving_avg_output_csv=precip_moving_avg_output_csv,
+                                            skip_processing=skip_process_doug_data)
 
     # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
     # # # For Diamond Valley, Nevada
@@ -335,15 +376,23 @@ if __name__ == '__main__':
         basin_code = 'dv'
         basin_shp = '../../Data_main/shapefiles/Basins_of_interest/Diamond_Valley_Basin.shp'
         monthly_peff_dir = f'../../Data_main/Raster_data/Effective_precip_prediction_WestUS/{model_version}_monthly'
+        monthly_precip_dir = f'../../Data_main/Raster_data/PRISM_Precip/WestUS_monthly'
         basin_Peff_output_dir = f'../../Data_main/results_eval/peff/monthly/{basin_code}'
-        output_csv = f'../../Data_main/results_eval/peff/monthly/{basin_code}.csv'
+        basin_precip_output_dir = f'../../Data_main/results_eval/precip/monthly/{basin_code}'
+        peff_output_csv = f'../../Data_main/results_eval/peff/monthly/{basin_code}.csv'
+        precip_output_csv = f'../../Data_main/results_eval/precip/monthly/{basin_code}.csv'
+        precip_moving_avg_output_csv = f'../../Data_main/results_eval/precip/monthly/{basin_code}_mv_avg.csv'
 
-        run_monthly_peff_compilation(years=years, month_range=(4, 11),
-                                     basin_shp=basin_shp,
-                                     Peff_input_dir=monthly_peff_dir,
-                                     basin_Peff_output_dir=basin_Peff_output_dir,
-                                     basin_code=basin_code, output_csv=output_csv,
-                                     skip_processing=skip_process_dv_data)
+        run_monthly_peff_precip_compilation(years=years,
+                                            basin_shp=basin_shp,
+                                            Peff_input_dir=monthly_peff_dir,
+                                            precip_input_dir=monthly_precip_dir,
+                                            basin_Peff_output_dir=basin_Peff_output_dir,
+                                            basin_precip_output_dir=basin_precip_output_dir,
+                                            basin_code=basin_code, peff_output_csv=peff_output_csv,
+                                            precip_output_csv=precip_output_csv,
+                                            precip_moving_avg_output_csv=precip_moving_avg_output_csv,
+                                            skip_processing=skip_process_dv_data)
 
     # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
     # # # For Central Valley, California
@@ -356,19 +405,27 @@ if __name__ == '__main__':
         basin_code = 'cv'
         basin_shp = '../../Data_main/shapefiles/Basins_of_interest/Central_Valley.shp'
         monthly_peff_dir = f'../../Data_main/Raster_data/Effective_precip_prediction_WestUS/{model_version}_monthly'
+        monthly_precip_dir = f'../../Data_main/Raster_data/PRISM_Precip/WestUS_monthly'
         basin_Peff_output_dir = f'../../Data_main/results_eval/peff/monthly/{basin_code}'
-        output_csv = f'../../Data_main/results_eval/peff/monthly/{basin_code}.csv'
+        basin_precip_output_dir = f'../../Data_main/results_eval/precip/monthly/{basin_code}'
+        peff_output_csv = f'../../Data_main/results_eval/peff/monthly/{basin_code}.csv'
+        precip_output_csv = f'../../Data_main/results_eval/precip/monthly/{basin_code}.csv'
+        precip_moving_avg_output_csv = f'../../Data_main/results_eval/precip/monthly/{basin_code}_mv_avg.csv'
 
-        run_monthly_peff_compilation(years=years, month_range=(4, 11),
-                                     basin_shp=basin_shp,
-                                     Peff_input_dir=monthly_peff_dir,
-                                     basin_Peff_output_dir=basin_Peff_output_dir,
-                                     basin_code=basin_code, output_csv=output_csv,
-                                     skip_processing=skip_process_cv_data)
+        run_monthly_peff_precip_compilation(years=years,
+                                            basin_shp=basin_shp,
+                                            Peff_input_dir=monthly_peff_dir,
+                                            precip_input_dir=monthly_precip_dir,
+                                            basin_Peff_output_dir=basin_Peff_output_dir,
+                                            basin_precip_output_dir=basin_precip_output_dir,
+                                            basin_code=basin_code, peff_output_csv=peff_output_csv,
+                                            precip_output_csv=precip_output_csv,
+                                            precip_moving_avg_output_csv=precip_moving_avg_output_csv,
+                                            skip_processing=skip_process_cv_data)
 
     # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-    # # # For all basins' annual csv compilation
-    if not skip_compile_all_basin_data:
+    # # # For all basins' effective precip csv compilation
+    if not skip_compile_all_basin_peff_data:
         print('Compiling csv of all basins...')
 
         basin_csvs = ['../../Data_main/results_eval/peff/monthly/gmd4.csv',
@@ -380,6 +437,22 @@ if __name__ == '__main__':
                       '../../Data_main/results_eval/peff/monthly/cv.csv']
         output_csv = '../../Data_main/results_eval/peff/monthly/all_basins.csv'
 
-        compile_peff_csv_all_basins(annual_csv_list=basin_csvs, output_csv=output_csv)
+        compile_peff_precip_csv_all_basins(annual_csv_list=basin_csvs, output_csv=output_csv)
+
+    # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+    # # # For all basins' moving avg monthly precip csv compilation
+    if not skip_compile_all_basin_mv_avg_precip_data:
+        print('Compiling csv of all basins...')
+
+        basin_csvs = ['../../Data_main/results_eval/precip/monthly/gmd4_mv_avg.csv',
+                      '../../Data_main/results_eval/precip/monthly/gmd3_mv_avg.csv',
+                      '../../Data_main/results_eval/precip/monthly/rpb_mv_avg.csv',
+                      '../../Data_main/results_eval/precip/monthly/hqr_mv_avg.csv',
+                      '../../Data_main/results_eval/precip/monthly/doug_mv_avg.csv',
+                      '../../Data_main/results_eval/precip/monthly/dv_mv_avg.csv',
+                      '../../Data_main/results_eval/precip/monthly/cv_mv_avg.csv']
+        output_csv = '../../Data_main/results_eval/precip/monthly/all_basins_mv_avg.csv'
+
+        compile_peff_precip_csv_all_basins(annual_csv_list=basin_csvs, output_csv=output_csv)
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #

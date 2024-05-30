@@ -1326,7 +1326,7 @@ def clip_Peff_for_basin(years, basin_shp, Peff_input_dir, basin_Peff_output_dir,
     :param basin_Peff_output_dir: Output directory path to save the clipped effective precipitation estimates for the basin.
     :param basin_code: Basin keyword to add before the processed raster's name. Preferred to use from
                           ['gmd3', 'gmd4', 'rpb', 'hqr', 'doug', 'dv', 'cv'].
-    :param month_range: Range of month to process data for. Example - (4, 11).
+    :param month_range: Range of month to process data for. Example - (4, 10).
                         Default set to None to process growing season effective precipitation data only.
     :param resolution: model resolution.
 
@@ -1350,7 +1350,7 @@ def clip_Peff_for_basin(years, basin_shp, Peff_input_dir, basin_Peff_output_dir,
                                            use_ref_width_height=False)
 
         else:  # for monthly effective precipitation estimates
-            months = list(range(month_range[0], month_range[1]))
+            months = list(range(month_range[0], month_range[1] + 1))
 
             for month in months:
                 print(f'Clipping effective precipitation for {year=}, {month=} ...')
@@ -1367,8 +1367,8 @@ def clip_Peff_for_basin(years, basin_shp, Peff_input_dir, basin_Peff_output_dir,
                                                use_ref_width_height=False)
 
 
-def clip_water_yr_precip_basin(years, basin_shp, precip_input_dir, basin_precip_output_dir,
-                               basin_code, resolution=model_res):
+def clip_precip_for_basin(years, basin_shp, precip_input_dir, basin_precip_output_dir,
+                          basin_code, month_range=None, resolution=model_res):
     """
     Clip effective precipitation estimates for growing seasons or months for the basin.
 
@@ -1378,6 +1378,7 @@ def clip_water_yr_precip_basin(years, basin_shp, precip_input_dir, basin_precip_
     :param basin_precip_output_dir: Output directory path to save the clipped water year precipitation estimates for the basin.
     :param basin_code: Basin keyword to add before the processed raster's name. Preferred to use from
                       ['gmd3', 'gmd4', 'rpb', 'hqr', 'doug', 'dv', 'cv'].
+
     :param resolution: model resolution.
 
     :return: None.
@@ -1385,18 +1386,35 @@ def clip_water_yr_precip_basin(years, basin_shp, precip_input_dir, basin_precip_
     makedirs([basin_precip_output_dir])
 
     for year in years:
-        print(f'Clipping water year precipitation for {year}...')
+        if month_range is None:
+            print(f'Clipping water year precipitation for {year}...')
 
-        precip_raster = glob(os.path.join(precip_input_dir, f'*{year}*.tif'))[0]
+            precip_raster = glob(os.path.join(precip_input_dir, f'*{year}*.tif'))[0]
 
-        clip_resample_reproject_raster(input_raster=precip_raster, input_shape=basin_shp,
-                                       output_raster_dir=basin_precip_output_dir,
-                                       keyword=basin_code, raster_name=None,
-                                       clip=True, resample=False, clip_and_resample=False,
-                                       targetaligned=True, resample_algorithm='near',
-                                       resolution=resolution,
-                                       crs='EPSG:4269', output_datatype=gdal.GDT_Float32,
-                                       use_ref_width_height=False)
+            clip_resample_reproject_raster(input_raster=precip_raster, input_shape=basin_shp,
+                                           output_raster_dir=basin_precip_output_dir,
+                                           keyword=basin_code, raster_name=None,
+                                           clip=True, resample=False, clip_and_resample=False,
+                                           targetaligned=True, resample_algorithm='near',
+                                           resolution=resolution,
+                                           crs='EPSG:4269', output_datatype=gdal.GDT_Float32,
+                                           use_ref_width_height=False)
+        else:  # for monthly precipitation estimates
+            months = list(range(month_range[0], month_range[1] + 1))
+
+            for month in months:
+                print(f'Clipping monthly precipitation for {year=}, {month=} ...')
+
+                precip_raster = glob(os.path.join(precip_input_dir, f'*{year}_{month}*.tif'))[0]
+
+                clip_resample_reproject_raster(input_raster=precip_raster, input_shape=basin_shp,
+                                               output_raster_dir=basin_precip_output_dir,
+                                               keyword=' ', raster_name=None,
+                                               clip=True, resample=False, clip_and_resample=False,
+                                               targetaligned=True, resample_algorithm='near',
+                                               resolution=resolution,
+                                               crs='EPSG:4269', output_datatype=gdal.GDT_Float32,
+                                               use_ref_width_height=False)
 
 
 def compile_basin_growS_peff_water_yr_precip_to_csv(years, basin_peff_dir, basin_water_yr_precip_dir,
@@ -1405,13 +1423,13 @@ def compile_basin_growS_peff_water_yr_precip_to_csv(years, basin_peff_dir, basin
     Compiling pixel-wise growing season effective precipitation and water year precipitation data for a basin into a csv.
 
     :param years: List of years to process data.
-    :param basin_peff_dir: Basin netGW directory.
-    :param basin_water_yr_precip_dir: Basin pumping (in AF) directory.
+    :param basin_peff_dir: Basin effective precipitation directory.
+    :param basin_water_yr_precip_dir: Basin water year precipitation directory.
     :param basin_code: Basin keyword to add before the processed raster's name. Preferred to use from
                   ['gmd3', 'gmd4', 'rpb', 'hqr', 'doug', 'dv', 'cv'].
     :param output_csv: Filepath of output csv.
 
-    :return:  Filepath of output csv.
+    :return:  None.
     """
     makedirs([os.path.dirname(output_csv)])
 
@@ -1452,8 +1470,6 @@ def compile_basin_growS_peff_water_yr_precip_to_csv(years, basin_peff_dir, basin
     df_avg.dropna(inplace=True)
     df_avg.to_csv(output_csv, index=False)
 
-    return output_csv
-
 
 def run_growS_peff_water_yr_precip_compilation(years, basin_shp, Peff_input_dir, basin_Peff_output_dir,
                                                precip_input_dir, basin_precip_output_dir,
@@ -1466,9 +1482,9 @@ def run_growS_peff_water_yr_precip_compilation(years, basin_shp, Peff_input_dir,
         clip_Peff_for_basin(years=years, basin_shp=basin_shp, Peff_input_dir=Peff_input_dir,
                             basin_Peff_output_dir=basin_Peff_output_dir, basin_code=basin_code,
                             month_range=None, resolution=model_res)
-        clip_water_yr_precip_basin(years=years, basin_shp=basin_shp, precip_input_dir=precip_input_dir,
-                                   basin_precip_output_dir=basin_precip_output_dir, basin_code=basin_code,
-                                   resolution=model_res)
+        clip_precip_for_basin(years=years, basin_shp=basin_shp, precip_input_dir=precip_input_dir,
+                              basin_precip_output_dir=basin_precip_output_dir, basin_code=basin_code,
+                              month_range=None, resolution=model_res)
         compile_basin_growS_peff_water_yr_precip_to_csv(years=years, basin_peff_dir=basin_Peff_output_dir,
                                                         basin_water_yr_precip_dir=basin_precip_output_dir,
                                                         basin_code=basin_code, output_csv=output_csv)
@@ -1481,13 +1497,13 @@ def compile_basin_monthly_peff_to_csv(years, month_range, basin_peff_dir, basin_
     Compiling pixel-wise monthly effective precipitation data for a basin into a csv.
 
     :param years: List of years to process data.
-    :param month_range: Range of month to process data for. Example - (4, 11).
-    :param basin_peff_dir: Basin netGW directory.
+    :param month_range: Range of month to process data for. Example - (4, 10).
+    :param basin_peff_dir: Basin monthly effective precipitation directory.
     :param basin_code: Basin keyword to add before the processed raster's name. Preferred to use from
                   ['gmd3', 'gmd4', 'rpb', 'hqr', 'doug', 'dv', 'cv'].
     :param output_csv: Filepath of output csv.
 
-    :return:  Filepath of output csv.
+    :return:  None.
     """
     makedirs([os.path.dirname(output_csv)])
 
@@ -1504,7 +1520,7 @@ def compile_basin_monthly_peff_to_csv(years, month_range, basin_peff_dir, basin_
 
     # lopping through each year and storing data in a list
     for year in years:
-        months = list(range(month_range[0], month_range[1]))
+        months = list(range(month_range[0], month_range[1]+1))
 
         for month in months:
             peff_data = glob(os.path.join(basin_peff_dir, f'*{year}_{month}*.tif'))[0]
@@ -1524,7 +1540,7 @@ def compile_basin_monthly_peff_to_csv(years, month_range, basin_peff_dir, basin_
     df_avg = df.groupby(by=['index', 'month'])['peff'].mean()  # groupby() mean avoid nan values (-9999) by default
 
     # assigning month index as a month column
-    df_avg = df_avg.reset_index()  # assings index as columns
+    df_avg = df_avg.reset_index()  # assigns index as columns
     df_avg = df_avg.drop(columns=['index'])
 
     # assigning basin name
@@ -1534,27 +1550,167 @@ def compile_basin_monthly_peff_to_csv(years, month_range, basin_peff_dir, basin_
     df_avg.dropna(inplace=True)
     df_avg.to_csv(output_csv, index=False)
 
-    return output_csv
 
-
-def run_monthly_peff_compilation(years, basin_shp, Peff_input_dir, basin_Peff_output_dir,
-                                 basin_code, output_csv, month_range=(4, 11), skip_processing=False):
+def compile_basin_monthly_precip_mv_avg_to_csv(years, month_range, basin_precip_dir, basin_code, output_csv):
     """
-    Driver function for processing growing season effective precipitation and water year precipitation for each basin
+    Compiling pixel-wise monthly effective precipitation data for a basin into a csv.
+
+    :param years: List of years to process data.
+    :param month_range: Range of month to process data for. Example - (4, 10).
+    :param basin_precip_dir: Basin monthly precipitation directory.
+    :param basin_code: Basin keyword to add before the processed raster's name. Preferred to use from
+                       ['gmd3', 'gmd4', 'rpb', 'hqr', 'doug', 'dv', 'cv'].
+    :param output_csv: Filepath of output csv.
+
+    :return:  None.
+    """
+    makedirs([os.path.dirname(output_csv)])
+
+    print(f'Compiling monthly precipitation into a csv...')
+
+    # empty dictionary with to store data
+    extract_dict = {'precip': [], 'month': [],
+                    'index': []}  # the index column keep track of pixel which will be used for aggregation to mean
+
+    # basin name dict
+    basin_name_dict = {'gmd4': 'GMD4, KS', 'gmd3': 'GMD3, KS', 'rpb': 'Republican Basin, CO',
+                       'hqr': 'Harquahala INA, AZ', 'doug': 'Douglas AMA, AZ',
+                       'dv': 'Diamond Valley, NV', 'cv': 'Central Valley, CA'}
+
+    # lopping through each year and storing data in a list
+    for year in years:
+        months = list(range(month_range[0], month_range[1] + 1))
+
+        for month in months:
+            precip_data = glob(os.path.join(basin_precip_dir, f'*{year}_{month}*.tif'))[0]
+
+            precip_arr = read_raster_arr_object(precip_data, get_file=False).flatten()
+
+            extract_dict['precip'].extend(list(precip_arr))
+            extract_dict['index'].extend(
+                range(len(list(precip_arr))))  # for each data, the indexing will start from 0 up to the max num of pixels
+
+            month_list = [month] * len(list(precip_arr))
+            extract_dict['month'].extend(month_list)
+
+    # converting dictionary to dataframe and saving to csv
+    df = pd.DataFrame(extract_dict)
+
+    # assigning basin name
+    df['basin_code'] = [basin_code] * len(df)
+    df['basin_name'] = [basin_name_dict[basin_code]] * len(df)
+
+    df.to_csv(output_csv, index=False)
+
+
+def calc_moving_avg_monthly_precip(monthly_precip_csv, basin_code, output_csv):
+    """
+    Calculate moving average monthly precipitation for basins.
+    Estimates the moving average for three default windows of 2, 3, and 4 months.
+
+    :param monthly_precip_csv: Basin's monthly precipitation csv. Must have a index columns (representing consistent
+                               pixel number
+    :param basin_code: Basin keyword to add before the processed raster's name. Preferred to use from
+                      ['gmd3', 'gmd4', 'rpb', 'hqr', 'doug', 'dv', 'cv'].
+    :param output_csv: Filepath for output csv.
+
+    :return: None.
+    """
+    # basin name dict
+    basin_name_dict = {'gmd4': 'GMD4, KS', 'gmd3': 'GMD3, KS', 'rpb': 'Republican Basin, CO',
+                       'hqr': 'Harquahala INA, AZ', 'doug': 'Douglas AMA, AZ',
+                       'dv': 'Diamond Valley, NV', 'cv': 'Central Valley, CA'}
+
+    # loading data
+    df = pd.read_csv(monthly_precip_csv)
+    df = df.dropna()
+
+    # Sort the dataframe by index and month
+    df_test = df.sort_values(by=['index', 'month'])
+
+    # summing precip for all years for each month in a pixel.
+    # Also, keeping count of total values summed for a pixel (each count value account for a year)
+    df_test = df_test.groupby(['index', 'month'])['precip'].agg(['sum', 'count']).reset_index()
+
+    # growing season months
+    growS_months = list(range(4, 11))
+
+    # empty dict to store the result
+    results_dict = {'month': [], 'mean_precip_4_mnth': [], 'mean_precip_3_mnth': [], 'mean_precip_2_mnth': [],
+                    'mean_precip': []}
+
+    # we are only considering 2, 3, and 4 months including the current month as moving average window
+    windows = [4, 3, 2, 1]
+
+    # looping for each window, calculating moving average, and aggregating into a dataframe
+    for window in windows:
+        for mn in growS_months:
+            if window == 4:  # moving season average for 4 months including the current month
+                months_to_consider = list(range(mn - 3, mn + 1))
+            elif window == 3:  # moving season average for 3 months including the current month
+                months_to_consider = list(range(mn - 2, mn + 1))
+            elif window == 2:  # moving season average for 2 months including the current month
+                months_to_consider = list(range(mn - 1, mn + 1))
+            else:
+                months_to_consider = [mn]
+
+            # filtering for months that fall inside the window
+            df_filtered = df_test[df_test['month'].isin(months_to_consider)]
+
+            # summing both the precipitation summed and the pixel count
+            df_grouped = df_filtered.groupby('index').agg({'sum': 'sum', 'count': 'sum'}).reset_index()
+
+            # mean precip for the given month window
+            if window > 1:
+                results_dict[f'mean_precip_{window}_mnth'].extend((df_grouped['sum'] / df_grouped['count']).values)
+            else:
+                results_dict['mean_precip'].extend((df_grouped['sum'] / df_grouped['count']).values)
+
+            if window == 4:  # only recording month info once
+                results_dict['month'].extend([mn] * len(df_grouped))
+
+    df_done = pd.DataFrame(results_dict)
+
+    # assigning basin code and name
+    df_done['basin_code'] = [basin_code] * len(df_done)
+    df_done['basin_name'] = [basin_name_dict[basin_code]] * len(df_done)
+
+    df_done.to_csv(output_csv, index=False)
+
+
+def run_monthly_peff_precip_compilation(years, basin_shp, Peff_input_dir, precip_input_dir,
+                                        basin_Peff_output_dir, basin_precip_output_dir, basin_code,
+                                        peff_output_csv, precip_output_csv, precip_moving_avg_output_csv,
+                                        skip_processing=False):
+    """
+    Driver function for processing monthly effective precipitation and precipitation for each basin
     and compiling data into a csv.
     """
     if not skip_processing:
+        # monthly effective precipitation
         clip_Peff_for_basin(years=years, basin_shp=basin_shp, Peff_input_dir=Peff_input_dir,
                             basin_Peff_output_dir=basin_Peff_output_dir, basin_code=basin_code,
-                            month_range=month_range, resolution=model_res)
-        compile_basin_monthly_peff_to_csv(years=years, month_range=month_range,
+                            month_range=(4, 10), resolution=model_res)
+        compile_basin_monthly_peff_to_csv(years=years, month_range=(4, 10),
                                           basin_peff_dir=basin_Peff_output_dir,
-                                          basin_code=basin_code, output_csv=output_csv)
+                                          basin_code=basin_code, output_csv=peff_output_csv)
+
+        # monthly precipitation (months 1-10 chosen as it will be used to estimate moving average of precip
+        clip_precip_for_basin(years=years, basin_shp=basin_shp, basin_code=basin_code,
+                              precip_input_dir=precip_input_dir, basin_precip_output_dir=basin_precip_output_dir,
+                              month_range=(1, 10), resolution=model_res)
+
+        compile_basin_monthly_precip_mv_avg_to_csv(years=years, month_range=(1, 10),
+                                                   basin_precip_dir=basin_precip_output_dir,
+                                                   basin_code=basin_code, output_csv=precip_output_csv)
+
+        calc_moving_avg_monthly_precip(monthly_precip_csv=precip_output_csv, basin_code=basin_code,
+                                       output_csv=precip_moving_avg_output_csv)
     else:
         pass
 
 
-def compile_peff_csv_all_basins(annual_csv_list, output_csv):
+def compile_peff_precip_csv_all_basins(annual_csv_list, output_csv):
     """
         Compile csv files of all basins' effective precip into a single csv.
 
@@ -1574,3 +1730,5 @@ def compile_peff_csv_all_basins(annual_csv_list, output_csv):
         compiled_annual_df = pd.concat([compiled_annual_df, df])
 
     compiled_annual_df.to_csv(output_csv, index=False)
+
+

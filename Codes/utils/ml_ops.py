@@ -637,6 +637,9 @@ def create_pdplots(trained_model, x_train, features_to_include, output_dir, plot
             'AWC': 'Available water capacity (mm)', 'DEM': 'Elevation', 'month': 'month',
             'Latitude': f'Latitude ({deg_unit})', 'Longitude': f'Longitude ({deg_unit})'
         }
+        # Subplot labels
+        subplot_labels = ['(a)', '(b)', '(c)', '(d)', '(e)', '(f)', '(g)', '(h)', '(i)', '(j)', '(k)',
+                          '(l)', '(m)', '(n)', '(o)', '(p)']
 
         # replacing x and y axis labels
         row_num = range(0, pdisp.axes_.shape[0])
@@ -647,6 +650,11 @@ def create_pdplots(trained_model, x_train, features_to_include, output_dir, plot
             for c in col_num:
                 if pdisp.axes_[r][c] is not None:
                     pdisp.axes_[r][c].set_xlabel(feature_dict[features_to_include[feature_idx]])
+
+                    # subplot num
+                    pdisp.axes_[r][c].text(0.1, 0.9, subplot_labels[feature_idx], transform=pdisp.axes_[r][c].transAxes,
+                                            fontsize=35, va='top', ha='left')
+
                     feature_idx += 1
                 else:
                     pass

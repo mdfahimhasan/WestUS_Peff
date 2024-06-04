@@ -234,7 +234,7 @@ def make_BOI_netGW_vs_pumping_vs_USGS_scatter_plot(df, x1, y1, error_col, hue, x
 def make_scatter_plot_irr_area(df, x, y, hue, xlabel, ylabel, fontsize, lim,
                                basin_labels, figsize=(10, 6),
                                scientific_ticks=True, scilimits=(4, 4),
-                               savepath=None):
+                               savepath=None, legend='on'):
     basin_colors = {'GMD4, KS': '#4c72b0',
                     'GMD3, KS': '#dd8452',
                     'Republican Basin, CO': '#55a868',
@@ -253,17 +253,22 @@ def make_scatter_plot_irr_area(df, x, y, hue, xlabel, ylabel, fontsize, lim,
     ax.set_xlim(lim)
     ax.set_ylim(lim)
 
+    sns.despine(offset=10, trim=True)  # turning of bounding box around the plots
+
     if scientific_ticks:
         ax.ticklabel_format(style='sci', scilimits=scilimits)
         ax.tick_params(axis='both', labelsize=fontsize)
 
-    handles, labels = ax.get_legend_handles_labels()
 
-    # Create legend with square markers, adjust marker size as needed
-    new_handles = [plt.Line2D([], [], marker='s', color=handle.get_facecolor()[0], linestyle='None') for handle in
-                   handles[0:]]  # Skip the first handle as it's the legend title
+    # legend
+    if legend == 'on':
+        handles, labels = ax.get_legend_handles_labels()
 
-    ax.legend(handles=new_handles, labels=list(basin_labels), title='basin', loc='upper left', fontsize=fontsize)
+        # Create legend with square markers, adjust marker size as needed
+        new_handles = [plt.Line2D([], [], marker='s', color=handle.get_facecolor()[0], linestyle='None') for handle in
+                       handles[0:]]  # Skip the first handle as it's the legend title
+
+        ax.legend(handles=new_handles, labels=list(basin_labels), title='basin', loc='upper left', fontsize=fontsize)
 
     plt.tight_layout()
 

@@ -1,3 +1,6 @@
+import os
+import pandas as pd
+
 import seaborn as sns
 import matplotlib.pyplot as plt
 from sklearn.metrics import r2_score, mean_squared_error
@@ -61,33 +64,82 @@ def make_scatter_line_plots(x1, y1,
 
 
 def make_line_plot_v1(y1, y2, year, fontsize, xlabel, ylabel, line_label_1, line_label_2,
-                      figsize=(10, 4), lim=None, legend_pos='upper left'):
+                      figsize=(10, 4), lim=None, legend_pos='upper left',legend='on',
+                      savepath=None, no_xticks=False, suptitle=None):
 
     # line plot (annual mean mm/year)
     fig, ax = plt.subplots(figsize=figsize)
+
     ax.plot(year, y1, label=line_label_1, color='tab:blue', marker='^', linewidth=1)
     ax.plot(year, y2, label=line_label_2, color='tab:green', marker='^', linewidth=1)
     ax.set_xticks(year)
-    ax.set_xticklabels(labels=year, rotation=45)
     ax.set_ylabel(ylabel)
     ax.set_xlabel(xlabel)
     ax.set_ylim(lim)
-    ax.legend(loc=legend_pos, fontsize=(fontsize-2))
+
+    # legend
+    if legend == 'on':
+        ax.legend(loc=legend_pos, fontsize=(fontsize - 2))
+    else:
+        if ax.get_legend() is not None:
+            ax.get_legend().remove()
+
+    # remove bounding box
+    sns.despine(offset=10, trim=True)  # turning of bounding box around the plots
+
+    # suptitle
+    if suptitle is not None:
+        fig.suptitle(suptitle, fontsize=fontsize)
+
+    # xticks
+    ax.set_xticklabels(labels=year, rotation=45, fontsize=fontsize)
+    if no_xticks:
+        ax.set_xticklabels(labels=[])
+
+    plt.subplots_adjust(bottom=0.35)
+
+    if savepath is not None:
+        fig.savefig(savepath, dpi=300, transparent=True)
 
 
 def make_line_plot_v2(y1, y2, y3, year, fontsize, xlabel, ylabel, line_label_1, line_label_2, line_label_3,
-                      figsize=(10, 4), legend_pos='upper left'):
+                      figsize=(10, 4), legend_pos='upper left', legend='on',
+                      savepath=None, no_xticks=False, suptitle=None):
 
     # line plot (annual mean mm/year)
     fig, ax = plt.subplots(figsize=figsize)
+    plt.rcParams['font.size'] = fontsize
+
     ax.plot(year, y1, label=line_label_1, color='tab:blue', marker='^', linewidth=1)
     ax.plot(year, y2, label=line_label_2, color='tab:orange', marker='^', linewidth=1)
     ax.plot(year, y3, label=line_label_3, color='tab:green', marker='^', linewidth=1)
     ax.set_xticks(year)
-    ax.set_xticklabels(labels=year, rotation=45)
     ax.set_ylabel(ylabel)
     ax.set_xlabel(xlabel)
-    ax.legend(loc=legend_pos, fontsize=(fontsize-2))
+
+    # legend
+    if legend == 'on':
+        ax.legend(loc=legend_pos, fontsize=(fontsize-2))
+    else:
+        if ax.get_legend() is not None:
+            ax.get_legend().remove()
+
+    # remove bounding box
+    sns.despine(offset=10, trim=True)  # turning of bounding box around the plots
+
+    # xticks
+    ax.set_xticklabels(labels=year, rotation=45, fontsize=fontsize)
+    if no_xticks:
+        ax.set_xticklabels(labels=[])
+
+    # suptitle
+    if suptitle is not None:
+        fig.suptitle(suptitle, fontsize=fontsize)
+
+    plt.subplots_adjust(bottom=0.35)
+
+    if savepath is not None:
+        fig.savefig(savepath, dpi=300, transparent=True)
 
 
 def make_BOI_netGW_vs_pumping_vs_USGS_scatter_plot(df, x1, y1, error_col, hue, xlabel1, ylabel1, fontsize, lim,
@@ -95,7 +147,7 @@ def make_BOI_netGW_vs_pumping_vs_USGS_scatter_plot(df, x1, y1, error_col, hue, x
                                                    basin_labels=('GMD4, KS', 'GMD3, KS', 'Republican Basin, CO',
                                                                  'Harquahala INA, AZ', 'Douglas AMA, AZ', 'Diamond Valley, NV'),
                                                    x2=None, y2=None, xlabel2=None, ylabel2=None,
-                                                   figsize=(12, 8), savepath=None):
+                                                   figsize=(12, 8), savepath=None, legend='on'):
 
     basin_colors = {'GMD4, KS': '#4c72b0',
                     'GMD3, KS': '#dd8452',
@@ -132,19 +184,23 @@ def make_BOI_netGW_vs_pumping_vs_USGS_scatter_plot(df, x1, y1, error_col, hue, x
             ax[1].ticklabel_format(style='sci', scilimits=scilimits)
             ax[1].tick_params(axis='both', labelsize=fontsize)
 
+        sns.despine(offset=10, trim=True)  # turning of bounding box around the plots
+
+        if legend == 'on':
+            # Create a custom legend
+            handles, labels = ax[0].get_legend_handles_labels()
+
+            # Create legend with square markers, adjust marker size as needed
+            new_handles = [plt.Line2D([], [], marker='s', color=handle.get_facecolor()[0], linestyle='None') for handle in
+                           handles[0:]]  # Skip the first handle as it's the legend title
+
+            ax[0].legend(handles=new_handles, labels=list(basin_labels), title='basin',
+                         loc='lower right', fontsize=(fontsize-2))
+
         plt.tight_layout()
 
-        # Create a custom legend
-        handles, labels = ax[0].get_legend_handles_labels()
-
-        # Create legend with square markers, adjust marker size as needed
-        new_handles = [plt.Line2D([], [], marker='s', color=handle.get_facecolor()[0], linestyle='None') for handle in
-                       handles[0:]]  # Skip the first handle as it's the legend title
-
-        ax[0].legend(handles=new_handles, labels=list(basin_labels), title='basin', loc='upper left', fontsize=fontsize)
-
         if savepath is not None:
-            fig.savefig(savepath, dpi=300)
+            fig.savefig(savepath, dpi=400, transparent=True)
 
     else:
         fig, ax = plt.subplots(figsize=figsize)
@@ -168,10 +224,11 @@ def make_BOI_netGW_vs_pumping_vs_USGS_scatter_plot(df, x1, y1, error_col, hue, x
         new_handles = [plt.Line2D([], [], marker='s', color=handle.get_facecolor()[0], linestyle='None') for handle in
                        handles[0:]]  # Skip the first handle as it's the legend title
 
-        ax.legend(handles=new_handles, labels=list(basin_labels), title='basin', loc='upper left', fontsize=fontsize)
+        ax.legend(handles=new_handles, labels=list(basin_labels), title='basin',
+                  loc='lower right', fontsize=(fontsize-2))
 
         if savepath is not None:
-            fig.savefig(savepath, dpi=300)
+            fig.savefig(savepath, dpi=400, transparent=True)
 
 
 def make_scatter_plot_irr_area(df, x, y, hue, xlabel, ylabel, fontsize, lim,
@@ -239,3 +296,51 @@ def make_scatter_plot(df, x, y,
 
     if savepath is not None:
         fig.savefig(savepath, dpi=300)
+
+
+def variable_correlation_plot(variables_to_include, dataframe_csv,
+                              output_dir, method='spearman',
+                              rename_dict=None):
+    """
+    Makes correlation heatmap of variables (predictors) used in the model using pearson's/spearman's correlation method.
+    *** pearson's method consider linear relationship between variables while spearman's method consider non-linear
+    relationship.
+
+    :param variables_to_include: A list  of variables. Names should match with names available in the provided csv.
+    :param dataframe_csv: Filepath of dataframe csv.
+    :param output_dir: Filepath of output directory to save the image and resulting csv.
+    :param method: Can be 'spearman' or 'pearson'. Default set to 'spearman' to measure strengths of non-linear relationship.
+    :param rename_dict: A dictionary to change the default names of the variable. Set to None as default to not rename the variables.
+
+    :return: None.
+    """
+    global df
+
+    if '.csv' in dataframe_csv:
+        df = pd.read_csv(dataframe_csv)
+    elif '.parquet' in dataframe_csv:
+        df = pd.read_parquet(dataframe_csv)
+
+    df = df[variables_to_include]
+
+    if rename_dict is not None:
+        df = df.rename(columns=rename_dict)
+
+    # estimating correlations
+    corr_coef = round(df.corr(method=method), 2)
+
+    # plotting
+    plt.figure(figsize=(10, 8))
+    plt.rcParams['font.size'] = 12
+    sns.heatmap(corr_coef, cmap='Purples', annot=True, annot_kws={"size": 10})
+    plt.tight_layout()
+    plt.savefig(os.path.join(output_dir, 'variable_correlation.png'), dpi=200)
+
+    # Calculating total value of absolute
+    corr_coef = round(df.corr(method=method).abs(), 2)
+    corr_coef['sum'] = corr_coef.sum() - 1  # deleting 1 to remove self correlation
+    corr_coef.to_csv(os.path.join(output_dir, 'var_correlation.csv'))
+
+
+
+

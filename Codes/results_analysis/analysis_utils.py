@@ -1730,5 +1730,3 @@ def compile_peff_precip_csv_all_basins(annual_csv_list, output_csv):
         compiled_annual_df = pd.concat([compiled_annual_df, df])
 
     compiled_annual_df.to_csv(output_csv, index=False)
-
-

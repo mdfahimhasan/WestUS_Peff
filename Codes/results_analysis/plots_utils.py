@@ -64,7 +64,7 @@ def make_scatter_line_plots(x1, y1,
 
 
 def make_line_plot_v1(y1, y2, year, fontsize, xlabel, ylabel, line_label_1, line_label_2,
-                      figsize=(10, 4), lim=None, legend_pos='upper left',legend='on',
+                      figsize=(10, 4), y_lim=None, legend_pos='upper left',legend='on',
                       savepath=None, no_xticks=False, suptitle=None):
 
     # line plot (annual mean mm/year)
@@ -75,7 +75,7 @@ def make_line_plot_v1(y1, y2, year, fontsize, xlabel, ylabel, line_label_1, line
     ax.set_xticks(year)
     ax.set_ylabel(ylabel)
     ax.set_xlabel(xlabel)
-    ax.set_ylim(lim)
+    ax.set_ylim(y_lim)
 
     # legend
     if legend == 'on':
@@ -103,7 +103,7 @@ def make_line_plot_v1(y1, y2, year, fontsize, xlabel, ylabel, line_label_1, line
 
 
 def make_line_plot_v2(y1, y2, y3, year, fontsize, xlabel, ylabel, line_label_1, line_label_2, line_label_3,
-                      figsize=(10, 4), legend_pos='upper left', legend='on',
+                      figsize=(10, 4), legend_pos='upper left', legend='on', y_lim=None,
                       savepath=None, no_xticks=False, suptitle=None):
 
     # line plot (annual mean mm/year)
@@ -116,6 +116,8 @@ def make_line_plot_v2(y1, y2, y3, year, fontsize, xlabel, ylabel, line_label_1, 
     ax.set_xticks(year)
     ax.set_ylabel(ylabel)
     ax.set_xlabel(xlabel)
+    if y_lim is not None:
+        ax.set_ylim(y_lim)
 
     # legend
     if legend == 'on':

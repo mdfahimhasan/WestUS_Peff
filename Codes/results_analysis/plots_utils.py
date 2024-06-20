@@ -144,11 +144,11 @@ def make_line_plot_v2(y1, y2, y3, year, fontsize, xlabel, ylabel, line_label_1, 
         fig.savefig(savepath, dpi=300, transparent=True)
 
 
-def make_BOI_netGW_vs_pumping_vs_USGS_scatter_plot(df, x1, y1, error_col, hue, xlabel1, ylabel1, fontsize, lim,
+def make_BOI_netGW_vs_pumping_vs_USGS_scatter_plot(df, x1, y1, x2, y2, error_xmin, error_xmax, hue,
+                                                   xlabel1, ylabel1, xlabel2, ylabel2, fontsize, lim,
                                                    scientific_ticks=True, scilimits=(4, 4),
                                                    basin_labels=('GMD4, KS', 'GMD3, KS', 'Republican Basin, CO',
                                                                  'Harquahala INA, AZ', 'Douglas AMA, AZ', 'Diamond Valley, NV'),
-                                                   x2=None, y2=None, xlabel2=None, ylabel2=None,
                                                    figsize=(12, 8), savepath=None, legend='on'):
 
     basin_colors = {'GMD4, KS': '#4c72b0',
@@ -158,79 +158,50 @@ def make_BOI_netGW_vs_pumping_vs_USGS_scatter_plot(df, x1, y1, error_col, hue, x
                     'Douglas AMA, AZ': '#8172b3',
                     'Diamond Valley, NV': '#64b5cd'}
 
-    if x2 is not None:
-        fig, ax = plt.subplots(1, 2, figsize=figsize)
-        plt.rcParams['font.size'] = fontsize
+    fig, ax = plt.subplots(1, 2, figsize=figsize)
+    plt.rcParams['font.size'] = fontsize
 
-        ax[0].errorbar(df[x1], df[y1], xerr=df[error_col], fmt='none', ecolor='gray', alpha=0.2)
-        sns.scatterplot(data=df, x=x1, y=y1, hue=hue, marker='s', ax=ax[0], palette=basin_colors)
-        ax[0].legend_.remove()
-        ax[0].plot([0, 1], [0, 1], 'gray', transform=ax[0].transAxes)
-        ax[0].set_ylabel(ylabel1)
-        ax[0].set_xlabel(xlabel1)
-        ax[0].set_xlim(lim)
-        ax[0].set_ylim(lim)
+    sns.scatterplot(data=df, x=x1, y=y1, hue=hue, marker='s', ax=ax[0], palette=basin_colors)
+    ax[0].hlines(df[y1], df[error_xmin], df[error_xmax], color='gray', alpha=0.4)
+    ax[0].legend_.remove()
+    ax[0].plot([0, 1], [0, 1], 'gray', transform=ax[0].transAxes)
+    ax[0].set_ylabel(ylabel1)
+    ax[0].set_xlabel(xlabel1)
+    ax[0].set_xlim(lim)
+    ax[0].set_ylim(lim)
 
-        sns.scatterplot(data=df, x=x2, y=y2, hue=hue, marker='s', ax=ax[1], palette=basin_colors)
-        ax[1].legend_.remove()
-        ax[1].plot([0, 1], [0, 1], 'gray', transform=ax[1].transAxes)
-        ax[1].set_ylabel(ylabel2)
-        ax[1].set_xlabel(xlabel2)
-        ax[1].set_xlim(lim)
-        ax[1].set_ylim(lim)
+    sns.scatterplot(data=df, x=x2, y=y2, hue=hue, marker='s', ax=ax[1], palette=basin_colors)
+    ax[1].legend_.remove()
+    ax[1].plot([0, 1], [0, 1], 'gray', transform=ax[1].transAxes)
+    ax[1].set_ylabel(ylabel2)
+    ax[1].set_xlabel(xlabel2)
+    ax[1].set_xlim(lim)
+    ax[1].set_ylim(lim)
 
-        if scientific_ticks:
-            ax[0].ticklabel_format(style='sci', scilimits=scilimits)
-            ax[0].tick_params(axis='both', labelsize=fontsize)
+    if scientific_ticks:
+        ax[0].ticklabel_format(style='sci', scilimits=scilimits)
+        ax[0].tick_params(axis='both', labelsize=fontsize)
 
-            ax[1].ticklabel_format(style='sci', scilimits=scilimits)
-            ax[1].tick_params(axis='both', labelsize=fontsize)
+        ax[1].ticklabel_format(style='sci', scilimits=scilimits)
+        ax[1].tick_params(axis='both', labelsize=fontsize)
 
-        sns.despine(offset=10, trim=True)  # turning of bounding box around the plots
+    sns.despine(offset=10, trim=True)  # turning of bounding box around the plots
 
-        if legend == 'on':
-            # Create a custom legend
-            handles, labels = ax[0].get_legend_handles_labels()
-
-            # Create legend with square markers, adjust marker size as needed
-            new_handles = [plt.Line2D([], [], marker='s', color=handle.get_facecolor()[0], linestyle='None') for handle in
-                           handles[0:]]  # Skip the first handle as it's the legend title
-
-            ax[0].legend(handles=new_handles, labels=list(basin_labels), title='Basin',
-                         loc='lower right', fontsize=(fontsize-4))
-
-        plt.tight_layout()
-
-        if savepath is not None:
-            fig.savefig(savepath, dpi=400, transparent=True)
-
-    else:
-        fig, ax = plt.subplots(figsize=figsize)
-        plt.rcParams['font.size'] = fontsize
-
-        sns.scatterplot(data=df, x=x1, y=y1, hue=hue, marker='s', ax=ax, palette=basin_colors)
-        ax.legend_.remove()
-        ax.plot([0, 1], [0, 1], 'gray', transform=ax.transAxes)
-        ax.set_ylabel(ylabel1)
-        ax.set_xlabel(xlabel1)
-        ax.set_xlim(lim)
-        ax.set_ylim(lim)
-
-        if scientific_ticks:
-            ax.ticklabel_format(style='sci', scilimits=scilimits)
-            ax.tick_params(axis='both', labelsize=fontsize)
-
-        handles, labels = ax.get_legend_handles_labels()
+    if legend == 'on':
+        # Create a custom legend
+        handles, labels = ax[0].get_legend_handles_labels()
 
         # Create legend with square markers, adjust marker size as needed
         new_handles = [plt.Line2D([], [], marker='s', color=handle.get_facecolor()[0], linestyle='None') for handle in
                        handles[0:]]  # Skip the first handle as it's the legend title
 
-        ax.legend(handles=new_handles, labels=list(basin_labels), title='Basin',
-                  loc='lower right', fontsize=(fontsize-4))
+        ax[0].legend(handles=new_handles, labels=list(basin_labels), title='Basin',
+                     loc='lower right', fontsize=(fontsize-4))
 
-        if savepath is not None:
-            fig.savefig(savepath, dpi=400, transparent=True)
+    plt.tight_layout()
+
+    if savepath is not None:
+        fig.savefig(savepath, dpi=400, transparent=True)
 
 
 def make_scatter_plot_irr_area(df, x, y, hue, xlabel, ylabel, fontsize, lim,

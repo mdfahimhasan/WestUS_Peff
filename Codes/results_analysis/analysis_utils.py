@@ -941,23 +941,20 @@ def compile_annual_pumping_netGW_all_basins(annual_csv_list, output_csv):
     compiled_annual_df['sim_pumping_m3'] = compiled_annual_df['netGW_m3'] / avg_irrig_efficiency
     compiled_annual_df['sim_mean_pumping_mm'] = compiled_annual_df['mean netGW_mm'] / avg_irrig_efficiency
 
-    # Error range with 70-90% efficiency
-    compiled_annual_df['sim_pumping_m3_70'] = compiled_annual_df['netGW_m3'] / 0.70
-    compiled_annual_df['sim_pumping_m3_90'] = compiled_annual_df['netGW_m3'] / 0.90
-    compiled_annual_df['error_range_m3'] = compiled_annual_df['sim_pumping_m3_70'] - compiled_annual_df[
-        'sim_pumping_m3_90']
-
-    compiled_annual_df['sim_mean_pumping_mm_70'] = compiled_annual_df['mean netGW_mm'] / 0.70
-    compiled_annual_df['sim_mean_pumping_mm_90'] = compiled_annual_df['mean netGW_mm'] / 0.90
-    compiled_annual_df['error_range_mm'] = compiled_annual_df['sim_mean_pumping_mm_70'] - compiled_annual_df[
-        'sim_mean_pumping_mm_90']
-
     # dynamic irrigation efficiency for each basin
     basin_irr_eff_dict = {'gmd4': 0.85, 'gmd3': 0.85, 'rpb': 0.80,
-                          'hqr': 0.6, 'doug': 0.67, 'dv': 0.6}
+                          'hqr': 0.65, 'doug': 0.65, 'dv': 0.87}
     compiled_annual_df['dyn_irr_eff'] = compiled_annual_df.apply(lambda x: basin_irr_eff_dict[x['basin_code']], axis=1)
     compiled_annual_df['sim_pumping_m3_dy'] = compiled_annual_df['netGW_m3'] / compiled_annual_df['dyn_irr_eff']
     compiled_annual_df['sim_mean_pumping_mm_dy'] = compiled_annual_df['mean netGW_mm'] / compiled_annual_df['dyn_irr_eff']
+
+    # Error range with 60-90% efficiency
+    compiled_annual_df['sim_pumping_m3_60'] = compiled_annual_df['netGW_m3'] / 0.60
+    compiled_annual_df['sim_pumping_m3_90'] = compiled_annual_df['netGW_m3'] / 0.90
+
+    compiled_annual_df['sim_mean_pumping_mm_60'] = compiled_annual_df['mean netGW_mm'] / 0.60
+    compiled_annual_df['sim_mean_pumping_mm_90'] = compiled_annual_df['mean netGW_mm'] / 0.90
+
 
     # setting all zero values to np.nan
     compiled_annual_df = compiled_annual_df.replace({0: np.nan})

@@ -217,7 +217,7 @@ if __name__ == '__main__':
         years = [2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010,
                  2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020]
         basin_code = 'cv'
-        irr_eff = 0.65   # from USGS irrigation efficiency data
+        irr_eff = 0.7   # from USGS irrigation efficiency data
         basin_shp = '../../Data_main/shapefiles/Basins_of_interest/Central_Valley.shp'
         westUS_netGW_dir = '../../Data_main/Raster_data/NetGW_irrigation/WesternUS'
         westUS_irr_frac_dir = '../../Data_main/Raster_data/Irrigated_cropland/Irrigated_Frac'

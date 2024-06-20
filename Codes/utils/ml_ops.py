@@ -660,7 +660,7 @@ def create_pdplots(trained_model, x_train, features_to_include, output_dir, plot
                     pass
 
         for row_idx in range(0, pdisp.axes_.shape[0]):
-            pdisp.axes_[row_idx][0].set_ylabel('Effective Precipitation')
+            pdisp.axes_[row_idx][0].set_ylabel('Effective Precipitation \n (mm)')
 
         fig = plt.gcf()
         fig.set_size_inches(30, 30)

@@ -196,8 +196,8 @@ def make_BOI_netGW_vs_pumping_vs_USGS_scatter_plot(df, x1, y1, error_col, hue, x
             new_handles = [plt.Line2D([], [], marker='s', color=handle.get_facecolor()[0], linestyle='None') for handle in
                            handles[0:]]  # Skip the first handle as it's the legend title
 
-            ax[0].legend(handles=new_handles, labels=list(basin_labels), title='basin',
-                         loc='lower right', fontsize=(fontsize-2))
+            ax[0].legend(handles=new_handles, labels=list(basin_labels), title='Basin',
+                         loc='lower right', fontsize=(fontsize-4))
 
         plt.tight_layout()
 
@@ -226,8 +226,8 @@ def make_BOI_netGW_vs_pumping_vs_USGS_scatter_plot(df, x1, y1, error_col, hue, x
         new_handles = [plt.Line2D([], [], marker='s', color=handle.get_facecolor()[0], linestyle='None') for handle in
                        handles[0:]]  # Skip the first handle as it's the legend title
 
-        ax.legend(handles=new_handles, labels=list(basin_labels), title='basin',
-                  loc='lower right', fontsize=(fontsize-2))
+        ax.legend(handles=new_handles, labels=list(basin_labels), title='Basin',
+                  loc='lower right', fontsize=(fontsize-4))
 
         if savepath is not None:
             fig.savefig(savepath, dpi=400, transparent=True)
@@ -261,16 +261,15 @@ def make_scatter_plot_irr_area(df, x, y, hue, xlabel, ylabel, fontsize, lim,
         ax.ticklabel_format(style='sci', scilimits=scilimits)
         ax.tick_params(axis='both', labelsize=fontsize)
 
-
     # legend
     if legend == 'on':
         handles, labels = ax.get_legend_handles_labels()
 
         # Create legend with square markers, adjust marker size as needed
-        new_handles = [plt.Line2D([], [], marker='s', color=handle.get_facecolor()[0], linestyle='None') for handle in
+        new_handles = [plt.Line2D([], [], marker='o', color=handle.get_facecolor()[0], linestyle='None') for handle in
                        handles[0:]]  # Skip the first handle as it's the legend title
 
-        ax.legend(handles=new_handles, labels=list(basin_labels), title='basin', loc='upper left', fontsize=fontsize)
+        ax.legend(handles=new_handles, labels=list(basin_labels), title='Basin', loc='upper left', fontsize=fontsize)
 
     plt.tight_layout()
 

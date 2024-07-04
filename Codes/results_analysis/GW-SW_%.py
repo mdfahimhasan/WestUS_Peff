@@ -1,9 +1,7 @@
 import os
-import numpy as np
 import pandas as pd
 from glob import glob
 from osgeo import gdal
-import geopandas as gpd
 
 from Codes.utils.system_ops import makedirs
 from Codes.utils.vector_ops import clip_vector
@@ -72,7 +70,7 @@ def compile_basin_netGW_SW(years, basin_netGW_dir, basin_SW_dir, basin_name, out
     :param years: List of years to process data.
     :param basin_netGW_dir: Basin netGW directory.
     :param basin_pumping_mm_dir: Basin pumping (in mm) directory.
-    :param basin_pumping_AF_dir: Basin pumping (in AF) directory.
+    :param basin_water_yr_precip_dir: Basin pumping (in AF) directory.
     :param output_csv: Filepath of output csv.
 
     :return:  Filepath of output csv.

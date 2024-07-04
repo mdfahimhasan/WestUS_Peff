@@ -126,8 +126,8 @@ basin_code = 'cv'
 years = [2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010,
                  2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020]
 basin_shp = '../../Data_main/shapefiles/Basins_of_interest/Central_Valley.shp'
-westUS_netGW_dir = '../Data_main/Raster_data/NetGW_irrigation/WesternUS'
-westUS_SW_dir = '../Data_main/Raster_data/SW_irrigation'
+westUS_netGW_dir = '../../Data_main/Raster_data/NetGW_irrigation/WesternUS'
+westUS_SW_dir = '../../Data_main/Raster_data/SW_irrigation'
 basin_netGW_output_dir = f'../../Data_main/results_eval/irrig_perc/{basin_code}/netGW'
 basin_SW_output_dir = f'../../Data_main/results_eval/irrig_perc/{basin_code}/SW'
 
@@ -147,8 +147,8 @@ basin_code = 'srb'
 years = [2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010,
          2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020]
 basin_shp = '../../Data_main/shapefiles/Basins_of_interest/Snake_River_Basin.shp'
-westUS_netGW_dir = '../Data_main/Raster_data/NetGW_irrigation/WesternUS'
-westUS_SW_dir = '../Data_main/Raster_data/SW_irrigation'
+westUS_netGW_dir = '../../Data_main/Raster_data/NetGW_irrigation/WesternUS'
+westUS_SW_dir = '../../Data_main/Raster_data/SW_irrigation'
 basin_netGW_output_dir = f'../../Data_main/results_eval/irrig_perc/{basin_code}/netGW'
 basin_SW_output_dir = f'../../Data_main/results_eval/irrig_perc/{basin_code}/SW'
 

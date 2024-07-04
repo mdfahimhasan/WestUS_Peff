@@ -11,20 +11,20 @@ model_res = 0.01976293625031605786  # in deg, ~2 km
 WestUS_shape = '../../Data_main/shapefiles/Western_US_ref_shapes/WestUS_states.shp'
 WestUS_raster = '../../Data_main/reference_rasters/Western_US_refraster_2km.tif'
 
-model_version = 'v10'  # # # #
+model_version = 'v11'  # # # #
 
 # # # # # for growing season # # # # #
 if __name__ == '__main__':
     # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
     # boolean switches to process data for each region
-    skip_process_gmd4_data = True  # Groundwater Management District 4, KS
-    skip_process_gmd3_data = True  # Groundwater Management District 3, KS
-    skip_process_rpb_data = True  # Republican River Basin, Co
-    skip_process_hqr_data = True  # Harquahala INA, AZ
-    skip_process_doug_data = True  # Douglas AMA, AZ
-    skip_process_dv_data = True  # Diamond Valley, NV
-    skip_process_cv_data = True  # Central Valley, CA
-    skip_compile_all_basin_data = True  # all basins
+    skip_process_gmd4_data = False  # Groundwater Management District 4, KS
+    skip_process_gmd3_data = False  # Groundwater Management District 3, KS
+    skip_process_rpb_data = False  # Republican River Basin, Co
+    skip_process_hqr_data = False  # Harquahala INA, AZ
+    skip_process_doug_data = False  # Douglas AMA, AZ
+    skip_process_dv_data = False  # Diamond Valley, NV
+    skip_process_cv_data = False  # Central Valley, CA
+    skip_compile_all_basin_data = False  # all basins
 
     # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
     # # # For Groundwater Management District 4 (GMD4), Kansas

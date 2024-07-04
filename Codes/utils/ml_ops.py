@@ -634,7 +634,7 @@ def create_pdplots(trained_model, x_train, features_to_include, output_dir, plot
             'GRIDMET_wind_vel': 'Wind velocity (m/s)', 'GRIDMET_short_rad': 'Downward shortwave radiation (W/$m^2$)',
             'DAYMET_sun_hr': 'Daylight duration (hr)', 'Bulk_density': 'Bulk Density (kg/$m^3$)',
             'Clay_content': 'Clay content (%)', 'Field_capacity': 'Field Capacity (%)', 'Sand_content': 'Sand Content (%)',
-            'AWC': 'Available water capacity (mm)', 'DEM': 'Elevation', 'month': 'month',
+            'AWC': 'Available water capacity (mm)', 'DEM': 'Elevation', 'month': 'Month',
             'Latitude': f'Latitude ({deg_unit})', 'Longitude': f'Longitude ({deg_unit})'
         }
         # Subplot labels

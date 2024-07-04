@@ -1128,13 +1128,13 @@ def download_data_from_GEE_by_multiprocess(download_urls_fp_list, use_cpu=2):
 
     :param download_urls_fp_list: A list of tuples where each tuple has the data url (1st member) and local file path
                                   (2nd member).
-    :param use_cpu: Number of CPU/core (Int) to use for downloading. Default set to 15.
+    :param use_cpu: Number of CPU/core (Int) to use for downloading. Default set to 2.
 
     :return: None.
     """
     # Using ThreadPool() instead of pool() as this is an I/O bound job not CPU bound
-    # Using imap() as it completes assigns one task at a time to the Thread
-    # Pool() and blocks until each task is complet
+    # Using imap() as it completes assigning one task at a time to the ThreadPool()
+    # and blocks until each task is complete
     print('######')
     print('Downloading data from GEE..')
     print(f'{cpu_count()} CPUs on this machine. Engaging {use_cpu} CPUs for downloading')

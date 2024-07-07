@@ -12,7 +12,7 @@ sys.path.insert(0, dirname(dirname(dirname(abspath(__file__)))))
 
 from Codes.utils.system_ops import makedirs
 from Codes.utils.ml_ops import reindex_df
-from Codes.utils.raster_ops import read_raster_arr_object, write_array_to_raster
+from Codes.utils.raster_ops import read_raster_arr_object, write_array_to_raster, create_multiband_raster
 
 no_data_value = -9999
 model_res = 0.01976293625031605786  # in deg, ~2 km
@@ -336,3 +336,31 @@ def sum_monthly_effective_precip_to_grow_season(years_list, monthly_effective_pr
             summed_raster = os.path.join(grow_season_effective_precip_output_dir, f'effective_precip_{year}.tif')
             write_array_to_raster(raster_arr=sum_arr, raster_file=file, transform=file.transform,
                                   output_path=summed_raster)
+
+
+def process_monthly_peff_rasters_to_multiband(years, peff_monthly_dir, output_dir, nodata=no_data_value):
+    """
+    Compiles monthly effective precipitation estimates into multi-band rasters for each year.
+
+    :param years: List of years.
+    :param peff_monthly_dir: Filepath of monthly effective precipitation rasters.
+    :param output_dir: Filepath of output directory to save the multi-band raster.
+    :param nodata: Default set to -9999.
+
+    :return: None,
+    """
+    makedirs([output_dir])
+    for year in years:
+        peff_data_list = []
+
+        # collecting the monthly Peff estimates serially for a year
+        for month in list(range(4, 11)):  # list of months from 4-10
+            monthly_peff = glob(os.path.join(peff_monthly_dir, f'*{year}_{month}*.tif'))
+            peff_data_list.append(monthly_peff[0])
+
+        # creating the multi-band image for monthly datasets within an year
+        output_raster = os.path.join(output_dir, f'effective_precip_{year}_monthly.tif')
+
+        create_multiband_raster(input_files_list=peff_data_list,
+                                output_file=output_raster, nodata=nodata)
+        print(f'created effective precipitation monthly multi-band raster for {year}...')

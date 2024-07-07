@@ -578,3 +578,38 @@ def create_ref_raster(input_raster, output_ref_raster):
                           output_path=output_ref_raster)
 
 
+def create_multiband_raster(input_files_list, output_file, nodata=no_data_value):
+    """
+    Create a multi-band image from a list of images.
+
+    :param input_files_list: List of image file paths to be included in the multi-band image.
+    :param output_file: Filepath of output raster.
+    :param nodata: Default set to -9999.
+
+    :return: None
+    """
+    # reading first dataset to extract essential metadata
+    raster_arr, raster_file = read_raster_arr_object(input_files_list[0])
+    height, width = raster_arr.shape[0], raster_arr.shape[0]
+
+    with rio.open(
+            output_file,
+            'w',
+            driver='GTiff',
+            height=height,
+            width=width,
+            dtype=raster_arr.dtype,
+            count=len(input_files_list),
+            crs=raster_file.crs,
+            transform=raster_file.transform,
+            nodata=nodata
+    ) as dst:
+        for id, layer in enumerate(input_files_list, start=1):
+            with rio.open(layer) as src:
+                year = os.path.basename(layer).split('_')[2]
+                month = os.path.basename(layer).split('_')[3].split('.')[0]
+                band_name = f'{year}_{month}'
+
+                dst.write_band(id, src.read(1))
+                dst.set_band_description(id, band_name)
+

@@ -5,36 +5,39 @@ Effective precipitation, defined as the portion of ET derived from precipitation
 
 __Keywords:__ Effective precipitation, Groundwater; Irrigation; Water use; Remote sensing; Machine learning.
 
+## Publications
+in progress
+
 ## Organizations
-<img src="Readme_Figures/CSU-Signature-C-357.png" height="60"/> &nbsp; <img src="Readme_Figures/DRITaglineLogoTransparentBackground.png" height="45"/>
+<img src="readme_figs/CSU-Signature-C-357-617.png" height="80"/> <img src="readme_figs/Official-DRI-Logo-for-Web.png" height="70"/>
 
 ## Funding
-https://www.google.com/url?sa=i&url=https%3A%2F%2Fcommons.wikimedia.org%2Fwiki%2FFile%3ANASA_logo.svg&psig=AOvVaw0gLopUniES7ucPpQjuDNoa&ust=1720458599992000&source=images&cd=vfe&opi=89978449&ved=0CBEQjRxqFwoTCIC75u61lYcDFQAAAAAdAAAAABAE
+<img src="readme_figs/NASA-Logo-Large.png" height="80"/>
 
 ## Running the repository
 
 ### Repository structure
 The repository has five main modules described as follows-
 
-__1. utils -__ consists of scripts that helps in basic raster, vector, and statistical operation. It also holds the _ml_ops_ scripts which has the machine learning functions.
+__1. utils -__ consists of scripts that helps in basic raster, vector, and statistical operation. It also holds the `ml_ops` scripts which has the machine learning functions.
 
-__2. data_download_preprocess -__ consists of scripts that have functions to download datasets from GEE, including OpenET, and to further pre-process the datasets. The _run_download_preprocess.py_ is the main driver script that has to be used to download and pre-process all required datasets.
+__2. data_download_preprocess -__ consists of scripts that have functions to download datasets from GEE, including OpenET, and to further pre-process the datasets. The `run_download_preprocess.py` is the main driver script that has to be used to download and pre-process all required datasets.
 
-__3. effective_precip -__ consists of functions that are required specifically for the effective precipitation model. The _eff_precip_model.py_ is the main driver script of the 
+__3. effective_precip -__ consists of functions that are required specifically for the effective precipitation model. The `eff_precip_model.py` is the main driver script of the 
 effective precipitation model.
 
-__4. sw_irrig -__ consists of functions that are required for dictributing USGS HUC12 level surface water irrigation data to 2 km pixel scale. The _SW_Irr.py_ is the main driver file.
+__4. sw_irrig -__ consists of functions that are required for dictributing USGS HUC12 level surface water irrigation data to 2 km pixel scale. The `SW_Irr.py` is the main driver file.
 
-__5. netGW -__ consists of the _netGW_Irr.py_ script that has the functions to estimate consumptive groundwter use for irrigation at 2 km resolution using a water balance appraoch.  
+__5. netGW -__ consists of the `netGW_Irr.py` script that has the functions to estimate consumptive groundwter use for irrigation at 2 km resolution using a water balance appraoch.  
 
 The __utils__ module do not need any execution. The latter modules are required to be executed using the respective driver files to unvail the full funtionality of the model. The repository has other auxiliary folders with scripts that are some data processing, result analysis,and plotting purposes.
 
 ### Dependencies
-__operating system:__ All scripts are fully functional in windows and linux environments. In linux environment, gdal needs to be installed separately and the appropriate 'gdal_path' needs to be set in necessary scripts. For some functions, e.g. the _shapefile_to_raster()_ in utils > raster_ops.py and associated scripts (results_analysis > netGW_pumping_compile.py), gdal system call has to enabled/installed specifically to run them in linux environment. Note that all modules, except _results_analysis_, have been implemented/checked using both windows and linux environment (using conda environment). However, the authors recommend exercising discretion when setting up the environment and run the scripts.
+__operating system:__ All scripts are fully functional in windows and linux environments. In linux environment, gdal needs to be installed separately and the appropriate 'gdal_path' needs to be set in necessary scripts. For some functions, e.g. the `shapefile_to_raster()` in `utils > raster_ops.py` and associated scripts (`results_analysis > netGW_pumping_compile.py`), gdal system call has to enabled/installed specifically to run them in linux environment. Note that all modules, except `results_analysis`, have been implemented/checked using both windows and linux environment (using conda environment). However, the authors recommend exercising discretion when setting up the environment and run the scripts.
 
 __conda environment:__ A _conda environment_ set up using [Anaconda](https://www.anaconda.com/products/individual) with python 3.9 has been used to implement this repositories. Required libraries needed to be installed to run this repository are - dask, dask-geopandas, earthengine-api, fastparquet, gdal, matplotlib, numpy, pandas, rasterio, scikit-learn, shapely, seaborn. 
 
-Note that the _.ipynb_ scrips will require installaion of jupyter lab within the conda environment.
+Note that the `.ipynb` scripts will require installaion of jupyter lab within the conda environment.
 
 ### Google Earth Engine Authentication
 This project relies on the Google Earth Engine (GEE) Python API for downloading (and reducing) some of the predictor datasets from the GEE

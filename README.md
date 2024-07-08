@@ -9,7 +9,7 @@ __Keywords:__ Effective precipitation, Groundwater; Irrigation; Water use; Remot
 in progress
 
 ## Organizations
-<img src="readme_figs/CSU-Signature-C-357-617.png" height="80"/> <img src="readme_figs/Official-DRI-Logo-for-Web.png" height="70"/>
+<img src="readme_figs/CSU-Signature-C-357-617.png" height="90"/> <img src="readme_figs/Official-DRI-Logo-for-Web.png" height="80"/>
 
 ## Funding
 <img src="readme_figs/NASA-Logo-Large.png" height="80"/>
@@ -39,9 +39,13 @@ __conda environment:__ A _conda environment_ set up using [Anaconda](https://www
 
 Note that the `.ipynb` scripts will require installaion of jupyter lab within the conda environment.
 
-### Google Earth Engine Authentication
+### Google Earth Engine authentication
 This project relies on the Google Earth Engine (GEE) Python API for downloading (and reducing) some of the predictor datasets from the GEE
 data repository. After completing step 3, run ```earthengine authenticate```. The installation and authentication guide 
 for the earth-engine Python API is available [here](https://developers.google.com/earth-engine/guides/python_install). The Google Cloud CLI tools
 may be required for this GEE authentication step. Refer to the installation docs [here](https://cloud.google.com/sdk/docs/install-sdk). You also have to create a gcloud project to use the GEE API. 
+
+
+## Data availability
+The monthly effective precipitation estimates for the growing season (April - October) of 2000 to 2020 are available to download through this [GEE script](https://code.earthengine.google.com/8a41d8cbfb32e73cb339be98c111c875). Non-GEE users can acccess the dataset from this [HydroShare repo](https://www.hydroshare.org/resource/c33ce80f5ae44fe6ab2e5dd3c128eb0b/).
 

@@ -35,7 +35,7 @@ The __utils__ module do not need any execution. The latter modules are required 
 ### Dependencies
 __operating system:__ All scripts are fully functional in windows and linux environments. In linux environment, gdal needs to be installed separately and the appropriate 'gdal_path' needs to be set in necessary scripts. For some functions, e.g. the `shapefile_to_raster()` in `utils > raster_ops.py` and associated scripts (`results_analysis > netGW_pumping_compile.py`), gdal system call has to enabled/installed specifically to run them in linux environment. Note that all modules, except `results_analysis`, have been implemented/checked using both windows and linux environment (using conda environment). However, the authors recommend exercising discretion when setting up the environment and run the scripts.
 
-__conda environment:__ A _conda environment_ set up using [Anaconda](https://www.anaconda.com/products/individual) with python 3.9 has been used to implement this repositories. Required libraries needed to be installed to run this repository are - dask, dask-geopandas, earthengine-api, fastparquet, gdal, matplotlib, numpy, pandas, rasterio, scikit-learn, shapely, seaborn. 
+__conda environment:__ A _conda environment_, set up using [Anaconda](https://www.anaconda.com/products/individual) with python 3.9, has been used to implement this repositories. Required libraries needed to be installed to run this repository are - dask, dask-geopandas, earthengine-api, fastparquet, gdal, matplotlib, numpy, pandas, rasterio, scikit-learn, shapely, seaborn. 
 
 Note that the `.ipynb` scripts will require installaion of jupyter lab within the conda environment.
 

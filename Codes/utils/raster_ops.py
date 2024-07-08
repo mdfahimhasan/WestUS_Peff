@@ -590,7 +590,7 @@ def create_multiband_raster(input_files_list, output_file, nodata=no_data_value)
     """
     # reading first dataset to extract essential metadata
     raster_arr, raster_file = read_raster_arr_object(input_files_list[0])
-    height, width = raster_arr.shape[0], raster_arr.shape[0]
+    height, width = raster_arr.shape[0], raster_arr.shape[1]
 
     with rio.open(
             output_file,

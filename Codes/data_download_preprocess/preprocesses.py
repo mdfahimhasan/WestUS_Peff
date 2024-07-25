@@ -482,7 +482,7 @@ def process_prism_data(prism_bil_dir, prism_tif_dir, output_dir_prism_monthly, o
             if 'precip' in keyword:
                     prism_datasets = glob(os.path.join(output_dir_prism_monthly, f'*{year}*.tif'))  # monthly prism datasets for each year
 
-                    # Summing raster for each growing season
+                    # Summing raster for each year
                     summed_output_for_year = os.path.join(output_dir_prism_yearly, f'prism_precip_{year}.tif')
                     sum_rasters(raster_list=prism_datasets, raster_dir=None, output_raster=summed_output_for_year,
                                 ref_raster=prism_datasets[0])

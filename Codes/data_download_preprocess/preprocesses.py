@@ -7,7 +7,7 @@ from osgeo import gdal
 from os.path import dirname, abspath
 sys.path.insert(0, dirname(dirname(dirname(abspath(__file__)))))
 
-from Codes.utils.system_ops import makedirs, copy_file
+from Codes.utils.system_ops import makedirs
 from Codes.utils.raster_ops import read_raster_arr_object, write_array_to_raster, mosaic_rasters_list, \
         clip_resample_reproject_raster, sum_rasters, mean_rasters, make_lat_lon_array_from_raster
 

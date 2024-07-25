@@ -8,6 +8,8 @@ __Keywords:__ Effective precipitation, Groundwater; Irrigation; Water use; Remot
 ## Effective precipitation map
 <img src="readme_figs/Peff_map.png" height="500"/> 
 
+Figure: Machine learning model generated monthly and growing season effective precipitation estimates for 2016 at 2 km spatial resolution.
+
 ## Publications
 in progress
 

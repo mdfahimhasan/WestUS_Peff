@@ -373,7 +373,7 @@ def get_gee_dict(data_name):
 
 def cloud_cover_filter(data_name, start_date, end_date, from_bit, to_bit, geometry_bounds):
     """
-    Applies cloud cover mask on GEE data.
+    Applies cloud cover mask on GEE MODIS data.
 
     :param data_name: Data Name.
            Valid dataset include- ['MODIS_Terra_NDVI', 'MODIS_Terra_EVI', 'MODIS_NDWI', 'MODIS_NDVI'].

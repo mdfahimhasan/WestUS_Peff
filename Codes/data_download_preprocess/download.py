@@ -871,9 +871,9 @@ def download_gee_data_yearly(data_name, download_dir, year_list, month_range, me
                 r = requests.get(data_url, allow_redirects=True)
                 open(local_file_name, 'wb').write(r.content)
 
-                # # Joining LANID and AIM-HPA
-                # The equal operation (with 0) sets non-irrigated locations to 1 and irrigated to 0
-                # Remapping the irrigated 0 values to 1 and then applying a mask
+                # This is a check block to see if downloaded datasets are OK
+                # sometimes a particular grid's data is corrupted but it's completely random, not sure why it happens.
+                # Re-downloading the same data might not have that error
                 try:
                     arr = read_raster_arr_object(local_file_name, get_file=False)
 

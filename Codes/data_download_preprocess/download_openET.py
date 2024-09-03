@@ -32,14 +32,14 @@ GEE_merging_refraster_large_grids = '../../Data_main/reference_rasters/GEE_mergi
 
 
 def get_openet_gee_dict(data_name):
-    ee.Initialize(opt_url='https://earthengine-highvolume.googleapis.com')
+    ee.Initialize(project='ee-fahim', opt_url='https://earthengine-highvolume.googleapis.com')
 
     gee_data_dict = {
-        'OpenET_ensemble': 'OpenET/ENSEMBLE/CONUS/GRIDMET/MONTHLY/v2_0',
-        'Irrig_crop_OpenET_IrrMapper': 'OpenET/ENSEMBLE/CONUS/GRIDMET/MONTHLY/v2_0',
-        'Irrig_crop_OpenET_LANID': 'OpenET/ENSEMBLE/CONUS/GRIDMET/MONTHLY/v2_0',
-        'Rainfed_crop_OpenET_IrrMapper': 'OpenET/ENSEMBLE/CONUS/GRIDMET/MONTHLY/v2_0',
-        'Rainfed_crop_OpenET_LANID': 'OpenET/ENSEMBLE/CONUS/GRIDMET/MONTHLY/v2_0',
+        'OpenET_ensemble': ['OpenET/ENSEMBLE/CONUS/GRIDMET/MONTHLY/v2_0', 'projects/openet/assets/ensemble/conus/gridmet/monthly/provisional'],
+        'Irrig_crop_OpenET_IrrMapper': ['OpenET/ENSEMBLE/CONUS/GRIDMET/MONTHLY/v2_0', 'projects/openet/assets/ensemble/conus/gridmet/monthly/provisional'],
+        'Irrig_crop_OpenET_LANID': ['OpenET/ENSEMBLE/CONUS/GRIDMET/MONTHLY/v2_0', 'projects/openet/assets/ensemble/conus/gridmet/monthly/provisional'],
+        'Rainfed_crop_OpenET_IrrMapper': ['OpenET/ENSEMBLE/CONUS/GRIDMET/MONTHLY/v2_0', 'projects/openet/assets/ensemble/conus/gridmet/monthly/provisional'],
+        'Rainfed_crop_OpenET_LANID': ['OpenET/ENSEMBLE/CONUS/GRIDMET/MONTHLY/v2_0', 'projects/openet/assets/ensemble/conus/gridmet/monthly/provisional'],
         'USDA_CDL': 'USDA/NASS/CDL',
         'IrrMapper': 'projects/ee-dgketchum/assets/IrrMapper/IrrMapperComp',
         'LANID': 'projects/ee-fahim/assets/LANID_for_selected_states/selected_Annual_LANID',
@@ -105,11 +105,11 @@ def get_openet_gee_dict(data_name):
     # In most cases the end date is shifted a month later to cover the end month's data
 
     month_start_date_dict = {
-        'OpenET_ensemble': datetime(2016, 1, 1),
-        'Irrig_crop_OpenET_IrrMapper': datetime(2016, 1, 1),
-        'Irrig_crop_OpenET_LANID': datetime(2016, 1, 1),
-        'Rainfed_crop_OpenET_IrrMapper': datetime(2016, 1, 1),
-        'Rainfed_crop_OpenET_LANID': datetime(2016, 1, 1),
+        'OpenET_ensemble': datetime(2000, 1, 1),
+        'Irrig_crop_OpenET_IrrMapper': datetime(2000, 1, 1),
+        'Irrig_crop_OpenET_LANID': datetime(2000, 1, 1),
+        'Rainfed_crop_OpenET_IrrMapper': datetime(2000, 1, 1),
+        'Rainfed_crop_OpenET_LANID': datetime(2000, 1, 1),
         'USDA_CDL': datetime(2008, 1, 1),  # CONUS/West US full coverage starts from 2008
         'IrrMapper': datetime(1986, 1, 1),
         'LANID': None,
@@ -137,11 +137,11 @@ def get_openet_gee_dict(data_name):
     }
 
     year_start_date_dict = {
-        'OpenET_ensemble': datetime(2016, 1, 1),
-        'Irrig_crop_OpenET_IrrMapper': datetime(2016, 1, 1),
-        'Irrig_crop_OpenET_LANID': datetime(2016, 1, 1),
-        'Rainfed_crop_OpenET_IrrMapper': datetime(2016, 1, 1),
-        'Rainfed_crop_OpenET_LANID': datetime(2016, 1, 1),
+        'OpenET_ensemble': datetime(2000, 1, 1),
+        'Irrig_crop_OpenET_IrrMapper': datetime(2000, 1, 1),
+        'Irrig_crop_OpenET_LANID': datetime(2000, 1, 1),
+        'Rainfed_crop_OpenET_IrrMapper': datetime(2000, 1, 1),
+        'Rainfed_crop_OpenET_LANID': datetime(2000, 1, 1),
         'USDA_CDL': datetime(2008, 1, 1),  # CONUS/West US full coverage starts from 2008
         'IrrMapper': datetime(1986, 1, 1),
         'LANID': None,
@@ -248,7 +248,7 @@ def download_openet_indiv_models_grow_season(download_dir, year_list, merge_keyw
 
     :return: None.
     """
-    ee.Initialize(opt_url='https://earthengine-highvolume.googleapis.com')
+    ee.Initialize(project='ee-fahim', opt_url='https://earthengine-highvolume.googleapis.com')
 
     # models' gee info (except DisALEXI/ALEXI, it doesn't have output from 2001-2015)
     ssebop_asset = "OpenET/SSEBOP/CONUS/GRIDMET/MONTHLY/v2_0"
@@ -374,13 +374,21 @@ def download_openet_ensemble(download_dir, year_list, month_range, merge_keyword
 
     :return: None.
     """
-    ee.Initialize(opt_url='https://earthengine-highvolume.googleapis.com')
+    ee.Initialize(project='ee-fahim', opt_url='https://earthengine-highvolume.googleapis.com')
     download_dir = os.path.join(download_dir, 'OpenET_ensemble_monthly')
     makedirs([download_dir])
 
     # Extracting dataset information required for downloading from GEE
     data, band, multiply_scale, reducer, month_start_range, month_end_range, \
     year_start_range, year_end_range = get_openet_gee_dict('OpenET_ensemble')
+
+    # selecting open vs provisional data asset in GEE
+    # openET 1985-2007 data is provisional and 2008 to upfront data in open in GEE
+    # selecting appropriate OpenET GEE asset based on year
+    if month_start_range.year >= 2008:
+        data = data[0]
+    elif month_start_range.year <= 2007:
+        data = data[1]
 
     # Loading grid files to be used for data download
     grids = gpd.read_file(grid_shape)
@@ -519,7 +527,7 @@ def download_Irr_frac_from_IrrMapper_yearly(data_name, download_dir, year_list, 
 
     :return: None.
     """
-    ee.Initialize(opt_url='https://earthengine-highvolume.googleapis.com')
+    ee.Initialize(project='ee-fahim', opt_url='https://earthengine-highvolume.googleapis.com')
     download_dir = os.path.join(download_dir, data_name)
     makedirs([download_dir])
 
@@ -650,7 +658,7 @@ def download_Irr_frac_from_LANID_yearly(data_name, download_dir, year_list, grid
 
     :return: None.
     """
-    ee.Initialize(opt_url='https://earthengine-highvolume.googleapis.com')
+    ee.Initialize(project='ee-fahim', opt_url='https://earthengine-highvolume.googleapis.com')
     download_dir = os.path.join(download_dir, data_name)
     makedirs([download_dir])
 
@@ -798,7 +806,7 @@ def download_CropET_from_OpenET_IrrMapper_monthly(data_name, download_dir, year_
 
     :return: None.
     """
-    ee.Initialize(opt_url='https://earthengine-highvolume.googleapis.com')
+    ee.Initialize(project='ee-fahim', opt_url='https://earthengine-highvolume.googleapis.com')
     download_dir = os.path.join(download_dir, data_name)
     makedirs([download_dir])
 
@@ -807,6 +815,14 @@ def download_CropET_from_OpenET_IrrMapper_monthly(data_name, download_dir, year_
     _, _ = get_openet_gee_dict(data_name)
 
     irr_data, irr_band, irr_multiply_scale, irr_reducer, _, _, _, _ = get_openet_gee_dict('IrrMapper')
+
+    # selecting open vs provisional data asset in GEE
+    # openET 1985-2007 data is provisional and 2008 to upfront data in open in GEE
+    # selecting appropriate OpenET GEE asset based on year
+    if et_month_start_range.year >= 2008:
+        et_data = et_data[0]
+    elif et_month_start_range.year <= 2007:
+        et_data = et_data[1]
 
     # Loading grid files to be used for data download
     grids = gpd.read_file(grid_shape)
@@ -952,13 +968,21 @@ def download_CropET_from_OpenET_LANID_monthly(data_name, download_dir, year_list
 
     :return: None.
     """
-    ee.Initialize(opt_url='https://earthengine-highvolume.googleapis.com')
+    ee.Initialize(project='ee-fahim', opt_url='https://earthengine-highvolume.googleapis.com')
     download_dir = os.path.join(download_dir, data_name)
     makedirs([download_dir])
 
     # Extracting OpenET dataset information required for downloading from GEE
     et_data, et_band, et_multiply_scale, et_reducer, et_month_start_range, et_month_end_range, \
     _, _ = get_openet_gee_dict(data_name)
+
+    # selecting open vs provisional data asset in GEE
+    # openET 1985-2007 data is provisional and 2008 to upfront data in open in GEE
+    # selecting appropriate OpenET GEE asset based on year
+    if et_month_start_range.year >= 2008:
+        et_data = et_data[0]
+    elif et_month_start_range.year <= 2007:
+        et_data = et_data[1]
 
     # Extracting irrigated (LANID + AIM-HPA) dataset information (saved as an asset) from GEE
     lanid_asset, _, _, _, _, _, _, _ = get_openet_gee_dict('LANID')
@@ -1135,7 +1159,7 @@ def download_Rainfed_frac_from_IrrMapper_yearly(data_name, download_dir, year_li
 
     :return: None.
     """
-    ee.Initialize(opt_url='https://earthengine-highvolume.googleapis.com')
+    ee.Initialize(project='ee-fahim', opt_url='https://earthengine-highvolume.googleapis.com')
     download_dir = os.path.join(download_dir, data_name)
     makedirs([download_dir])
 
@@ -1300,7 +1324,7 @@ def download_Rainfed_frac_from_LANID_yearly(data_name, download_dir, year_list, 
 
     :return: None.
     """
-    ee.Initialize(opt_url='https://earthengine-highvolume.googleapis.com')
+    ee.Initialize(project='ee-fahim', opt_url='https://earthengine-highvolume.googleapis.com')
     download_dir = os.path.join(download_dir, data_name)
     makedirs([download_dir])
 
@@ -1489,7 +1513,7 @@ def download_Rainfed_CropET_from_OpenET_IrrMapper_monthly(data_name, download_di
 
     :return: None.
     """
-    ee.Initialize(opt_url='https://earthengine-highvolume.googleapis.com')
+    ee.Initialize(project='ee-fahim', opt_url='https://earthengine-highvolume.googleapis.com')
     download_dir = os.path.join(download_dir, data_name)
     makedirs([download_dir])
 
@@ -1499,6 +1523,14 @@ def download_Rainfed_CropET_from_OpenET_IrrMapper_monthly(data_name, download_di
 
     irr_data, irr_band, irr_multiply_scale, irr_reducer, _, _, _, _ = get_openet_gee_dict('IrrMapper')
     cdl_data, cdl_band, cdl_multiply_scale, cdl_reducer, _, _, _, _ = get_openet_gee_dict('USDA_CDL')
+
+    # selecting open vs provisional data asset in GEE
+    # openET 1985-2007 data is provisional and 2008 to upfront data in open in GEE
+    # selecting appropriate OpenET GEE asset based on year
+    if et_month_start_range.year >= 2008:
+        et_data = et_data[0]
+    elif et_month_start_range.year <= 2007:
+        et_data = et_data[1]
 
     # Loading grid files to be used for data download
     grids = gpd.read_file(grid_shape)
@@ -1670,7 +1702,7 @@ def download_Rainfed_CropET_from_OpenET_LANID_monthly(data_name, download_dir, y
 
     :return: None.
     """
-    ee.Initialize(opt_url='https://earthengine-highvolume.googleapis.com')
+    ee.Initialize(project='ee-fahim', opt_url='https://earthengine-highvolume.googleapis.com')
     download_dir = os.path.join(download_dir, data_name)
     makedirs([download_dir])
 
@@ -1696,6 +1728,14 @@ def download_Rainfed_CropET_from_OpenET_LANID_monthly(data_name, download_dir, y
     _, _ = get_openet_gee_dict(data_name)
 
     cdl_data, cdl_band, cdl_multiply_scale, cdl_reducer, _, _, _, _ = get_openet_gee_dict('USDA_CDL')
+
+    # selecting open vs provisional data asset in GEE
+    # openET 1985-2007 data is provisional and 2008 to upfront data in open in GEE
+    # selecting appropriate OpenET GEE asset based on year
+    if et_month_start_range.year >= 2008:
+        et_data = et_data[0]
+    elif et_month_start_range.year <= 2007:
+        et_data = et_data[1]
 
     # Loading grid files to be used for data download
     grids = gpd.read_file(grid_shape)
@@ -1952,7 +1992,7 @@ def download_all_openET_datasets(year_list, month_range,
                                  skip_download_OpenET_data=True,
                                  use_cpu_while_multidownloading=15):
     """
-    Download all GEE datasets and ssebop data.
+    Download all GEE datasets.
 
     :param year_list: List of year_list to download data for. We will use data for [2010, 2015] in the model.
     :param month_range: Tuple of month ranges to download data for, e.g., for months 1-12 use (1, 12).

@@ -87,7 +87,7 @@ def extract_data(zip_dir_or_list, out_dir, search_by='*.zip', rename_file=True):
 
 
 def get_gee_dict(data_name):
-    ee.Initialize(opt_url='https://earthengine-highvolume.googleapis.com')
+    ee.Initialize(project='ee-fahim', opt_url='https://earthengine-highvolume.googleapis.com')
 
     gee_data_dict = {
         'SMAP_SM': 'NASA_USDA/HSL/SMAP10KM_soil_moisture',
@@ -393,7 +393,7 @@ def cloud_cover_filter(data_name, start_date, end_date, from_bit, to_bit, geomet
 
         :return Cloud-masked image.
         """
-        ee.Initialize(opt_url='https://earthengine-highvolume.googleapis.com')
+        ee.Initialize(project='ee-fahim', opt_url='https://earthengine-highvolume.googleapis.com')
         global qc_img
         if data_name in ('MODIS_Terra_NDVI', 'MODIS_Terra_EVI'):
             qc_img = img.select('DetailedQA')
@@ -548,7 +548,7 @@ def download_soil_datasets(data_name, download_dir, merge_keyword, grid_shape, r
 
     :return: None.
     """
-    ee.Initialize()
+    ee.Initialize(project='ee-fahim', opt_url='https://earthengine-highvolume.googleapis.com')
 
     download_dir = os.path.join(download_dir, data_name)
     makedirs([download_dir])
@@ -623,7 +623,7 @@ def download_tree_cover_data(data_name, download_dir, merge_keyword, grid_shape,
 
     :return: None.
     """
-    ee.Initialize()
+    ee.Initialize(project='ee-fahim', opt_url='https://earthengine-highvolume.googleapis.com')
 
     download_dir = os.path.join(download_dir, data_name)
     makedirs([download_dir])
@@ -695,7 +695,7 @@ def download_DEM_Slope_data(data_name, download_dir, merge_keyword, grid_shape, 
 
     :return: None.
     """
-    ee.Initialize()
+    ee.Initialize(project='ee-fahim', opt_url='https://earthengine-highvolume.googleapis.com')
 
     download_dir = os.path.join(download_dir, data_name)
     makedirs([download_dir])
@@ -777,7 +777,7 @@ def download_gee_data_yearly(data_name, download_dir, year_list, month_range, me
 
     :return: None.
     """
-    ee.Initialize(opt_url='https://earthengine-highvolume.googleapis.com')
+    ee.Initialize(project='ee-fahim', opt_url='https://earthengine-highvolume.googleapis.com')
     download_dir = os.path.join(download_dir, data_name)
     makedirs([download_dir])
 
@@ -930,7 +930,7 @@ def download_gee_data_monthly(data_name, download_dir, year_list, month_range, m
 
     :return: None.
     """
-    ee.Initialize(opt_url='https://earthengine-highvolume.googleapis.com')
+    ee.Initialize(project='ee-fahim', opt_url='https://earthengine-highvolume.googleapis.com')
     download_dir = os.path.join(download_dir, data_name)
     makedirs([download_dir])
 
@@ -1165,7 +1165,7 @@ def download_eff_precip_data_from_DK_asset(data_name, download_dir, year_list, m
 
     :return: None.
     """
-    ee.Initialize()
+    ee.Initialize(project='ee-fahim', opt_url='https://earthengine-highvolume.googleapis.com')
     download_dir = os.path.join(download_dir, data_name)
     makedirs([download_dir])
 
@@ -1379,10 +1379,9 @@ def download_ssebop_et(years_list, month_range_list, download_dir='../../Data_ma
 def download_all_datasets(year_list, month_range, grid_shape_large,
                           gee_data_list,  data_download_dir,
                           skip_download_gee_data=True,
-                          use_cpu_while_multidownloading=15,
-                          skip_download_ssebop_data=True):
+                          use_cpu_while_multidownloading=15):
     """
-    Download all GEE datasets and ssebop data.
+    Download all GEE datasets.
 
     :param year_list: List of year_list to download data for. We will use data for [2010, 2015] in the model.
     :param month_range: Tuple of month ranges to download data for, e.g., for months 1-12 use (1, 12).
@@ -1401,7 +1400,6 @@ def download_all_datasets(year_list, month_range, grid_shape_large,
     :param skip_download_OpenET_data: Set to False if want to download listed data. Default set to True.
     :param use_cpu_while_multidownloading: Number (Int) of CPU cores to use for multi-download by
                                            multi-processing/multi-threading. Default set to 15.
-    :param skip_download_ssebop_data: Set to False if want to download ssebop data. Default set to True.
 
     :return: None.
     """
@@ -1410,11 +1408,5 @@ def download_all_datasets(year_list, month_range, grid_shape_large,
                           year_list=year_list, month_range=month_range,
                           grid_shape_large=grid_shape_large, skip_download=skip_download_gee_data,
                           use_cpu_while_multidownloading=use_cpu_while_multidownloading)
-
-    # SseBop data download from USGS link
-    ssebop_download_dir = os.path.join(data_download_dir, 'Ssebop_ETa')
-    download_ssebop_et(year_list, month_range_list=[1, 12],
-                       download_dir=ssebop_download_dir,
-                       skip_download=skip_download_ssebop_data)
 
 

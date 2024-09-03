@@ -12,7 +12,7 @@ GEE_merging_refraster_large_grids = '../../Data_main/reference_rasters/GEE_mergi
 
 # # Data download
 skip_download_gee_data = True
-skip_download_OpenET_data = True
+skip_download_OpenET_data = False
 
 gee_data_list = ['Field_capacity', 'Bulk_density', 'Sand_content', 'Clay_content',
                  'GRIDMET_RET', 'GRIDMET_vap_pres_def','GRIDMET_max_RH', 'GRIDMET_Precip',
@@ -20,20 +20,24 @@ gee_data_list = ['Field_capacity', 'Bulk_density', 'Sand_content', 'Clay_content
                  'USDA_CDL', 'Tree_cover', 'DEM']
 
 openET_data_list = ['Irrig_crop_OpenET_IrrMapper', 'Irrig_crop_OpenET_LANID',
-                    'Irrigation_Frac_IrrMapper', 'Irrigation_Frac_LANID',
                     'Rainfed_crop_OpenET_IrrMapper', 'Rainfed_crop_OpenET_LANID',
-                    'Rainfed_Frac_IrrMapper', 'Rainfed_Frac_LANID',
-                    'OpenET_ensemble', 'OpenET_indiv_models_grow_season']
+                    'OpenET_ensemble',
+                    # 'Irrigation_Frac_IrrMapper', 'Irrigation_Frac_LANID',
+                    # 'Rainfed_Frac_IrrMapper', 'Rainfed_Frac_LANID',
+                    # 'OpenET_indiv_models_grow_season'
+                    ]
 
 
 years = [2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007,
-         2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015,
-         2016, 2017, 2018, 2019, 2020]
+         2008, 2009, 2010, 2011, 2012,
+         # 2013, 2014, 2015,
+         # 2016, 2017, 2018, 2019, 2020
+         ]
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-# openET 2000-2015 data will be contributed by DRI collaborators
+# openET 2000-2012 data will be contributed by DRI collaborators
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
-months = (1, 12)
+months = (1, 3)  # then (11, 12) # then openet ensemble monthly from 2013-2020 (1, 3) and (11, 12)
 gee_grid_shape_large = '../../Data_main/shapefiles/Western_US_ref_shapes/WestUS_gee_grid.shp'
 gee_grid_shape_for30m_IrrMapper = '../../Data_main/shapefiles/Western_US_ref_shapes/WestUS_gee_grid_for30m_IrrMapper.shp'
 gee_grid_shape_for30m_LANID = '../../Data_main/shapefiles/Western_US_ref_shapes/WestUS_gee_grid_for30m_LANID.shp'

@@ -317,68 +317,6 @@ def filter_rainfed_irrigated_cropET_with_rainfed_irrigated_cropland(rainfed_crop
         pass
 
 
-def process_ssebop_data(year_list, input_ssebop_dir, output_dir_ssebop_monthly, output_dir_ssebop_yearly,
-                        west_US_shape='../../Data_main/shapefiles/Western_US_ref_shapes/WestUS_states.shp',
-                        ref_raster=WestUS_raster, resolution=model_res, skip_processing=False):
-    """
-    Process (sum and clip to Western US extent) Ssebop ET for growing seasons (April to October).
-
-    :param year_list: Tuple/list of year_list for which ssebop data was downloaded.
-    :param input_ssebop_dir: Directory file path of downloaded ssebop datasets.
-    :param output_dir_ssebop_monthly: File path of directory to save monthly SseBop ET at Western US extent.
-    :param output_dir_ssebop_yearly: File path of directory to save summed ET for each year at Western US extent.
-    :param west_US_shape: Filepath of Western US shapefile.
-    :param ref_raster: Model reference raster filepath.
-    :param resolution: Resolution used in the model. Default set to model_res = 0.02000000000000000736.
-    :param skip_processing: Set to True if want to skip ssebop processing.
-
-    :return: None.
-    """
-    if not skip_processing:
-        makedirs([output_dir_ssebop_monthly, output_dir_ssebop_yearly])
-
-        #########
-        # # Code-block for saving monthly data for the Western US
-        #########
-        # Clipping SseBop monthly datasets for Western US
-        monthly_ssebop_data = glob(os.path.join(input_ssebop_dir, '*.tif'))  # monthly ssebop datasets
-        for data in monthly_ssebop_data:
-            month = os.path.basename(data).split('.')[0][-2:]
-            year = os.path.basename(data).split('.')[0][1:5]
-
-            if month.startswith('0'):  # don't want to keep 0 in month for consistency will all datasets
-                month = month[-1]
-
-            print(f'processing SseBop data for year {year}, month {month}....')
-
-            monthly_raster_name = f'SSEBOP_ET_{year}_{month}.tif'
-
-            clip_resample_reproject_raster(input_raster=data,
-                                           input_shape=west_US_shape,
-                                           raster_name=monthly_raster_name, keyword=' ',
-                                           output_raster_dir=output_dir_ssebop_monthly,
-                                           clip=False, resample=False, clip_and_resample=True,
-                                           targetaligned=True, resample_algorithm='near',
-                                           use_ref_width_height=False, ref_raster=ref_raster,
-                                           resolution=resolution)
-
-        #########
-        # # Code-block for summing monthly data for year_list by growing season (April-October) for the Western US
-        #########
-        for year in year_list:  # first loop for year_list
-            print(f'summing Ssebop data for year {year}...')
-            ssebop_datasets = glob(os.path.join(output_dir_ssebop_monthly, f'*{year}_[4-9]*.tif')) + \
-                                glob(os.path.join(output_dir_ssebop_monthly, f'*{year}_10*.tif'))   # monthly ssebop datasets for each year
-
-            # Summing raster for each growing season
-            summed_output_for_year = os.path.join(output_dir_ssebop_yearly, f'SSEBOP_ET_{year}.tif')
-            sum_rasters(raster_list=ssebop_datasets, raster_dir=None, output_raster=summed_output_for_year,
-                        ref_raster=ssebop_datasets[0])
-
-    else:
-        pass
-
-
 def convert_prism_data_to_tif(input_dir, output_dir, keyword='prism_precip'):
     """
     Convert prism rainfall/temperature datasets from .bil format to GeoTiff format.
@@ -410,7 +348,7 @@ def process_prism_data(prism_bil_dir, prism_tif_dir, output_dir_prism_monthly, o
                        ref_raster=WestUS_raster, resolution=model_res, skip_processing=False):
     """
     Process (sum and mean to Western US extent) Prism Precipitation, Tmax, and Tmin data. The precipitation data is
-    summed for all months in a year. The Tmax and Tmin data is averaged for growing season (April - October).
+    summed for all months in a year.
 
     :param prism_bil_dir: Directory file path of downloaded prism datasets in .bil format.
     :param prism_tif_dir: Directory file path of prism datasets converted to tif format.
@@ -430,7 +368,11 @@ def process_prism_data(prism_bil_dir, prism_tif_dir, output_dir_prism_monthly, o
     """
     if not skip_processing:
         interim_dir_for_monthly_data = os.path.join(output_dir_prism_monthly, 'interim_dir_for_monthly_data')
-        makedirs([output_dir_prism_monthly, output_dir_prism_yearly, interim_dir_for_monthly_data])
+
+        if output_dir_prism_yearly is not None:
+            makedirs([output_dir_prism_monthly, output_dir_prism_yearly, interim_dir_for_monthly_data])
+        else:
+            makedirs([output_dir_prism_monthly, interim_dir_for_monthly_data])
 
         convert_prism_data_to_tif(input_dir=prism_bil_dir, output_dir=prism_tif_dir, keyword=keyword)
 
@@ -474,7 +416,7 @@ def process_prism_data(prism_bil_dir, prism_tif_dir, output_dir_prism_monthly, o
                                            use_ref_width_height=False, ref_raster=ref_raster,
                                            resolution=resolution)
         #########
-        # # Code-block for summing monthly data for year_list by growing season for the Western US
+        # # Code-block for summing monthly precipitation data for year_list
         #########
         for year in year_list:  # first loop for year_list
             print(f'Processing {keyword} data for {year}...')
@@ -489,13 +431,7 @@ def process_prism_data(prism_bil_dir, prism_tif_dir, output_dir_prism_monthly, o
 
             elif any(i in keyword for i in ['tmax', 'tmin']):
 
-                    prism_datasets = glob(os.path.join(output_dir_prism_monthly, f'*{year}_[4-9]*.tif')) + \
-                                     glob(os.path.join(output_dir_prism_monthly, f'*{year}_10*.tif'))   # monthly growing season prism datasets for each year
-
-                    # Calculating mean of rasters for growing season (April-October)
-                    mean_output_for_year = os.path.join(output_dir_prism_yearly, f'{keyword}_{year}.tif')
-                    mean_rasters(raster_list=prism_datasets, raster_dir=None, output_raster=mean_output_for_year,
-                                 ref_raster=prism_datasets[0])
+                    print('This code does not aggregate prism tmax and tmin data for entire year/growing season')
 
     else:
         pass
@@ -778,7 +714,7 @@ def develop_excess_ET_filter(monthly_precip_dir, output_dir_precip_water_yr, gro
         pass
 
 
-def run_all_preprocessing(skip_prism_processing=True,
+def run_all_preprocessing(skip_prism_processing=False,
                           skip_gridmet_precip_processing=False,
                           skip_gridmet_RET_precessing=False,
                           skip_merging_rainfed_frac=False,
@@ -789,7 +725,7 @@ def run_all_preprocessing(skip_prism_processing=True,
                           skip_filtering_irrigated_rainfed_cropET=False,
                           skip_summing_irrigated_cropET=False,
                           skip_summing_rainfed_cropET=False,
-                          skip_openET_processing=True,
+                          skip_openET_processing=False,
                           skip_excess_ET_filter_processing=False,
                           skip_processing_slope_data=False,
                           skip_process_AWC_data=False,
@@ -913,7 +849,7 @@ def run_all_preprocessing(skip_prism_processing=True,
                        prism_bil_dir='../../Data_main/Raster_data/PRISM_Tmax/bil_format',
                        prism_tif_dir='../../Data_main/Raster_data/PRISM_Tmax/tif_format',
                        output_dir_prism_monthly='../../Data_main/Raster_data/PRISM_Tmax/WestUS_monthly',
-                       output_dir_prism_yearly='../../Data_main/Raster_data/PRISM_Tmax/WestUS',
+                       output_dir_prism_yearly=None,
                        west_US_shape='../../Data_main/shapefiles/Western_US_ref_shapes/WestUS_states.shp',
                        keyword='prism_tmax', skip_processing=skip_prism_processing)
 
@@ -923,7 +859,7 @@ def run_all_preprocessing(skip_prism_processing=True,
                        prism_bil_dir='../../Data_main/Raster_data/PRISM_Tmin/bil_format',
                        prism_tif_dir='../../Data_main/Raster_data/PRISM_Tmin/tif_format',
                        output_dir_prism_monthly='../../Data_main/Raster_data/PRISM_Tmin/WestUS_monthly',
-                       output_dir_prism_yearly='../../Data_main/Raster_data/PRISM_Tmin/WestUS',
+                       output_dir_prism_yearly=None,
                        west_US_shape='../../Data_main/shapefiles/Western_US_ref_shapes/WestUS_states.shp',
                        keyword='prism_tmin', skip_processing=skip_prism_processing)
 

@@ -1,10 +1,12 @@
 import os
+import re
 import sys
 import pickle
 import numpy as np
 import pandas as pd
 from glob import glob
 from osgeo import gdal
+import rasterio as rio
 import geopandas as gpd
 
 from os.path import dirname, abspath
@@ -338,7 +340,69 @@ def sum_monthly_effective_precip_to_grow_season(years_list, monthly_effective_pr
                                   output_path=summed_raster)
 
 
-def process_monthly_peff_rasters_to_multiband(years, peff_monthly_dir, output_dir, nodata=no_data_value):
+def dynamic_sum_peff(year_list, growsing_season_dir, monthly_peff_dir, gs_peff_dir, skip_processing=False):
+    """
+    Dynamically (spati-temporally) sums effective precipitation monthly rasters for the growing seasons.
+
+    :param year_list: List of years to process the data for.
+    :param growsing_season_dir: Directory path for growing season datasets.
+    :param monthly_peff_dir:  Directory path for monthly effective precipitation datasets.
+    :param gs_peff_dir:  Directory path (output) for summed growing season effective precipitation datasets.
+    :param skip_processing: Set to True if want to skip processing this step.
+    :return:
+    """
+    if not skip_processing:
+        makedirs([gs_peff_dir])
+
+        # The regex r'_([0-9]{1,2})\.tif' extracts the month (1 or 2 digits; e.g., '_1.tif', '_12.tif')
+        # from the filenames using the first group ([0-9]{1,2}).
+        # The extracted month is then (inside the for loop in the sorting block) converted to an integer with int(group(1))
+        # for proper sorting by month.
+        month_pattern = re.compile(r'_([0-9]{1,2})\.tif')
+
+        for year in year_list:
+            # gathering and sorting the peff datasets by month (from 1 to 12)
+            peff_datasets = glob(os.path.join(monthly_peff_dir, f'*{year}*.tif'))
+            sorted_peff_datasets = sorted(peff_datasets, key=lambda x: int(
+                month_pattern.search(x).group(1)))  # First capturing group (the month)
+
+            # peff monthly array stacked in a single numpy array
+            peff_arrs = np.stack([read_raster_arr_object(i, get_file=False) for i in sorted_peff_datasets], axis=0)
+
+            # gathering, reading, and stacking growing season array
+            gs_data = glob(os.path.join(growsing_season_dir, f'*{year}*.tif'))[0]
+            start_gs_arr, ras_file = read_raster_arr_object(gs_data, band=1, get_file=True)
+            end_gs_arr = read_raster_arr_object(gs_data, band=1, get_file=False)
+
+            # We create a 1 pixel "kernel", representing months 1 to 12 (shape - 12, 1, 1).
+            # Then it is broadcasted across the array and named as the kernel_mask.
+            # The kernel_mask acts as a mask, and only sum peff values for months that are 'True'.
+            kernel = np.arange(1, 13, 1).reshape(12, 1, 1)
+            kernel_mask = (kernel >= start_gs_arr) & (kernel <= end_gs_arr)
+
+            # sum peff arrays over the valid months using the kernel_mask
+            summed_peff = np.sum(peff_arrs * kernel_mask, axis=0)
+
+            # saving the summed peff array
+            output_name = f'effective_precip_{year}.tif'
+            output_path = os.path.join(gs_peff_dir, output_name)
+            with rio.open(
+                    output_path,
+                    'w',
+                    driver='GTiff',
+                    height=summed_peff.shape[0],
+                    width=summed_peff.shape[1],
+                    dtype=np.float32,
+                    count=1,
+                    crs=ras_file.crs,
+                    transform=ras_file.transform,
+                    nodata=-9999
+            ) as dst:
+                dst.write(summed_peff, 1)
+            break
+
+
+def process_monthly_peff_rasters_to_multiband_forGEE(years, peff_monthly_dir, output_dir, nodata=no_data_value):
     """
     Compiles monthly effective precipitation estimates into multi-band rasters for each year.
 

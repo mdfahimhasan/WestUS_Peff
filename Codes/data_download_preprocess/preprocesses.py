@@ -1,15 +1,17 @@
 import os
 import sys
+import datetime
 import numpy as np
 from glob import glob
 from osgeo import gdal
+import rasterio as rio
 
 from os.path import dirname, abspath
 sys.path.insert(0, dirname(dirname(dirname(abspath(__file__)))))
 
 from Codes.utils.system_ops import makedirs
 from Codes.utils.raster_ops import read_raster_arr_object, write_array_to_raster, mosaic_rasters_list, \
-        clip_resample_reproject_raster, sum_rasters, mean_rasters, make_lat_lon_array_from_raster
+        clip_resample_reproject_raster, sum_rasters, make_lat_lon_array_from_raster
 
 
 no_data_value = -9999
@@ -714,6 +716,90 @@ def develop_excess_ET_filter(monthly_precip_dir, output_dir_precip_water_yr, gro
         pass
 
 
+def extract_month_from_GrowSeason_data(GS_data_dir, skip_processing=False):
+    """
+    Extract start and ending growing season months from growing season dataset (provided by Justin Huntington DRI;
+    downloaded from GEE to google drive). The output datasets have 2 bands, containing start and end month info,
+    respectively.
+
+    :param GS_data_dir: Directory path of growing season dataset. The GEE-downloaded datasets are in the
+                        'ee_exports' folder.
+    :param skip_processing: Set to true if want to skip processing.
+
+    :return: None.
+    """
+
+    def doy_to_month(year, doy):
+        """
+        Convert a day of year (DOY) to a month in a given year.
+
+        :param year (int): The year in which the DOY is being calculated.
+        :param doy (int): The day of the year (1 through 365 or 366 for leap years).
+
+        :return: Month of the corresponding date.
+        """
+        if np.isnan(doy):  # Check if the DOY is NaN
+            return np.nan
+
+        # January 1st of the given year
+        month = (datetime.datetime(year, 1, 1) + datetime.timedelta(int(doy) - 1)).month
+
+        return month
+
+    if not skip_processing:
+        print('Processing growing season data...')
+
+        # collecting GEE exported data files and making new directories for processing
+        GS_data_files = glob(os.path.join(GS_data_dir, 'ee_exports', '*.tif'))
+        interim_dir = os.path.join(GS_data_dir, 'interim')
+        makedirs([interim_dir])
+
+        # looping through each dataset, extracting start and end of the growing season months, saving as an array
+        for data in GS_data_files:
+            raster_name = os.path.basename(data)
+            year = int(raster_name.split('_')[1].split('.')[0])
+
+            # clipping and resampling the growing season data with the western US reference raster
+            interim_raster = clip_resample_reproject_raster(input_raster=data,
+                                                            input_shape=WestUS_shape,
+                                                            raster_name=raster_name,
+                                                            output_raster_dir=interim_dir,
+                                                            clip=False, resample=False, clip_and_resample=True,
+                                                            targetaligned=True, resample_algorithm='near',
+                                                            use_ref_width_height=False, ref_raster=None,
+                                                            resolution=model_res)
+
+            # reading the start and end DoY of the growing season
+            startDOY_arr, ras_file = read_raster_arr_object(interim_raster, band=1)
+            endDOY_arr = read_raster_arr_object(interim_raster, band=2, get_file=False)
+
+            # vectorizing the doy_to_month() function to apply on a numpy array
+            vectorized_doy_to_date = np.vectorize(doy_to_month)
+
+            # converting the start and end DoY to corresponding month
+            start_months = vectorized_doy_to_date(year, startDOY_arr)
+            end_months = vectorized_doy_to_date(year, endDOY_arr)
+
+            # stacking the arrays together (single tif with 2 bands)
+            GS_month_arr = np.stack((start_months, end_months), axis=0)
+
+            # saving the array
+            output_raster = os.path.join(GS_data_dir, raster_name)
+            with rio.open(
+                    output_raster,
+                    'w',
+                    driver='GTiff',
+                    height=GS_month_arr.shape[1],
+                    width=GS_month_arr.shape[2],
+                    dtype=np.float32,
+                    count=GS_month_arr.shape[0],
+                    crs=ras_file.crs,
+                    transform=ras_file.transform,
+                    nodata=-9999
+            ) as dst:
+                dst.write(GS_month_arr)
+
+
 def run_all_preprocessing(skip_prism_processing=False,
                           skip_gridmet_precip_processing=False,
                           skip_gridmet_RET_precessing=False,
@@ -729,6 +815,7 @@ def run_all_preprocessing(skip_prism_processing=False,
                           skip_excess_ET_filter_processing=False,
                           skip_processing_slope_data=False,
                           skip_process_AWC_data=False,
+                          skip_process_GrowSeason_data=False,
                           ref_raster=WestUS_raster):
     """
     Run all preprocessing steps.
@@ -749,7 +836,8 @@ def run_all_preprocessing(skip_prism_processing=False,
     :param skip_openET_processing: Set True to skip openET ensemble yearly data processing.
     :param skip_excess_ET_filter_processing: Set to True if want to skip excess ET filter dataset processing.
     :param skip_processing_slope_data: Set to True if want to skip DEM to slope conversion.
-    :param skip_process_AWC_data: Set to True ti skip processing AWC data.
+    :param skip_process_AWC_data: Set to True to skip processing growing season data.
+    :param skip_process_GrowSeason_data: Set to True ti skip processing AWC data.
     :param ref_raster: Filepath of Western US reference raster to use in 2km pixel lat-lon raster creation and to use
                         as reference raster in other processing operations.
 
@@ -906,6 +994,10 @@ def run_all_preprocessing(skip_prism_processing=False,
                      ref_raster=ref_raster, resolution=model_res,
                      skip_processing=skip_process_AWC_data)
 
+    # process growing season data
+    extract_month_from_GrowSeason_data(GS_data_dir='../../Data_main/Raster_data/Growing_season',
+                                       skip_processing=skip_process_GrowSeason_data)
+
     # making a latitude longitude raster from reference raster
     ref_arr, ref_file = read_raster_arr_object(ref_raster)
     lon_arr, lat_arr = make_lat_lon_array_from_raster(ref_raster)
@@ -918,3 +1010,11 @@ def run_all_preprocessing(skip_prism_processing=False,
                           output_path=os.path.join(lon_dir, 'Longitude.tif'))
     write_array_to_raster(raster_arr=lat_arr, raster_file=ref_file, transform=ref_file.transform,
                           output_path=os.path.join(lat_dir, 'Latitude.tif'))
+
+
+
+
+
+
+
+

@@ -159,9 +159,9 @@ def classify_irrigated_rainfed_cropland(rainfed_fraction_dir, irrigated_fraction
     """
     Classifies rainfed and irrigated cropland using rainfed and irrigated fraction data.
 
-    ** The rainfed fraction data is only available for 2008-2020, so rainfed cropland classification can't be done
-    directly for 2000-2007. This function classifies rainfed cropland data for 2008-2020 first, then applies
-    "maximum occurrence approach" for extending the rainfed cropland dataset for 2000-2007.
+    ** The rainfed fraction data is only available for 2008-2020, as CDL has Western US scale crop classification data
+    starting from 2008. This function classifies rainfed cropland data for 2008-2020 only, but irrigated cropland data
+    for 2000-2020. **
 
     :param rainfed_fraction_dir: Input directory path for rainfed fraction data.
     :param irrigated_fraction_dir: Input directory path for irrigated fraction data.
@@ -176,16 +176,18 @@ def classify_irrigated_rainfed_cropland(rainfed_fraction_dir, irrigated_fraction
         makedirs([rainfed_cropland_output_dir, irrigated_cropland_output_dir])
 
         ############################
-        # Rainfed
+        # # Rainfed
         # Criteria of irrigated and rainfed cropland classification
-        # More than 0.30 (30%) rainfed and less than 0.02 (2%) irrigated 30m pixels in a 2km pixel will be classified
+        # More than 0.30 (30%) rainfed and 0% irrigated 30m pixels in a 2km pixel will be classified
         # as "Rainfed cropland". Also, it should have <6% tree cover.
-        # Irrigated
-        # More than 0.02 (2%) irrigated 30m pixels in a 2km pixel will be classified as "Irrigated cropland"
-        # These classifications are exclusive. This means a certain pixel can only be irrigated or rainfed
+
+        # # Irrigated
+        # A 2km pixel with any fraction of irrigation will be classified as irrigated.
+        # Previously, >2% irr fraction was used to classify as irrigated, which was later removed to cover the
+        # boundary pixels in irrigated-agricultural zones. May need post filtering.
 
         rainfed_frac_threshold = 0.30
-        irrigated_frac_threshold = 0.02
+        irrigated_frac_threshold = 0
         tree_threshold = 6  # unit in %
 
         # list of year_list when there are both irrigated and rainfed fraction datasets derived from
@@ -207,10 +209,10 @@ def classify_irrigated_rainfed_cropland(rainfed_fraction_dir, irrigated_fraction
 
             # classification using defined rainfed, irrigated fraction, and tree fraction threshold. -9999 is no data
             rainfed_cropland = np.where((rain_arr >= rainfed_frac_threshold) &
-                                        ((irrig_arr <= irrigated_frac_threshold) | (np.isnan(irrig_arr)))
+                                        ((irrig_arr == irrigated_frac_threshold) | (np.isnan(irrig_arr)))
                                          & (tree_arr <= tree_threshold), 1, -9999)
 
-            irrigated_cropland = np.where((irrig_arr >= irrigated_frac_threshold), 1, -9999)
+            irrigated_cropland = np.where((irrig_arr > irrigated_frac_threshold), 1, -9999)
 
             # saving classified data
             output_rainfed_cropland_raster = os.path.join(rainfed_cropland_output_dir, f'Rainfed_cropland_{year}.tif')
@@ -222,7 +224,8 @@ def classify_irrigated_rainfed_cropland(rainfed_fraction_dir, irrigated_fraction
                                   output_path=output_irrigated_cropland_raster, dtype=np.int32)  # linux can't save data properly if dtype isn't np.int32 in this case
 
         ############################
-        # irrigated fraction data is also available for 2000-2007. Classifying those data to irrigated cropland with defined threshold
+        # irrigated fraction data is also available for 2000-2007. Classifying those data to
+        # irrigated cropland with defined threshold
         years_rest_irrigated_frac_data = [2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007]
 
         for year in years_rest_irrigated_frac_data:
@@ -233,7 +236,7 @@ def classify_irrigated_rainfed_cropland(rainfed_fraction_dir, irrigated_fraction
             irrig_arr, irrig_file = read_raster_arr_object(irrigated_frac_data)
 
             # classification using defined rainfed and irrigated fraction threshold. -9999 is no data
-            irrigated_cropland = np.where(irrig_arr >= irrigated_frac_threshold, 1, -9999)
+            irrigated_cropland = np.where(irrig_arr > irrigated_frac_threshold, 1, -9999)
 
             # saving classified data
             output_irrigated_cropland_raster = os.path.join(irrigated_cropland_output_dir, f'Irrigated_cropland_{year}.tif')

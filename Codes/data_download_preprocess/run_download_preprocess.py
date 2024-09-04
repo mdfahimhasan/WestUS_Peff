@@ -12,27 +12,23 @@ GEE_merging_refraster_large_grids = '../../Data_main/reference_rasters/GEE_mergi
 
 # # Data download
 skip_download_gee_data = True
-skip_download_OpenET_data = False
+skip_download_OpenET_data = True
 
 gee_data_list = ['Field_capacity', 'Bulk_density', 'Sand_content', 'Clay_content',
                  'GRIDMET_RET', 'GRIDMET_vap_pres_def','GRIDMET_max_RH', 'GRIDMET_Precip',
                  'GRIDMET_min_RH', 'GRIDMET_wind_vel', 'GRIDMET_short_rad', 'DAYMET_sun_hr',
                  'USDA_CDL', 'Tree_cover', 'DEM']
 
-openET_data_list = ['Irrig_crop_OpenET_IrrMapper', 'Irrig_crop_OpenET_LANID',
+openET_data_list = ['Irrig_crop_OpenET_IrrMapper',
+                    'Irrig_crop_OpenET_LANID',
                     'Rainfed_crop_OpenET_IrrMapper', 'Rainfed_crop_OpenET_LANID',
                     'OpenET_ensemble',
-                    # 'Irrigation_Frac_IrrMapper', 'Irrigation_Frac_LANID',
-                    # 'Rainfed_Frac_IrrMapper', 'Rainfed_Frac_LANID',
-                    # 'OpenET_indiv_models_grow_season'
-                    ]
+                    'Irrigation_Frac_IrrMapper', 'Irrigation_Frac_LANID',
+                    'Rainfed_Frac_IrrMapper', 'Rainfed_Frac_LANID',
+                    'OpenET_indiv_models_grow_season']
 
-
-years = [2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007,
-         2008, 2009, 2010, 2011, 2012,
-         # 2013, 2014, 2015,
-         # 2016, 2017, 2018, 2019, 2020
-         ]
+years = [2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010,
+         2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020]
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 # openET 2000-2012 data will be contributed by DRI collaborators
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
@@ -78,6 +74,7 @@ skip_openET_processing = True
 skip_excess_ET_filter_processing = True
 skip_processing_slope_data = True
 skip_process_AWC_data = True
+skip_process_GrowSeason_data = True
 
 
 run_all_preprocessing(skip_prism_processing=skip_prism_processing,
@@ -95,11 +92,6 @@ run_all_preprocessing(skip_prism_processing=skip_prism_processing,
                       skip_excess_ET_filter_processing=skip_excess_ET_filter_processing,
                       skip_processing_slope_data=skip_processing_slope_data,
                       skip_process_AWC_data=skip_process_AWC_data,
+                      skip_process_GrowSeason_data=skip_process_GrowSeason_data,
                       ref_raster=WestUS_raster)
-
-
-
-
-
-
 

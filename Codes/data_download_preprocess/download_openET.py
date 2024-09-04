@@ -1,6 +1,7 @@
 import os
 import ee
 import sys
+import time
 import requests
 import geopandas as gpd
 from datetime import datetime
@@ -35,11 +36,16 @@ def get_openet_gee_dict(data_name):
     ee.Initialize(project='ee-fahim', opt_url='https://earthengine-highvolume.googleapis.com')
 
     gee_data_dict = {
-        'OpenET_ensemble': ['OpenET/ENSEMBLE/CONUS/GRIDMET/MONTHLY/v2_0', 'projects/openet/assets/ensemble/conus/gridmet/monthly/provisional'],
-        'Irrig_crop_OpenET_IrrMapper': ['OpenET/ENSEMBLE/CONUS/GRIDMET/MONTHLY/v2_0', 'projects/openet/assets/ensemble/conus/gridmet/monthly/provisional'],
-        'Irrig_crop_OpenET_LANID': ['OpenET/ENSEMBLE/CONUS/GRIDMET/MONTHLY/v2_0', 'projects/openet/assets/ensemble/conus/gridmet/monthly/provisional'],
-        'Rainfed_crop_OpenET_IrrMapper': ['OpenET/ENSEMBLE/CONUS/GRIDMET/MONTHLY/v2_0', 'projects/openet/assets/ensemble/conus/gridmet/monthly/provisional'],
-        'Rainfed_crop_OpenET_LANID': ['OpenET/ENSEMBLE/CONUS/GRIDMET/MONTHLY/v2_0', 'projects/openet/assets/ensemble/conus/gridmet/monthly/provisional'],
+        'OpenET_ensemble': ['OpenET/ENSEMBLE/CONUS/GRIDMET/MONTHLY/v2_0',
+                            'projects/openet/assets/ensemble/conus/gridmet/monthly/provisional'],
+        'Irrig_crop_OpenET_IrrMapper': ['OpenET/ENSEMBLE/CONUS/GRIDMET/MONTHLY/v2_0',
+                                        'projects/openet/assets/ensemble/conus/gridmet/monthly/provisional'],
+        'Irrig_crop_OpenET_LANID': ['OpenET/ENSEMBLE/CONUS/GRIDMET/MONTHLY/v2_0',
+                                    'projects/openet/assets/ensemble/conus/gridmet/monthly/provisional'],
+        'Rainfed_crop_OpenET_IrrMapper': ['OpenET/ENSEMBLE/CONUS/GRIDMET/MONTHLY/v2_0',
+                                          'projects/openet/assets/ensemble/conus/gridmet/monthly/provisional'],
+        'Rainfed_crop_OpenET_LANID': ['OpenET/ENSEMBLE/CONUS/GRIDMET/MONTHLY/v2_0',
+                                      'projects/openet/assets/ensemble/conus/gridmet/monthly/provisional'],
         'USDA_CDL': 'USDA/NASS/CDL',
         'IrrMapper': 'projects/ee-dgketchum/assets/IrrMapper/IrrMapperComp',
         'LANID': 'projects/ee-fahim/assets/LANID_for_selected_states/selected_Annual_LANID',
@@ -61,7 +67,8 @@ def get_openet_gee_dict(data_name):
         'LANID': None,  # The data holds annual datasets in separate band. Will process it out separately
         'Irrigation_Frac_IrrMapper': 'classification',
         'AIM-HPA': None,
-        'Irrigation_Frac_LANID': None, # The data holds annual datasets in separate band. Will process it out separately
+        'Irrigation_Frac_LANID': None,
+        # The data holds annual datasets in separate band. Will process it out separately
         'Rainfed_Frac_IrrMapper': 'classification',
         'Rainfed_Frac_LANID': None  # The data holds annual datasets in separate band. Will process it out separately
     }
@@ -83,7 +90,8 @@ def get_openet_gee_dict(data_name):
     }
 
     aggregation_dict = {
-        'OpenET_ensemble': ee.Reducer.mean(),  # monthly data; doesn't matter whether use mean() or sum() as reducer. Change for yearly data download if needed.
+        'OpenET_ensemble': ee.Reducer.mean(),
+        # monthly data; doesn't matter whether use mean() or sum() as reducer. Change for yearly data download if needed.
         'Irrig_crop_OpenET_IrrMapper': ee.Reducer.sum(),
         'Irrig_crop_OpenET_LANID': ee.Reducer.sum(),
         # as the data is downloaded at monthly resolution, setting mean/median/max as reducer won't make any difference. Setting it as sum() as it can be used for yearly aggregation
@@ -231,7 +239,8 @@ def download_data_from_GEE_by_multiprocess(download_urls_fp_list, use_cpu=2):
 
 def download_openet_indiv_models_grow_season(download_dir, year_list, merge_keyword, grid_shape,
                                              use_cpu_while_multidownloading=15, refraster_westUS=WestUS_raster,
-                                             refraster_gee_merge=GEE_merging_refraster_large_grids, westUS_shape=WestUS_shape):
+                                             refraster_gee_merge=GEE_merging_refraster_large_grids,
+                                             westUS_shape=WestUS_shape):
     """
     Download openET individual model's dataset at annual scale from GEE.
 
@@ -248,9 +257,12 @@ def download_openet_indiv_models_grow_season(download_dir, year_list, merge_keyw
 
     :return: None.
     """
-    ee.Initialize(project='ee-fahim', opt_url='https://earthengine-highvolume.googleapis.com')
+    global data_url
 
-    # models' gee info (except DisALEXI/ALEXI, it doesn't have output from 2001-2015)
+    ee.Initialize(project='ee-fahim', opt_url='https://earthengine-highvolume.googleapis.com')
+    makedirs([download_dir])
+
+    # models' gee asset info (note - DisALEXI/ALEXI doesn't have output from 2001-2015)
     ssebop_asset = "OpenET/SSEBOP/CONUS/GRIDMET/MONTHLY/v2_0"
     eemetric_asset = "OpenET/EEMETRIC/CONUS/GRIDMET/MONTHLY/v2_0"
     geesebal_asset = "OpenET/GEESEBAL/CONUS/GRIDMET/MONTHLY/v2_0"
@@ -290,27 +302,30 @@ def download_openet_indiv_models_grow_season(download_dir, year_list, merge_keyw
                 gee_extent = ee.Geometry.Rectangle(roi)
 
                 download_data = ee.ImageCollection(asset).select('et').filterDate(start_date, end_date). \
-                        filterBounds(gee_extent).reduce(ee.Reducer.mean()).toFloat()
+                    filterBounds(gee_extent).reduce(ee.Reducer.mean()).toFloat()
 
                 # Getting Data URl for each grid from GEE
                 # The GEE connection gets disconnected sometimes, therefore, we adding the try-except block to
                 # retry failed connections
-                try:
-                    data_url = download_data.getDownloadURL({'name': model_name,
-                                                             'crs': 'EPSG:4269',  # NAD83
-                                                             'scale': 2200,  # in meter. equal to ~0.02 deg
-                                                             'region': gee_extent,
-                                                             'format': 'GEO_TIFF'})
-                except:
-                    data_url = download_data.getDownloadURL({'name': model_name,
-                                                             'crs': 'EPSG:4269',  # NAD83
-                                                             'scale': 2200,  # in meter. equal to ~0.02 deg
-                                                             'region': gee_extent,
-                                                             'format': 'GEO_TIFF'})
+                max_retries = 3
+                for attempt in range(max_retries):
+                    try:
+                        data_url = download_data.getDownloadURL({'name': model_name,
+                                                                      'crs': 'EPSG:4269',  # NAD83
+                                                                      'scale': 2200,  # in meter. equal to ~0.02 deg
+                                                                      'region': gee_extent,
+                                                                      'format': 'GEO_TIFF'})
+                        break  # if successful, exit the loop
+                    except ee.EEException as e:
+                        if attempt < max_retries - 1:
+                            time.sleep(5)  # wait for 5 seconds before retrying
+                            continue
+                        else:
+                            print(f"Failed to get data_url for year={year}, grid={grid_sr}: {e}")
+                            data_url = None
 
                 key_word = model_name
-                local_file_path = os.path.join(sub_download_dir,
-                                               f'{key_word}_{str(year)}_{str(grid_sr)}.tif')
+                local_file_path = os.path.join(sub_download_dir, f'{key_word}_{str(year)}_{str(grid_sr)}.tif')
 
                 # Appending data url and local file path (to save data) to a central list
                 data_url_list.append(data_url)
@@ -318,7 +333,8 @@ def download_openet_indiv_models_grow_season(download_dir, year_list, merge_keyw
 
                 # The GEE connection gets disconnected sometimes, therefore, we download the data in batches when
                 # there is enough data url gathered for download.
-                if (len(data_url_list) == 120) | (i == len(grid_no) - 1):  # downloads data when one of the conditions are met
+                if (len(data_url_list) == 120) | (
+                        i == len(grid_no) - 1):  # downloads data when one of the conditions are met
                     # Combining url and file paths together to pass in multiprocessing
                     urls_to_file_paths_compile = []
                     for j, k in zip(data_url_list, local_file_paths_list):
@@ -374,21 +390,16 @@ def download_openet_ensemble(download_dir, year_list, month_range, merge_keyword
 
     :return: None.
     """
+    global openet_asset, data_url
+
     ee.Initialize(project='ee-fahim', opt_url='https://earthengine-highvolume.googleapis.com')
+
     download_dir = os.path.join(download_dir, 'OpenET_ensemble_monthly')
     makedirs([download_dir])
 
     # Extracting dataset information required for downloading from GEE
     data, band, multiply_scale, reducer, month_start_range, month_end_range, \
     year_start_range, year_end_range = get_openet_gee_dict('OpenET_ensemble')
-
-    # selecting open vs provisional data asset in GEE
-    # openET 1985-2007 data is provisional and 2008 to upfront data in open in GEE
-    # selecting appropriate OpenET GEE asset based on year
-    if month_start_range.year >= 2008:
-        data = data[0]
-    elif month_start_range.year <= 2007:
-        data = data[1]
 
     # Loading grid files to be used for data download
     grids = gpd.read_file(grid_shape)
@@ -415,9 +426,17 @@ def download_openet_ensemble(download_dir, year_list, month_range, merge_keyword
                 end_date = ee.Date.fromYMD(year + 1, 1, 1)  # for month 12 moving end date to next year
                 end_date_dt = datetime(year + 1, 1, 1)
 
+            # selecting open vs provisional data asset in GEE
+            # openET 1985-2007 data is provisional and 2008 to upfront data in open in GEE
+            # selecting appropriate OpenET GEE asset based on year
+            if year >= 2008:
+                openet_asset = data[0]
+            elif year <= 2007:
+                openet_asset = data[1]
+
             # a condition to check whether start and end date falls in the available data range in GEE
             # if not the block will not be executed
-            if (start_date_dt >= month_start_range) & (end_date_dt <= month_end_range):
+            if (start_date_dt >= month_start_range) and (end_date_dt <= month_end_range):
                 # will collect url and file name in url list and local_file_paths_list
                 data_url_list = []
                 local_file_paths_list = []
@@ -428,28 +447,31 @@ def download_openet_ensemble(download_dir, year_list, month_range, merge_keyword
                     roi = grid_geometry[i].bounds
                     gee_extent = ee.Geometry.Rectangle(roi)
 
-                    download_data = ee.ImageCollection(data).select(band).filterDate(start_date, end_date). \
-                            filterBounds(gee_extent).reduce(reducer).multiply(multiply_scale).toFloat()
+                    download_data = ee.ImageCollection(openet_asset).select(band).filterDate(start_date, end_date). \
+                        filterBounds(gee_extent).reduce(reducer).multiply(multiply_scale).toFloat()
 
                     # Getting Data URl for each grid from GEE
                     # The GEE connection gets disconnected sometimes, therefore, we adding the try-except block to
                     # retry failed connections
-                    try:
-                        data_url = download_data.getDownloadURL({'name': 'OpenET_ensemble',
-                                                                 'crs': 'EPSG:4269',  # NAD83
-                                                                 'scale': 2200,  # in meter. equal to ~0.02 deg
-                                                                 'region': gee_extent,
-                                                                 'format': 'GEO_TIFF'})
-                    except:
-                        data_url = download_data.getDownloadURL({'name': 'OpenET_ensemble',
-                                                                 'crs': 'EPSG:4269',  # NAD83
-                                                                 'scale': 2200,  # in meter. equal to ~0.02 deg
-                                                                 'region': gee_extent,
-                                                                 'format': 'GEO_TIFF'})
+                    max_retries = 3
+                    for attempt in range(max_retries):
+                        try:
+                            data_url = download_data.getDownloadURL({'name': 'OpenET_ensemble',
+                                                                          'crs': 'EPSG:4269',  # NAD83
+                                                                          'scale': 2200,  # in meter. equal to ~0.02 deg
+                                                                          'region': gee_extent,
+                                                                          'format': 'GEO_TIFF'})
+                            break  # if successful, exit the loop
+                        except ee.EEException as e:
+                            if attempt < max_retries - 1:
+                                time.sleep(5)  # wait for 5 seconds before retrying
+                                continue
+                            else:
+                                print(f"Failed to get data_url for year={year}, month={month}, grid={grid_sr}: {e}")
+                                data_url = None
 
                     key_word = 'OpenET_ensemble'
-                    local_file_path = os.path.join(download_dir,
-                                                   f'{key_word}_{str(year)}_{str(month)}_{str(grid_sr)}.tif')
+                    local_file_path = os.path.join(download_dir, f'{key_word}_{str(year)}_{str(month)}_{str(grid_sr)}.tif')
 
                     # Appending data url and local file path (to save data) to a central list
                     data_url_list.append(data_url)
@@ -527,7 +549,10 @@ def download_Irr_frac_from_IrrMapper_yearly(data_name, download_dir, year_list, 
 
     :return: None.
     """
+    global data_url
+
     ee.Initialize(project='ee-fahim', opt_url='https://earthengine-highvolume.googleapis.com')
+
     download_dir = os.path.join(download_dir, data_name)
     makedirs([download_dir])
 
@@ -548,7 +573,7 @@ def download_Irr_frac_from_IrrMapper_yearly(data_name, download_dir, year_list, 
 
         # a condition to check whether start and end date falls in the available data range in GEE
         # if not the block will not be executed
-        if (start_date_dt >= year_start_range) & (end_date_dt <= year_end_range):
+        if (start_date_dt >= year_start_range) and (end_date_dt <= year_end_range):
             # Filtering data for the year range and reducing data
             irrmap_imcol = ee.ImageCollection(data)
             irrmap = irrmap_imcol.filter(ee.Filter.calendarRange(year, year, 'year')).select(band).reduce(reducer)
@@ -586,19 +611,25 @@ def download_Irr_frac_from_IrrMapper_yearly(data_name, download_dir, year_list, 
                 roi = grid_geometry[i].bounds
                 gee_extent = ee.Geometry.Rectangle(roi)
 
-                try:
-                    data_url = irrig_frac.getDownloadURL({'name': data_name,
-                                                          'crs': 'EPSG:4269',  # NAD83
-                                                          'scale': 2200,  # in meter
-                                                          'region': gee_extent,
-                                                          'format': 'GEO_TIFF'})
-
-                except:
-                    data_url = irrig_frac.getDownloadURL({'name': data_name,
-                                                          'crs': 'EPSG:4269',  # NAD83
-                                                          'scale': 2200,  # in meter
-                                                          'region': gee_extent,
-                                                          'format': 'GEO_TIFF'})
+                # Getting Data URl for each grid from GEE
+                # The GEE connection gets disconnected sometimes, therefore, we adding the try-except block to
+                # retry failed connections
+                max_retries = 3
+                for attempt in range(max_retries):
+                    try:
+                        data_url = irrig_frac.getDownloadURL({'name': data_name,
+                                                              'crs': 'EPSG:4269',  # NAD83
+                                                              'scale': 2200,  # in meter. equal to ~0.02 deg
+                                                              'region': gee_extent,
+                                                              'format': 'GEO_TIFF'})
+                        break  # if successful, exit the loop
+                    except ee.EEException as e:
+                        if attempt < max_retries - 1:
+                            time.sleep(5)  # wait for 5 seconds before retrying
+                            continue
+                        else:
+                            print(f"Failed to get data_url for year={year}, grid={grid_sr}: {e}")
+                            data_url = None
 
                 key_word = data_name
                 local_file_path = os.path.join(download_dir, f'{key_word}_{str(year)}_{str(grid_sr)}.tif')
@@ -658,7 +689,10 @@ def download_Irr_frac_from_LANID_yearly(data_name, download_dir, year_list, grid
 
     :return: None.
     """
+    global data_url
+
     ee.Initialize(project='ee-fahim', opt_url='https://earthengine-highvolume.googleapis.com')
+
     download_dir = os.path.join(download_dir, data_name)
     makedirs([download_dir])
 
@@ -736,18 +770,26 @@ def download_Irr_frac_from_LANID_yearly(data_name, download_dir, year_list, grid
             roi = grid_geometry[i].bounds
             gee_extent = ee.Geometry.Rectangle(roi)
 
-            try:
-                data_url = irrig_frac.getDownloadURL({'name': data_name,
-                                                      'crs': 'EPSG:4269',  # NAD83
-                                                      'scale': 2200,  # in meter
-                                                      'region': gee_extent,
-                                                      'format': 'GEO_TIFF'})
-            except:
-                data_url = irrig_frac.getDownloadURL({'name': data_name,
-                                                      'crs': 'EPSG:4269',  # NAD83
-                                                      'scale': 2200,  # in meter
-                                                      'region': gee_extent,
-                                                      'format': 'GEO_TIFF'})
+            # Getting Data URl for each grid from GEE
+            # The GEE connection gets disconnected sometimes, therefore, we adding the try-except block to
+            # retry failed connections
+            max_retries = 3
+            for attempt in range(max_retries):
+                try:
+                    data_url = irrig_frac.getDownloadURL({'name': data_name,
+                                                          'crs': 'EPSG:4269',  # NAD83
+                                                          'scale': 2200,  # in meter. equal to ~0.02 deg
+                                                          'region': gee_extent,
+                                                          'format': 'GEO_TIFF'})
+                    break  # if successful, exit the loop
+                except ee.EEException as e:
+                    if attempt < max_retries - 1:
+                        time.sleep(5)  # wait for 5 seconds before retrying
+                        continue
+                    else:
+                        print(f"Failed to get data_url for year={year}, grid={grid_sr}: {e}")
+                        data_url = None
+
             key_word = data_name
             local_file_path = os.path.join(download_dir, f'{key_word}_{str(year)}_{str(grid_sr)}.tif')
 
@@ -806,7 +848,10 @@ def download_CropET_from_OpenET_IrrMapper_monthly(data_name, download_dir, year_
 
     :return: None.
     """
+    global openet_asset, data_url
+
     ee.Initialize(project='ee-fahim', opt_url='https://earthengine-highvolume.googleapis.com')
+
     download_dir = os.path.join(download_dir, data_name)
     makedirs([download_dir])
 
@@ -815,14 +860,6 @@ def download_CropET_from_OpenET_IrrMapper_monthly(data_name, download_dir, year_
     _, _ = get_openet_gee_dict(data_name)
 
     irr_data, irr_band, irr_multiply_scale, irr_reducer, _, _, _, _ = get_openet_gee_dict('IrrMapper')
-
-    # selecting open vs provisional data asset in GEE
-    # openET 1985-2007 data is provisional and 2008 to upfront data in open in GEE
-    # selecting appropriate OpenET GEE asset based on year
-    if et_month_start_range.year >= 2008:
-        et_data = et_data[0]
-    elif et_month_start_range.year <= 2007:
-        et_data = et_data[1]
 
     # Loading grid files to be used for data download
     grids = gpd.read_file(grid_shape)
@@ -859,10 +896,19 @@ def download_CropET_from_OpenET_IrrMapper_monthly(data_name, download_dir, year_
                 end_date = ee.Date.fromYMD(year + 1, 1, 1)  # for month 12 moving end date to next year
                 end_date_dt = datetime(year + 1, 1, 1)
 
+            # selecting open vs provisional data asset in GEE
+            # openET 1985-2007 data is provisional and 2008 to upfront data in open in GEE
+            # selecting appropriate OpenET GEE asset based on year
+            if year >= 2008:
+                openet_asset = et_data[0]
+
+            elif year <= 2007:
+                openet_asset = et_data[1]
+
             # a condition to check whether start and end date falls in the available data range in GEE
             # if not the block will not be executed
-            if (start_date_dt >= et_month_start_range) & (end_date_dt <= et_month_end_range):
-                openET_imcol = ee.ImageCollection(et_data)
+            if (start_date_dt >= et_month_start_range) and (end_date_dt <= et_month_end_range):
+                openET_imcol = ee.ImageCollection(openet_asset)
                 # getting default projection of OpenET
                 projection_openET = ee.Image(openET_imcol.first()).projection()
 
@@ -893,18 +939,23 @@ def download_CropET_from_OpenET_IrrMapper_monthly(data_name, download_dir, year_
                     # Getting Data URl for each grid from GEE
                     # The GEE connection gets disconnected sometimes, therefore, we adding the try-except block to retry
                     # failed connections
-                    try:
-                        data_url = cropET_from_OpenET.getDownloadURL({'name': data_name,
-                                                                      'crs': 'EPSG:4269',  # NAD83
-                                                                      'scale': scale,  # in meter. equal to ~0.02 deg
-                                                                      'region': gee_extent,
-                                                                      'format': 'GEO_TIFF'})
-                    except:
-                        data_url = cropET_from_OpenET.getDownloadURL({'name': data_name,
-                                                                      'crs': 'EPSG:4269',  # NAD83
-                                                                      'scale': scale,  # in meter. equal to ~0.02 deg
-                                                                      'region': gee_extent,
-                                                                      'format': 'GEO_TIFF'})
+                    max_retries = 3
+                    for attempt in range(max_retries):
+                        try:
+                            data_url = cropET_from_OpenET.getDownloadURL({'name': data_name,
+                                                                          'crs': 'EPSG:4269',  # NAD83
+                                                                          'scale': scale,
+                                                                          # in meter. equal to ~0.02 deg
+                                                                          'region': gee_extent,
+                                                                          'format': 'GEO_TIFF'})
+                            break  # if successful, exit the loop
+                        except ee.EEException as e:
+                            if attempt < max_retries - 1:
+                                time.sleep(5)  # wait for 5 seconds before retrying
+                                continue
+                            else:
+                                print(f"Failed to get data_url for year={year}, month={month}, grid={grid_sr}: {e}")
+                                data_url = None
 
                     local_file_path = os.path.join(download_dir,
                                                    f'{data_name}_{str(year)}_{str(month)}_{str(grid_sr)}.tif')
@@ -968,21 +1019,16 @@ def download_CropET_from_OpenET_LANID_monthly(data_name, download_dir, year_list
 
     :return: None.
     """
+    global openet_asset, data_url
+
     ee.Initialize(project='ee-fahim', opt_url='https://earthengine-highvolume.googleapis.com')
+
     download_dir = os.path.join(download_dir, data_name)
     makedirs([download_dir])
 
     # Extracting OpenET dataset information required for downloading from GEE
     et_data, et_band, et_multiply_scale, et_reducer, et_month_start_range, et_month_end_range, \
     _, _ = get_openet_gee_dict(data_name)
-
-    # selecting open vs provisional data asset in GEE
-    # openET 1985-2007 data is provisional and 2008 to upfront data in open in GEE
-    # selecting appropriate OpenET GEE asset based on year
-    if et_month_start_range.year >= 2008:
-        et_data = et_data[0]
-    elif et_month_start_range.year <= 2007:
-        et_data = et_data[1]
 
     # Extracting irrigated (LANID + AIM-HPA) dataset information (saved as an asset) from GEE
     lanid_asset, _, _, _, _, _, _, _ = get_openet_gee_dict('LANID')
@@ -1033,6 +1079,15 @@ def download_CropET_from_OpenET_LANID_monthly(data_name, download_dir, year_list
         irr_total = ee.ImageCollection([irr_lanid, irr_aim_hpa]).mosaic()
         irr_total = irr_total.gt(0).setDefaultProjection(projection_lanid)
 
+        # selecting open vs provisional data asset in GEE
+        # openET 1985-2007 data is provisional and 2008 to upfront data in open in GEE
+        # selecting appropriate OpenET GEE asset based on year
+        if year >= 2008:
+            openet_asset = et_data[0]
+
+        elif year <= 2007:
+            openet_asset = et_data[1]
+
         # second loop for months
         for month in month_list:
             print('********')
@@ -1050,8 +1105,8 @@ def download_CropET_from_OpenET_LANID_monthly(data_name, download_dir, year_list
 
             # a condition to check whether start and end date falls in the available data range in GEE
             # if not the block will not be executed
-            if (start_date_dt >= et_month_start_range) & (end_date_dt <= et_month_end_range):
-                openET_imcol = ee.ImageCollection(et_data)
+            if (start_date_dt >= et_month_start_range) and (end_date_dt <= et_month_end_range):
+                openET_imcol = ee.ImageCollection(openet_asset)
 
                 # getting default projection of OpenET
                 projection_openET = ee.Image(openET_imcol.first()).projection()
@@ -1083,18 +1138,23 @@ def download_CropET_from_OpenET_LANID_monthly(data_name, download_dir, year_list
                     # Getting Data URl for each grid from GEE
                     # The GEE connection gets disconnected sometimes, therefore, we adding the try-except block to retry
                     # failed connections
-                    try:
-                        data_url = cropET_from_OpenET.getDownloadURL({'name': data_name,
-                                                                      'crs': 'EPSG:4269',  # NAD83
-                                                                      'scale': scale,  # in meter. equal to ~0.02 deg
-                                                                      'region': gee_extent,
-                                                                      'format': 'GEO_TIFF'})
-                    except:
-                        data_url = cropET_from_OpenET.getDownloadURL({'name': data_name,
-                                                                      'crs': 'EPSG:4269',  # NAD83
-                                                                      'scale': scale,  # in meter. equal to ~0.02 deg
-                                                                      'region': gee_extent,
-                                                                      'format': 'GEO_TIFF'})
+                    max_retries = 3
+                    for attempt in range(max_retries):
+                        try:
+                            data_url = cropET_from_OpenET.getDownloadURL({'name': data_name,
+                                                                          'crs': 'EPSG:4269',  # NAD83
+                                                                          'scale': scale,
+                                                                          # in meter. equal to ~0.02 deg
+                                                                          'region': gee_extent,
+                                                                          'format': 'GEO_TIFF'})
+                            break  # if successful, exit the loop
+                        except ee.EEException as e:
+                            if attempt < max_retries - 1:
+                                time.sleep(5)  # wait for 5 seconds before retrying
+                                continue
+                            else:
+                                print(f"Failed to get data_url for year={year}, month={month}, grid={grid_sr}: {e}")
+                                data_url = None
 
                     local_file_path = os.path.join(download_dir,
                                                    f'{data_name}_{str(year)}_{str(month)}_{str(grid_sr)}.tif')
@@ -1105,8 +1165,7 @@ def download_CropET_from_OpenET_LANID_monthly(data_name, download_dir, year_list
 
                     # The GEE connection gets disconnected sometimes, therefore, we download the data in batches when
                     # there is enough data url gathered for download.
-                    if (len(data_url_list) == 120) | (
-                            i == len(grid_no) - 1):  # downloads data when one of the conditions are met
+                    if (len(data_url_list) == 120) | (i == len(grid_no) - 1):  # downloads data when one of the conditions are met
                         # Combining url and file paths together to pass in multiprocessing
                         urls_to_file_paths_compile = []
                         for i, j in zip(data_url_list, local_file_paths_list):
@@ -1159,7 +1218,10 @@ def download_Rainfed_frac_from_IrrMapper_yearly(data_name, download_dir, year_li
 
     :return: None.
     """
+    global data_url
+
     ee.Initialize(project='ee-fahim', opt_url='https://earthengine-highvolume.googleapis.com')
+
     download_dir = os.path.join(download_dir, data_name)
     makedirs([download_dir])
 
@@ -1233,7 +1295,7 @@ def download_Rainfed_frac_from_IrrMapper_yearly(data_name, download_dir, year_li
         start_date_dt = datetime(year, 1, 1)
         end_date_dt = datetime(year + 1, 1, 1)
 
-        if (start_date_dt >= cdl_year_start_date) & (end_date_dt <= cdl_year_end_date):
+        if (start_date_dt >= cdl_year_start_date) and (end_date_dt <= cdl_year_end_date):
             # will collect url and file name in url list and local_file_paths_list
             data_url_list = []
             local_file_paths_list = []
@@ -1247,18 +1309,23 @@ def download_Rainfed_frac_from_IrrMapper_yearly(data_name, download_dir, year_li
                 # Getting Data URl for each grid from GEE
                 # The GEE connection gets disconnected sometimes, therefore, we adding the try-except block to retry
                 # failed connections
-                try:
-                    data_url = rainfed_frac_IrrMapper.getDownloadURL({'name': data_name,
-                                                                      'crs': 'EPSG:4269',  # NAD83
-                                                                      'scale': scale,  # in meter. equal to ~0.02 deg
-                                                                      'region': gee_extent,
-                                                                      'format': 'GEO_TIFF'})
-                except:
-                    data_url = rainfed_frac_IrrMapper.getDownloadURL({'name': data_name,
-                                                                      'crs': 'EPSG:4269',  # NAD83
-                                                                      'scale': scale,  # in meter. equal to ~0.02 deg
-                                                                      'region': gee_extent,
-                                                                      'format': 'GEO_TIFF'})
+                max_retries = 3
+                for attempt in range(max_retries):
+                    try:
+                        data_url = rainfed_frac_IrrMapper.getDownloadURL({'name': data_name,
+                                                                          'crs': 'EPSG:4269',  # NAD83
+                                                                          'scale': scale,
+                                                                          # in meter. equal to ~0.02 deg
+                                                                          'region': gee_extent,
+                                                                          'format': 'GEO_TIFF'})
+                        break  # if successful, exit the loop
+                    except ee.EEException as e:
+                        if attempt < max_retries - 1:
+                            time.sleep(5)  # wait for 5 seconds before retrying
+                            continue
+                        else:
+                            print(f"Failed to get data_url for year={year}, grid={grid_sr}: {e}")
+                            data_url = None
 
                 keyword = data_name
                 local_file_path = os.path.join(download_dir, f'{keyword}_{str(year)}_{str(grid_sr)}.tif')
@@ -1269,8 +1336,7 @@ def download_Rainfed_frac_from_IrrMapper_yearly(data_name, download_dir, year_li
 
                 # The GEE connection gets disconnected sometimes, therefore, we download the data in batches when
                 # there is enough data url gathered for download.
-                if (len(data_url_list) == 120) | (
-                        i == len(grid_no) - 1):  # downloads data when one of the conditions are met
+                if (len(data_url_list) == 120) | (i == len(grid_no) - 1):  # downloads data when one of the conditions are met
                     # Combining url and file paths together to pass in multiprocessing
                     urls_to_file_paths_compile = []
                     for i, j in zip(data_url_list, local_file_paths_list):
@@ -1324,7 +1390,10 @@ def download_Rainfed_frac_from_LANID_yearly(data_name, download_dir, year_list, 
 
     :return: None.
     """
+    global data_url
+
     ee.Initialize(project='ee-fahim', opt_url='https://earthengine-highvolume.googleapis.com')
+
     download_dir = os.path.join(download_dir, data_name)
     makedirs([download_dir])
 
@@ -1421,7 +1490,7 @@ def download_Rainfed_frac_from_LANID_yearly(data_name, download_dir, year_list, 
         start_date_dt = datetime(year, 1, 1)
         end_date_dt = datetime(year + 1, 1, 1)
 
-        if (start_date_dt >= cdl_year_start_date) & (end_date_dt <= cdl_year_end_date):
+        if (start_date_dt >= cdl_year_start_date) and (end_date_dt <= cdl_year_end_date):
             # will collect url and file name in url list and local_file_paths_list
             data_url_list = []
             local_file_paths_list = []
@@ -1435,18 +1504,22 @@ def download_Rainfed_frac_from_LANID_yearly(data_name, download_dir, year_list, 
                 # Getting Data URl for each grid from GEE
                 # The GEE connection gets disconnected sometimes, therefore, we adding the try-except block to retry
                 # failed connections
-                try:
-                    data_url = rainfed_frac_LANID.getDownloadURL({'name': data_name,
-                                                                  'crs': 'EPSG:4269',  # NAD83
-                                                                  'scale': scale,  # in meter. equal to ~0.02 deg
-                                                                  'region': gee_extent,
-                                                                  'format': 'GEO_TIFF'})
-                except:
-                    data_url = rainfed_frac_LANID.getDownloadURL({'name': data_name,
-                                                                  'crs': 'EPSG:4269',  # NAD83
-                                                                  'scale': scale,  # in meter. equal to ~0.02 deg
-                                                                  'region': gee_extent,
-                                                                  'format': 'GEO_TIFF'})
+                max_retries = 3
+                for attempt in range(max_retries):
+                    try:
+                        data_url = rainfed_frac_LANID.getDownloadURL({'name': data_name,
+                                                                      'crs': 'EPSG:4269',  # NAD83
+                                                                      'scale': scale,  # in meter. equal to ~0.02 deg
+                                                                      'region': gee_extent,
+                                                                      'format': 'GEO_TIFF'})
+                        break  # if successful, exit the loop
+                    except ee.EEException as e:
+                        if attempt < max_retries - 1:
+                            time.sleep(5)  # wait for 5 seconds before retrying
+                            continue
+                        else:
+                            print(f"Failed to get data_url for year={year}, grid={grid_sr}: {e}")
+                            data_url = None
 
                 keyword = data_name
                 local_file_path = os.path.join(download_dir, f'{keyword}_{str(year)}_{str(grid_sr)}.tif')
@@ -1513,7 +1586,10 @@ def download_Rainfed_CropET_from_OpenET_IrrMapper_monthly(data_name, download_di
 
     :return: None.
     """
+    global openet_asset, data_url
+
     ee.Initialize(project='ee-fahim', opt_url='https://earthengine-highvolume.googleapis.com')
+
     download_dir = os.path.join(download_dir, data_name)
     makedirs([download_dir])
 
@@ -1523,14 +1599,6 @@ def download_Rainfed_CropET_from_OpenET_IrrMapper_monthly(data_name, download_di
 
     irr_data, irr_band, irr_multiply_scale, irr_reducer, _, _, _, _ = get_openet_gee_dict('IrrMapper')
     cdl_data, cdl_band, cdl_multiply_scale, cdl_reducer, _, _, _, _ = get_openet_gee_dict('USDA_CDL')
-
-    # selecting open vs provisional data asset in GEE
-    # openET 1985-2007 data is provisional and 2008 to upfront data in open in GEE
-    # selecting appropriate OpenET GEE asset based on year
-    if et_month_start_range.year >= 2008:
-        et_data = et_data[0]
-    elif et_month_start_range.year <= 2007:
-        et_data = et_data[1]
 
     # Loading grid files to be used for data download
     grids = gpd.read_file(grid_shape)
@@ -1576,6 +1644,15 @@ def download_Rainfed_CropET_from_OpenET_IrrMapper_monthly(data_name, download_di
             .setDefaultProjection(crs=projection_irrmap)
         # # # # # # # # #
 
+        # selecting open vs provisional data asset in GEE
+        # openET 1985-2007 data is provisional and 2008 to upfront data in open in GEE
+        # selecting appropriate OpenET GEE asset based on year
+        if year >= 2008:
+            openet_asset = et_data[0]
+
+        elif year <= 2007:
+            openet_asset = et_data[1]
+
         for month in month_list:  # second loop for months
             print('********')
             print(f'Getting data urls for year={year}, month={month}.....')
@@ -1592,8 +1669,8 @@ def download_Rainfed_CropET_from_OpenET_IrrMapper_monthly(data_name, download_di
 
             # a condition to check whether start and end date falls in the available data range in GEE
             # if not the block will not be executed
-            if (start_date_dt >= et_month_start_range) & (end_date_dt <= et_month_end_range):
-                openET_imcol = ee.ImageCollection(et_data)
+            if (start_date_dt >= et_month_start_range) and (end_date_dt <= et_month_end_range):
+                openET_imcol = ee.ImageCollection(openet_asset)
                 # getting default projection of OpenET
                 projection_openET = ee.Image(openET_imcol.first()).projection()
 
@@ -1622,23 +1699,26 @@ def download_Rainfed_CropET_from_OpenET_IrrMapper_monthly(data_name, download_di
                     gee_extent = ee.Geometry.Rectangle(roi)
 
                     # Getting Data URl for each grid from GEE
-                    # The GEE connection gets disconnected sometimes, therefore, we adding the try-except block to retry
-                    # failed connections
-                    try:
-                        data_url = cropET_from_OpenET.getDownloadURL({'name': data_name,
-                                                                      'crs': 'EPSG:4269',  # NAD83
-                                                                      'scale': scale,  # in meter. equal to ~0.02 deg
-                                                                      'region': gee_extent,
-                                                                      'format': 'GEO_TIFF'})
-                    except:
-                        data_url = cropET_from_OpenET.getDownloadURL({'name': data_name,
-                                                                      'crs': 'EPSG:4269',  # NAD83
-                                                                      'scale': scale,  # in meter. equal to ~0.02 deg
-                                                                      'region': gee_extent,
-                                                                      'format': 'GEO_TIFF'})
+                    # The GEE connection gets disconnected sometimes, therefore, we adding the try-except block to
+                    # retry failed connections
+                    max_retries = 3
+                    for attempt in range(max_retries):
+                        try:
+                            data_url = cropET_from_OpenET.getDownloadURL({'name': data_name,
+                                                                          'crs': 'EPSG:4269',  # NAD83
+                                                                          'scale': scale,  # in meter. equal to ~0.02 deg
+                                                                          'region': gee_extent,
+                                                                          'format': 'GEO_TIFF'})
+                            break  # if successful, exit the loop
+                        except ee.EEException as e:
+                            if attempt < max_retries - 1:
+                                time.sleep(5)  # wait for 5 seconds before retrying
+                                continue
+                            else:
+                                print(f"Failed to get data_url for year={year}, month={month}, grid={grid_sr}: {e}")
+                                data_url = None
 
-                    local_file_path = os.path.join(download_dir,
-                                                   f'{data_name}_{str(year)}_{str(month)}_{str(grid_sr)}.tif')
+                    local_file_path = os.path.join(download_dir, f'{data_name}_{str(year)}_{str(month)}_{str(grid_sr)}.tif')
 
                     # Appending data url and local file path (to save data) to a central list
                     data_url_list.append(data_url)
@@ -1702,7 +1782,10 @@ def download_Rainfed_CropET_from_OpenET_LANID_monthly(data_name, download_dir, y
 
     :return: None.
     """
+    global openet_asset, data_url
+
     ee.Initialize(project='ee-fahim', opt_url='https://earthengine-highvolume.googleapis.com')
+
     download_dir = os.path.join(download_dir, data_name)
     makedirs([download_dir])
 
@@ -1728,14 +1811,6 @@ def download_Rainfed_CropET_from_OpenET_LANID_monthly(data_name, download_dir, y
     _, _ = get_openet_gee_dict(data_name)
 
     cdl_data, cdl_band, cdl_multiply_scale, cdl_reducer, _, _, _, _ = get_openet_gee_dict('USDA_CDL')
-
-    # selecting open vs provisional data asset in GEE
-    # openET 1985-2007 data is provisional and 2008 to upfront data in open in GEE
-    # selecting appropriate OpenET GEE asset based on year
-    if et_month_start_range.year >= 2008:
-        et_data = et_data[0]
-    elif et_month_start_range.year <= 2007:
-        et_data = et_data[1]
 
     # Loading grid files to be used for data download
     grids = gpd.read_file(grid_shape)
@@ -1790,6 +1865,15 @@ def download_Rainfed_CropET_from_OpenET_LANID_monthly(data_name, download_dir, y
         mask = rainfed_cropland.eq(1)
         rainfed_cropland = rainfed_cropland.updateMask(mask).setDefaultProjection(crs=projection_lanid)
 
+        # selecting open vs provisional data asset in GEE
+        # openET 1985-2007 data is provisional and 2008 to upfront data in open in GEE
+        # selecting appropriate OpenET GEE asset based on year
+        if year >= 2008:
+            openet_asset = et_data[0]
+
+        elif year <= 2007:
+            openet_asset = et_data[1]
+
         for month in month_list:  # second loop for months
             print('********')
             print(f'Getting data urls for year={year}, month={month}.....')
@@ -1806,8 +1890,8 @@ def download_Rainfed_CropET_from_OpenET_LANID_monthly(data_name, download_dir, y
 
             # a condition to check whether start and end date falls in the available data range in GEE
             # if not the block will not be executed
-            if (start_date_dt >= et_month_start_range) & (end_date_dt <= et_month_end_range):
-                openET_imcol = ee.ImageCollection(et_data)
+            if (start_date_dt >= et_month_start_range) and (end_date_dt <= et_month_end_range):
+                openET_imcol = ee.ImageCollection(openet_asset)
                 # getting default projection of OpenET
                 projection_openET = ee.Image(openET_imcol.first()).projection()
 
@@ -1836,23 +1920,26 @@ def download_Rainfed_CropET_from_OpenET_LANID_monthly(data_name, download_dir, y
                     gee_extent = ee.Geometry.Rectangle(roi)
 
                     # Getting Data URl for each grid from GEE
-                    # The GEE connection gets disconnected sometimes, therefore, we adding the try-except block to retry
-                    # failed connections
-                    try:
-                        data_url = cropET_from_OpenET.getDownloadURL({'name': data_name,
-                                                                      'crs': 'EPSG:4269',  # NAD83
-                                                                      'scale': scale,  # in meter. equal to ~0.02 deg
-                                                                      'region': gee_extent,
-                                                                      'format': 'GEO_TIFF'})
-                    except:
-                        data_url = cropET_from_OpenET.getDownloadURL({'name': data_name,
-                                                                      'crs': 'EPSG:4269',  # NAD83
-                                                                      'scale': scale,  # in meter. equal to ~0.02 deg
-                                                                      'region': gee_extent,
-                                                                      'format': 'GEO_TIFF'})
+                    # The GEE connection gets disconnected sometimes, therefore, we adding the try-except block to
+                    # retry failed connections
+                    max_retries = 3
+                    for attempt in range(max_retries):
+                        try:
+                            data_url = cropET_from_OpenET.getDownloadURL({'name': data_name,
+                                                                          'crs': 'EPSG:4269',  # NAD83
+                                                                          'scale': scale,  # in meter. equal to ~0.02 deg
+                                                                          'region': gee_extent,
+                                                                          'format': 'GEO_TIFF'})
+                            break  # if successful, exit the loop
+                        except ee.EEException as e:
+                            if attempt < max_retries - 1:
+                                time.sleep(5)  # wait for 5 seconds before retrying
+                                continue
+                            else:
+                                print(f"Failed to get data_url for year={year}, month={month}, grid={grid_sr}: {e}")
+                                data_url = None
 
-                    local_file_path = os.path.join(download_dir,
-                                                   f'{data_name}_{str(year)}_{str(month)}_{str(grid_sr)}.tif')
+                    local_file_path = os.path.join(download_dir, f'{data_name}_{str(year)}_{str(month)}_{str(grid_sr)}.tif')
 
                     # Appending data url and local file path (to save data) to a central list
                     data_url_list.append(data_url)
@@ -1931,7 +2018,8 @@ def download_openET_data(data_list, download_dir, year_list, month_range,
                 download_openet_indiv_models_grow_season(download_dir=download_dir, year_list=year_list,
                                                          merge_keyword='WestUS_annual',
                                                          grid_shape=grid_shape_for_2km_ensemble,
-                                                         use_cpu_while_multidownloading=15, refraster_westUS=WestUS_raster,
+                                                         use_cpu_while_multidownloading=15,
+                                                         refraster_westUS=WestUS_raster,
                                                          refraster_gee_merge=GEE_merging_refraster_large_grids,
                                                          westUS_shape=WestUS_shape)
 

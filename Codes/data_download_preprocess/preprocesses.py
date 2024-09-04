@@ -1,4 +1,5 @@
 import os
+import re
 import sys
 import datetime
 import numpy as np
@@ -1013,11 +1014,3 @@ def run_all_preprocessing(skip_prism_processing=False,
                           output_path=os.path.join(lon_dir, 'Longitude.tif'))
     write_array_to_raster(raster_arr=lat_arr, raster_file=ref_file, transform=ref_file.transform,
                           output_path=os.path.join(lat_dir, 'Latitude.tif'))
-
-
-
-
-
-
-
-

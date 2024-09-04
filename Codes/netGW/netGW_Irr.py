@@ -4,6 +4,7 @@ import numpy as np
 from glob import glob
 
 from os.path import dirname, abspath
+
 sys.path.insert(0, dirname(dirname(dirname(abspath(__file__)))))
 
 from Codes.utils.system_ops import makedirs
@@ -95,6 +96,7 @@ if __name__ == '__main__':
     netGW_irrigation_output_dir = '../../Data_main/Raster_data/NetGW_irrigation/WesternUS'
 
     skip_westUS_netGW_processing = False  ######
-    estimate_netGW_Irr(years_list=years, effective_precip_dir_pp=effective_precip, irrigated_cropET_dir=irrigated_cropET,
+    estimate_netGW_Irr(years_list=years, effective_precip_dir_pp=effective_precip,
+                       irrigated_cropET_dir=irrigated_cropET,
                        irrigated_fraction_dir=irrigated_fraction, sw_cnsmp_use_dir=sw_irrigation_dir,
                        output_dir=netGW_irrigation_output_dir, skip_processing=skip_westUS_netGW_processing)

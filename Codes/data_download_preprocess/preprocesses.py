@@ -633,7 +633,7 @@ def develop_excess_ET_filter(monthly_precip_dir, output_dir_precip_water_yr, gro
         for yr in years:
             print(f'procesing Excess_ET_filter data for year {yr}')
 
-            # # summing precipitation for water year (previous year's October to current year's september
+            # # summing precipitation for water year (previous year's October to current year's september)
             # the searching operation is based on prism monthly data format
             precip_data_prev_years = glob(os.path.join(monthly_precip_dir, f'*{yr - 1}_1[0-2].*tif'))
             precip_data_current_years = glob(os.path.join(monthly_precip_dir, f'*{yr}_[1-9].*tif'))

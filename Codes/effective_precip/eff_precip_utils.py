@@ -6,7 +6,6 @@ import numpy as np
 import pandas as pd
 from glob import glob
 from osgeo import gdal
-import rasterio as rio
 import geopandas as gpd
 
 from os.path import dirname, abspath
@@ -14,7 +13,7 @@ sys.path.insert(0, dirname(dirname(dirname(abspath(__file__)))))
 
 from Codes.utils.system_ops import makedirs
 from Codes.utils.ml_ops import reindex_df
-from Codes.utils.raster_ops import read_raster_arr_object, write_array_to_raster, create_multiband_raster
+from Codes.utils.raster_ops import read_raster_arr_object, write_array_to_raster, create_multiband_raster, sum_rasters
 
 no_data_value = -9999
 model_res = 0.01976293625031605786  # in deg, ~2 km
@@ -38,10 +37,12 @@ def filter_effective_precip_training_data(training_zone_shp, general_output_dir,
     :return: None.
     """
     if not skip_processing:
+        print('Filtering effective precip training data...')
+
         # year_list and months to process over
         # starting from 2008 as rainfed cropET dataset starts from 2008
         years = [2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020]
-        months = list(range(4, 11))
+        months = list(range(1, 13))
 
         # training zone bounding box gdf
         training_zone_gdf = gpd.read_file(training_zone_shp)
@@ -127,7 +128,7 @@ def filter_effective_precip_training_data(training_zone_shp, general_output_dir,
         # compiling final filtered training data
         for year in years:
             for month in months:
-                print(f'compiling filtered effect. precip training data for year {year}, month {month}...')
+                print(f'compiling filtered effective precip training data for year {year}, month {month}...')
 
                 # collecting data for all boxes for a single year-month
                 # the  dot (.) is important to collect data for the same months. Not providing 'tif' here as glob will find
@@ -295,111 +296,73 @@ def create_monthly_effective_precip_rasters(trained_model, input_csv_dir, exclud
         pass
 
 
-def sum_monthly_effective_precip_to_grow_season(years_list, monthly_effective_precip_dir,
-                                                irrigated_cropET_dir,
-                                                grow_season_effective_precip_output_dir,
-                                                skip_processing=False):
+def sum_peff_water_year(monthly_peff_dir, output_peff_dir, skip_processing=False):
     """
-    Sum monthly effective precip predictions by the ML model to grow season effective precip.
+    Sum monthly effective precipitation estimates for water year.
 
-    :param years_list: A list of year_list to process the data.
-    :param monthly_effective_precip_dir: Directory path of model-generated effective precipitation rasters.
-    :param irrigated_cropET_dir: Directory path of growing season irrigated cropET. Will be used to set 0 and no data
-                                 values to effective precipitation dataset.
-    :param grow_season_effective_precip_output_dir: Directory path of summed growing season effective
-    precipitation rasters.
-    :param skip_processing: Set to True to skip this process.
+    :param monthly_peff_dir: Directory path of monthly effective precipitation.
+    :param output_peff_dir: Directory path of summed water year effective precipitation.
+    :param skip_processing: Set to False if want to skip this step.
 
     :return: None.
     """
     if not skip_processing:
-        makedirs([grow_season_effective_precip_output_dir])
+        print('Summing water year effective precipitation...')
 
-        for year in years_list:
-            print(f'Summing effective precipitation monthly raster for grow season {year}...')
+        makedirs([output_peff_dir])
 
-            input_rasters = glob(os.path.join(monthly_effective_precip_dir, f'*{year}*.tif'))
+        years = [2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011,
+                 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020]
 
-            sum_arr, file = None, None
-            for raster in input_rasters:
-                if raster == input_rasters[0]:
-                    arr, file = read_raster_arr_object(raster)
-                    sum_arr = arr
-                else:
-                    arr = read_raster_arr_object(raster, get_file=False)
-                    sum_arr = np.nansum(np.dstack((sum_arr, arr)), axis=2)
+        for yr in years:
+            # # summing peff for water year (previous year's October to current year's september)
+            peff_prev_years = glob(os.path.join(monthly_peff_dir, f'*{yr - 1}_1[0-2].*tif'))
+            pff_data_current_years = glob(os.path.join(monthly_peff_dir, f'*{yr}_[1-9].*tif'))
+            peff_water_yr_list = peff_prev_years + pff_data_current_years
 
-            # # setting values over non-irrigated croplands to 0
-            irrig_cropET = glob(os.path.join(irrigated_cropET_dir, f'*{year}*.tif'))[0]
-            irrig_cropET_arr = read_raster_arr_object(irrig_cropET, get_file=False)
-
-            sum_arr = np.where(np.isnan(irrig_cropET_arr), -9999, sum_arr)
-
-            summed_raster = os.path.join(grow_season_effective_precip_output_dir, f'effective_precip_{year}.tif')
-            write_array_to_raster(raster_arr=sum_arr, raster_file=file, transform=file.transform,
-                                  output_path=summed_raster)
+            sum_rasters(raster_list=peff_water_yr_list, raster_dir=None,
+                        output_raster=os.path.join(output_peff_dir, f'effective_precip_{yr}.tif'),
+                        ref_raster=peff_water_yr_list[0])
+    else:
+        pass
 
 
-def dynamic_sum_peff(year_list, growsing_season_dir, monthly_peff_dir, gs_peff_dir, skip_processing=False):
+def estimate_peff_precip_water_year_fraction(peff_dir_water_yr, precip_dir_water_yr, output_dir,
+                                             skip_processing=False):
     """
-    Dynamically (spati-temporally) sums effective precipitation monthly rasters for the growing seasons.
+    Estimated fraction of effective precipitation to precipitation for water years.
 
-    :param year_list: List of years to process the data for.
-    :param growsing_season_dir: Directory path for growing season datasets.
-    :param monthly_peff_dir:  Directory path for monthly effective precipitation datasets.
-    :param gs_peff_dir:  Directory path (output) for summed growing season effective precipitation datasets.
-    :param skip_processing: Set to True if want to skip processing this step.
-    :return:
+    :param peff_dir_water_yr: Directory path of water year effective precipitation.
+    :param precip_dir_water_yr: Directory path of water year precipitation.
+    :param output_dir: File path of output directory.
+    :param skip_processing:  Set to False if want to skip this step.
+
+    :return: None.
     """
     if not skip_processing:
-        makedirs([gs_peff_dir])
+        print('Estimating fraction of water year effective precipitation to precipitation...')
 
-        # The regex r'_([0-9]{1,2})\.tif' extracts the month (1 or 2 digits; e.g., '_1.tif', '_12.tif')
-        # from the filenames using the first group ([0-9]{1,2}).
-        # The extracted month is then (inside the for loop in the sorting block) converted to an integer with int(group(1))
-        # for proper sorting by month.
-        month_pattern = re.compile(r'_([0-9]{1,2})\.tif')
+        years = [2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011,
+                 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020]  # not doing it for 200 as we don't have 1999 (october-december) peff estimates
 
-        for year in year_list:
-            # gathering and sorting the peff datasets by month (from 1 to 12)
-            peff_datasets = glob(os.path.join(monthly_peff_dir, f'*{year}*.tif'))
-            sorted_peff_datasets = sorted(peff_datasets, key=lambda x: int(
-                month_pattern.search(x).group(1)))  # First capturing group (the month)
+        for yr in years:
+            # collecting and reading datasets
+            peff_data = glob(os.path.join(peff_dir_water_yr, f'*{yr}*.tif'))[0]
+            precip_data = glob(os.path.join(precip_dir_water_yr, f'*{yr}*.tif'))[0]
 
-            # peff monthly array stacked in a single numpy array
-            peff_arrs = np.stack([read_raster_arr_object(i, get_file=False) for i in sorted_peff_datasets], axis=0)
+            peff_arr, file = read_raster_arr_object(peff_data)
+            precip_arr = read_raster_arr_object(precip_data, get_file=False)
 
-            # gathering, reading, and stacking growing season array
-            gs_data = glob(os.path.join(growsing_season_dir, f'*{year}*.tif'))[0]
-            start_gs_arr, ras_file = read_raster_arr_object(gs_data, band=1, get_file=True)
-            end_gs_arr = read_raster_arr_object(gs_data, band=1, get_file=False)
+            # estimating peff/precip fraction over valid pixels
+            frac_arr = np.where(peff_arr != -9999, peff_arr/precip_arr, -9999)
 
-            # We create a 1 pixel "kernel", representing months 1 to 12 (shape - 12, 1, 1).
-            # Then it is broadcasted across the array and named as the kernel_mask.
-            # The kernel_mask acts as a mask, and only sum peff values for months that are 'True'.
-            kernel = np.arange(1, 13, 1).reshape(12, 1, 1)
-            kernel_mask = (kernel >= start_gs_arr) & (kernel <= end_gs_arr)
+            # saving raster
+            makedirs([output_dir])
 
-            # sum peff arrays over the valid months using the kernel_mask
-            summed_peff = np.sum(peff_arrs * kernel_mask, axis=0)
-
-            # saving the summed peff array
-            output_name = f'effective_precip_{year}.tif'
-            output_path = os.path.join(gs_peff_dir, output_name)
-            with rio.open(
-                    output_path,
-                    'w',
-                    driver='GTiff',
-                    height=summed_peff.shape[0],
-                    width=summed_peff.shape[1],
-                    dtype=np.float32,
-                    count=1,
-                    crs=ras_file.crs,
-                    transform=ras_file.transform,
-                    nodata=-9999
-            ) as dst:
-                dst.write(summed_peff, 1)
-            break
+            output_raster = os.path.join(output_dir, f'peff_frac_{yr}.tif')
+            write_array_to_raster(frac_arr, file, file.transform, output_raster)
+    else:
+        pass
 
 
 def process_monthly_peff_rasters_to_multiband_forGEE(years, peff_monthly_dir, output_dir, nodata=no_data_value):

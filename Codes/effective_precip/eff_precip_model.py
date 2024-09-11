@@ -13,7 +13,8 @@ from Codes.utils.ml_ops import create_train_test_dataframe, split_train_val_test
     create_pdplots, plot_permutation_importance
 from Codes.effective_precip.eff_precip_utils import filter_effective_precip_training_data, \
     create_monthly_dataframes_for_eff_precip_prediction, create_nan_pos_dict_for_irrigated_cropET, \
-    create_monthly_effective_precip_rasters, sum_monthly_effective_precip_to_grow_season
+    create_monthly_effective_precip_rasters, sum_peff_water_year, estimate_peff_precip_water_year_fraction
+from Codes.data_download_preprocess.preprocesses import dynamic_gs_sum_peff_cropET
 
 # model resolution and reference raster/shapefile
 no_data_value = -9999
@@ -64,9 +65,10 @@ exclude_columns_in_training = ['year', 'Latitude', 'Longitude',
                                'GRIDMET_vap_pres_def']
 # training time periods
 train_test_years_list = [2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020]  # training data starting from 2008 as rainfed cropET dataset starts from 2008
-months = (4, 10)  # considering growing season months for dataframe creation,
+months = (1, 12)  # the model will itself discard the month is places where growing season is less than 12 months
+                  # (using the nan value set up)
 
-# datasets to include in monthy dataframe
+# datasets to include in monthly dataframe
 datasets_to_include_month_predictors = ['PRISM_Precip', 'PRISM_Tmax', 'PRISM_Tmin',
                                         'GRIDMET_Precip', 'GRIDMET_RET', 'GRIDMET_vap_pres_def', 'GRIDMET_max_RH',
                                         'GRIDMET_min_RH', 'GRIDMET_wind_vel', 'GRIDMET_short_rad', 'DAYMET_sun_hr',
@@ -82,20 +84,22 @@ predictor_years = [2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2
                    2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020]
 
 if __name__ == '__main__':
-    model_version = 'v11'  ######
+    model_version = 'v12'                                   ######
 
-    skip_effective_precip_training_data_filtering = True  ######
-    skip_train_test_df_creation = True  ######
-    skip_train_test_split = False  ######
-    skip_tune_hyperparameters = True  ######
-    load_model = False  ######
-    save_model = True  ######
-    skip_plot_pdp = False  ######
-    skip_plot_perm_import = False  ######
-    skip_processing_monthly_predictor_dataframe = True  ######
-    skip_processing_nan_pos_irrig_cropET = True  ######
-    skip_estimate_monthly_eff_precip_WestUS = False  ######
-    skip_sum_effective_precip = False  ######
+    skip_effective_precip_training_data_filtering = True   ######
+    skip_train_test_df_creation = True                    ######
+    skip_train_test_split = True                          ######
+    skip_tune_hyperparams = True                            ######
+    load_model = True                                     ######
+    save_model = False                                       ######
+    skip_plot_pdp = True                                   ######
+    skip_plot_perm_import = True                           ######
+    skip_processing_monthly_predictor_dataframe = True     ######
+    skip_processing_nan_pos_irrig_cropET = True            ######
+    skip_estimate_monthly_eff_precip_WestUS = True         ######
+    skip_sum_effective_precip = True                       ######
+    skip_water_yr_peff = True                            ######
+    skip_estimate_peff_frac = False                        ######
 
     # ****************************** Filtering training data for effective precip (westUS) *********************************
 
@@ -165,7 +169,7 @@ if __name__ == '__main__':
     lgbm_reg_trained = train_model(x_train=x_train, y_train=y_train, params_dict=lgbm_param_dict, n_jobs=-1,
                                    load_model=load_model, save_model=save_model, save_folder=save_model_to_dir,
                                    model_save_name=model_name,
-                                   skip_tune_hyperparameters=skip_tune_hyperparameters,
+                                   skip_tune_hyperparameters=skip_tune_hyperparams,
                                    iteration_csv=param_iteration_csv, n_fold=10, max_evals=max_evals)
     print(lgbm_reg_trained)
     print('########## Model performance')
@@ -284,12 +288,30 @@ if __name__ == '__main__':
                                             skip_processing=skip_estimate_monthly_eff_precip_WestUS)
 
     # # Summing monthly effective precipitation estimates for growing season
+    growing_season_dir = '../../Data_main/Raster_data/Growing_season'
     irrigated_cropET_dir = '../../Data_main/Raster_data/Irrigated_cropET/WestUS_grow_season'
     grow_season_summed_dir = f'../../Data_main/Raster_data/Effective_precip_prediction_WestUS/{model_version}_grow_season'
 
-    sum_monthly_effective_precip_to_grow_season(years_list=predictor_years,
-                                                irrigated_cropET_dir=irrigated_cropET_dir,
-                                                monthly_effective_precip_dir=effective_precip_monthly_output_dir,
-                                                grow_season_effective_precip_output_dir=grow_season_summed_dir,
-                                                skip_processing=skip_sum_effective_precip)
+    dynamic_gs_sum_peff_cropET(year_list=predictor_years,
+                               growing_season_dir=growing_season_dir,
+                               monthly_input_dir=effective_precip_monthly_output_dir,
+                               gs_output_dir=grow_season_summed_dir,
+                               sum_keyword='effective_precip',
+                               skip_processing=skip_sum_effective_precip)
+
+    # # summing monthly effective precipitation for water year
+    water_yr_peff_dir = f'../../Data_main/Raster_data/Effective_precip_prediction_WestUS/{model_version}_water_year'
+
+    sum_peff_water_year(monthly_peff_dir=effective_precip_monthly_output_dir,
+                        output_peff_dir=water_yr_peff_dir, skip_processing=skip_water_yr_peff)
+
+    # # estimate effective precipitation/precipitation fraction for water year
+    precip_dir_water_yr = '../../Data_main/Raster_data/PRISM_Precip/WestUS_water_year'
+    frac_dir = f'../../Data_main/Raster_data/Effective_precip_prediction_WestUS/{model_version}_peff_fraction'
+
+    estimate_peff_precip_water_year_fraction(peff_dir_water_yr=water_yr_peff_dir,
+                                             precip_dir_water_yr=precip_dir_water_yr,
+                                             output_dir=frac_dir,
+                                             skip_processing=skip_estimate_peff_frac)
+
     print('**********************************')

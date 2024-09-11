@@ -511,48 +511,6 @@ def sum_OpenET_yearly_data(year_list, input_OpenET_monthly_dir, output_dir_OpenE
         pass
 
 
-# def sum_cropET_yearly_data(year_list, input_cropET_monthly_dir,
-#                            output_dir_cropET_growing_season, skip_processing=False):
-#     """
-#     Process (sum for Western US extent) irrigated/rainfed cropET (extracted from openET) datasets for a year and the year's growing season (April to october).
-#
-#     :param year_list: Tuple/list of year_list for which to process data.
-#     :param input_cropET_monthly_dir: Directory file path of downloaded irrigated/rainfed cropET monthly datasets.
-#     :param output_dir_cropET_growing_season: File path of directory to save summed irrigated/rainfed cropET data for each
-#                                              year's growing season at Western US extent.
-#     :param skip_processing: Set to True if want to skip processing.
-#
-#     :return: None.
-#     """
-#     if not skip_processing:
-#         makedirs([output_dir_cropET_growing_season])
-#
-#         for year in year_list:  # first loop for year_list
-#             output_name = None
-#
-#             # # for total year_list
-#             print(f'summing cropET data for year {year}...')
-#             openet_datasets = glob(os.path.join(input_cropET_monthly_dir, f'*{year}*.tif'))
-#
-#             if 'Irrigated' in openet_datasets[0]:
-#                 output_name = f'Irrigated_cropET_{year}.tif'
-#             elif 'Rainfed' in openet_datasets[0]:
-#                 output_name = f'Rainfed_cropET_{year}.tif'
-#
-#             # # for growing seasons
-#             print(f'summing cropET data for year {year} growing seasons...')
-#             openet_datasets = glob(os.path.join(input_cropET_monthly_dir, f'*{year}_[4-9]*.tif')) + \
-#                               glob(os.path.join(input_cropET_monthly_dir, f'*{year}_10*.tif'))
-#
-#             # Summing raster for each growing season
-#             summed_output_for_grow_season = os.path.join(output_dir_cropET_growing_season, output_name)
-#             sum_rasters(raster_list=openet_datasets, raster_dir=None, output_raster=summed_output_for_grow_season,
-#                         ref_raster=openet_datasets[0])
-#
-#     else:
-#         pass
-
-
 def sum_GridMET_RET_yearly_data(input_RET_monthly_dir, output_dir_RET_yearly, output_dir_RET_growing_season,
                                 year_list=(2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011,
                                            2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020),

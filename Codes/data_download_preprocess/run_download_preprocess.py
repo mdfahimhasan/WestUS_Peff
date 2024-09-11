@@ -34,25 +34,25 @@ gee_grid_shape_for30m_LANID = '../../Data_main/shapefiles/Western_US_ref_shapes/
 data_download_dir = '../../Data_main/Raster_data'
 use_cpu_while_multidownloading = 15
 
-skip_download_gee_data = True
-skip_download_OpenET_data = True
+skip_download_gee_data = True                       ######
+skip_download_OpenET_data = True                    ######
 
 # # # #  data preprocess args # # # #
-skip_process_GrowSeason_data = True
-skip_prism_processing = True
-skip_gridmet_precip_processing = True
-skip_gridmet_RET_precessing = True
-skip_merging_rainfed_frac = True
-skip_merging_rainfed_cropET = True
-skip_merging_irrigated_frac = True
-skip_merging_irrigated_cropET = True
-skip_classifying_irrigated_rainfed_cropland = True
-skip_filtering_irrigated_rainfed_cropET = True
-skip_summing_irrigated_cropET = True
-skip_openET_sum = True
-skip_excess_ET_filter_processing = True
-skip_processing_slope_data = True
-skip_process_AWC_data = True
+skip_process_GrowSeason_data = True                 ######
+skip_prism_processing = True                        ######
+skip_gridmet_precip_processing = True               ######
+skip_gridmet_RET_precessing = True                  ######
+skip_merging_rainfed_frac = True                    ######
+skip_merging_rainfed_cropET = True                  ######
+skip_merging_irrigated_frac = True                  ######
+skip_merging_irrigated_cropET = True                ######
+skip_classifying_irrigated_rainfed_cropland = True  ######
+skip_filtering_irrigated_rainfed_cropET = True      ######
+skip_summing_irrigated_cropET = True                ######
+skip_openET_sum = True                              ######
+skip_excess_ET_filter_processing = True             ######
+skip_processing_slope_data = True                   ######
+skip_process_AWC_data = True                        ######
 
 
 # # # #  runs # # # #

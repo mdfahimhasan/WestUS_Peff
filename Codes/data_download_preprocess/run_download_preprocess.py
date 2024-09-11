@@ -38,6 +38,7 @@ skip_download_gee_data = True
 skip_download_OpenET_data = True
 
 # # # #  data preprocess args # # # #
+skip_process_GrowSeason_data = True
 skip_prism_processing = True
 skip_gridmet_precip_processing = True
 skip_gridmet_RET_precessing = True
@@ -48,14 +49,13 @@ skip_merging_irrigated_cropET = True
 skip_classifying_irrigated_rainfed_cropland = True
 skip_filtering_irrigated_rainfed_cropET = True
 skip_summing_irrigated_cropET = True
-skip_summing_rainfed_cropET = True
-skip_openET_processing = True
+skip_openET_sum = True
 skip_excess_ET_filter_processing = True
 skip_processing_slope_data = True
 skip_process_AWC_data = True
-skip_process_GrowSeason_data = True
 
 
+# # # #  runs # # # #
 if __name__ == '__main__':
     download_all_datasets(year_list=years, month_range=months,
                           grid_shape_large=gee_grid_shape_large,
@@ -75,7 +75,8 @@ if __name__ == '__main__':
                                  skip_download_OpenET_data=skip_download_OpenET_data,
                                  use_cpu_while_multidownloading=use_cpu_while_multidownloading)
 
-    run_all_preprocessing(skip_prism_processing=skip_prism_processing,
+    run_all_preprocessing(skip_process_GrowSeason_data=skip_process_GrowSeason_data,
+                          skip_prism_processing=skip_prism_processing,
                           skip_gridmet_precip_processing=skip_gridmet_precip_processing,
                           skip_gridmet_RET_precessing=skip_gridmet_RET_precessing,
                           skip_merging_rainfed_frac=skip_merging_rainfed_frac,
@@ -85,11 +86,9 @@ if __name__ == '__main__':
                           skip_classifying_irrigated_rainfed_cropland=skip_classifying_irrigated_rainfed_cropland,
                           skip_filtering_irrigated_rainfed_cropET=skip_filtering_irrigated_rainfed_cropET,
                           skip_summing_irrigated_cropET=skip_summing_irrigated_cropET,
-                          skip_summing_rainfed_cropET=skip_summing_rainfed_cropET,
-                          skip_openET_processing=skip_openET_processing,
+                          skip_sum_openET=skip_openET_sum,
                           skip_excess_ET_filter_processing=skip_excess_ET_filter_processing,
                           skip_processing_slope_data=skip_processing_slope_data,
                           skip_process_AWC_data=skip_process_AWC_data,
-                          skip_process_GrowSeason_data=skip_process_GrowSeason_data,
                           ref_raster=WestUS_raster)
 

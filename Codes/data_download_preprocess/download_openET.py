@@ -394,7 +394,7 @@ def download_openet_ensemble(download_dir, year_list, month_range, merge_keyword
 
     ee.Initialize(project='ee-fahim', opt_url='https://earthengine-highvolume.googleapis.com')
 
-    download_dir = os.path.join(download_dir, 'OpenET_ensemble_monthly')
+    download_dir = os.path.join(download_dir, 'OpenET_ensemble')
     makedirs([download_dir])
 
     # Extracting dataset information required for downloading from GEE

@@ -114,17 +114,17 @@ def get_openet_gee_dict(data_name):
 
     month_start_date_dict = {
         'OpenET_ensemble': datetime(2000, 1, 1),
-        'Irrig_crop_OpenET_IrrMapper': datetime(2000, 1, 1),
-        'Irrig_crop_OpenET_LANID': datetime(2000, 1, 1),
-        'Rainfed_crop_OpenET_IrrMapper': datetime(2000, 1, 1),
-        'Rainfed_crop_OpenET_LANID': datetime(2000, 1, 1),
+        'Irrig_crop_OpenET_IrrMapper': datetime(1999, 1, 1),
+        'Irrig_crop_OpenET_LANID': datetime(1999, 1, 1),
+        'Rainfed_crop_OpenET_IrrMapper': datetime(2008, 1, 1),
+        'Rainfed_crop_OpenET_LANID': datetime(2008, 1, 1),
         'USDA_CDL': datetime(2008, 1, 1),  # CONUS/West US full coverage starts from 2008
         'IrrMapper': datetime(1986, 1, 1),
         'LANID': None,
         'AIM-HPA': None,
         'Irrigation_Frac_IrrMapper': datetime(1986, 1, 1),
         'Irrigation_Frac_LANID': None,
-        'Rainfed_Frac_IrrMapper': datetime(1986, 1, 1),
+        'Rainfed_Frac_IrrMapper': datetime(2008, 1, 1),
         'Rainfed_Frac_LANID': None
     }
 
@@ -146,17 +146,17 @@ def get_openet_gee_dict(data_name):
 
     year_start_date_dict = {
         'OpenET_ensemble': datetime(2000, 1, 1),
-        'Irrig_crop_OpenET_IrrMapper': datetime(2000, 1, 1),
-        'Irrig_crop_OpenET_LANID': datetime(2000, 1, 1),
-        'Rainfed_crop_OpenET_IrrMapper': datetime(2000, 1, 1),
-        'Rainfed_crop_OpenET_LANID': datetime(2000, 1, 1),
+        'Irrig_crop_OpenET_IrrMapper': datetime(1999, 1, 1),
+        'Irrig_crop_OpenET_LANID': datetime(1999, 1, 1),
+        'Rainfed_crop_OpenET_IrrMapper': datetime(2008, 1, 1),
+        'Rainfed_crop_OpenET_LANID': datetime(2008, 1, 1),
         'USDA_CDL': datetime(2008, 1, 1),  # CONUS/West US full coverage starts from 2008
         'IrrMapper': datetime(1986, 1, 1),
         'LANID': None,
         'AIM-HPA': None,
         'Irrigation_Frac_IrrMapper': datetime(1986, 1, 1),
         'Irrigation_Frac_LANID': None,
-        'Rainfed_Frac_IrrMapper': datetime(1986, 1, 1),
+        'Rainfed_Frac_IrrMapper': datetime(2008, 1, 1),
         'Rainfed_Frac_LANID': None
     }
 
@@ -245,7 +245,7 @@ def download_openet_indiv_models_grow_season(download_dir, year_list, merge_keyw
     Download openET individual model's dataset at annual scale from GEE.
 
     :param download_dir: File path of download directory.
-    :param year_list: List of year_list to download data for.
+    :param year_list: List of years_list to download data for.
     :param merge_keyword: Keyword to use for merging downloaded data. Suggested 'WestUS'/'Conus'.
     :param grid_shape: File path of grid shape for which data will be downloaded and mosaicked.
     :param use_cpu_while_multidownloading: Number (Int) of CPU cores to use for multi-download by
@@ -283,7 +283,7 @@ def download_openet_indiv_models_grow_season(download_dir, year_list, merge_keyw
         sub_download_dir = os.path.join(download_dir, model_name)
         makedirs([sub_download_dir])
 
-        for year in year_list:  # first loop for year_list
+        for year in year_list:  # first loop for years_list
             print('********')
             print(f'Getting {model_name} data urls for year={year}.....')
 
@@ -377,7 +377,7 @@ def download_openet_ensemble(download_dir, year_list, month_range, merge_keyword
     Download openET ensemble data (at monthly scale) from GEE.
 
     :param download_dir: File path of download directory.
-    :param year_list: List of year_list to download data for.
+    :param year_list: List of years_list to download data for.
     :param month_range: Tuple of month ranges to download data for, e.g., for months 1-12 use (1, 12).
     :param merge_keyword: Keyword to use for merging downloaded data. Suggested 'WestUS'/'Conus'.
     :param grid_shape: File path of grid shape for which data will be downloaded and mosaicked.
@@ -409,7 +409,7 @@ def download_openet_ensemble(download_dir, year_list, month_range, merge_keyword
 
     month_list = [m for m in range(month_range[0], month_range[1] + 1)]  # creating list of months
 
-    for year in year_list:  # first loop for year_list
+    for year in year_list:  # first loop for years_list
         for month in month_list:  # second loop for months
             print('********')
             print(f'Getting data urls for year={year}, month={month}.....')
@@ -530,11 +530,11 @@ def download_Irr_frac_from_IrrMapper_yearly(data_name, download_dir, year_list, 
 
     ########################
     # READ ME (for Irrigation Data)
-    IrrMapper Data is available for WA, OR, CA, ID, NV, UT, AZ, MT, WY, CO, and NM (11 states) for 2000-2023,
+    IrrMapper Data is available for WA, OR, CA, ID, NV, UT, AZ, MT, WY, CO, and NM (11 states) for 1986-2023,
     whereas LANID data consists datasets these 11 states and of ND, SD, OK, KS, NE, and TX (06 states) for 1997-2020.
-    Our target year is 2000-2020. We are using IrrMapper data as irrigated cropland data for 2000-2020 for the available
+    Our target year is 1999-2020. We are using IrrMapper data as irrigated cropland data for 1999-2020 for the available
     11 states' data (also it's available in GEE already). For the other 06 states, we clipped LANID data and compiled
-    them as a GEE asset for 2000-2020. In summary, for WA, OR, CA, ID, NV, UT, AZ, MT, WY, CO, and NM (11 states)
+    them as a GEE asset for 1999-2020. In summary, for WA, OR, CA, ID, NV, UT, AZ, MT, WY, CO, and NM (11 states)
     the irrigated field data comes from IrrMapper and for ND, SD, OK, KS, NE, and TX the irrigated field data comes from
     LANID. Also, adding AIM-HPA data with LANID to pick up irrigated fields that are unseen/undetected in LANID data.
     ########################
@@ -542,7 +542,7 @@ def download_Irr_frac_from_IrrMapper_yearly(data_name, download_dir, year_list, 
     :param data_name: Data name which will be used to extract GEE path, band, reducer, valid date range info from
                      get_gee_dict() function. Current valid data name is - ['Irrigation_Frac_IrrMapper']
     :param download_dir: File path of download directory.
-    :param year_list: List of year_list to download data for.
+    :param year_list: List of years_list to download data for.
     :param grid_shape: File path of grid shape for which data will be downloaded and mosaicked.
     :param use_cpu_while_multidownloading: Number (Int) of CPU cores to use for multi-download by
                                            multi-processing/multi-threading. Default set to 15.
@@ -565,7 +565,7 @@ def download_Irr_frac_from_IrrMapper_yearly(data_name, download_dir, year_list, 
     grid_geometry = grids['geometry']
     grid_no = grids['grid_no']
 
-    for year in year_list:  # first loop for year_list
+    for year in year_list:  # first loop for years_list
         print('********')
         print(f'Getting data urls for year={year}.....')
         start_date_dt = datetime(year, 1, 1)
@@ -664,17 +664,17 @@ def download_Irr_frac_from_LANID_yearly(data_name, download_dir, year_list, grid
                                         use_cpu_while_multidownloading=2):
     """
     Download LANID + AIM-HPA Irrigated fraction data (at 2km scale) at yearly scale from GEE for 6 states in
-    the Western US ND, SD, OK, KS, NE, and TX for 2000-2023.
+    the Western US ND, SD, OK, KS, NE, and TX for 1999-2020.
     *** For downloading irrigated fraction data for WA, OR, CA, ID, NV, UT, AZ, MT, WY, CO, and NM use
     download_Irr_frac_from_IrrMapper_yearly() function.
 
     ########################
     # READ ME (for Irrigation Data)
-    IrrMapper Data is available for WA, OR, CA, ID, NV, UT, AZ, MT, WY, CO, and NM (11 states) for 2000-2023,
+    IrrMapper Data is available for WA, OR, CA, ID, NV, UT, AZ, MT, WY, CO, and NM (11 states) for 1986-2023,
     whereas LANID data consists datasets these 11 states and of ND, SD, OK, KS, NE, and TX (06 states) for 1997-2020.
-    Our target year is 2000-2020. We are using IrrMapper data as irrigated cropland data for 2000-2020 for the available
+    Our target year is 1999-2020. We are using IrrMapper data as irrigated cropland data for 1999-2020 for the available
     11 states' data (also it's available in GEE already). For the other 06 states, we clipped LANID data and compiled
-    them as a GEE asset for 2000-2020. In summary, for WA, OR, CA, ID, NV, UT, AZ, MT, WY, CO, and NM (11 states)
+    them as a GEE asset for 1999-2020. In summary, for WA, OR, CA, ID, NV, UT, AZ, MT, WY, CO, and NM (11 states)
     the irrigated field data comes from IrrMapper and for ND, SD, OK, KS, NE, and TX the irrigated field data comes from
     LANID. Also, adding AIM-HPA data with LANID to pick up irrigated fields that are unseen/undetected in LANID data.
     ########################
@@ -682,7 +682,7 @@ def download_Irr_frac_from_LANID_yearly(data_name, download_dir, year_list, grid
     :param data_name: Data name which will be used to extract GEE path, band, reducer, valid date range info from
                      get_gee_dict() function. Current valid data name is - ['Irrigation_Frac_LANID']
     :param download_dir: File path of download directory.
-    :param year_list: List of year_list to download data for.
+    :param year_list: List of years_list to download data for.
     :param grid_shape: File path of grid shape for which data will be downloaded and mosaicked.
     :param use_cpu_while_multidownloading: Number (Int) of CPU cores to use for multi-download by
                                            multi-processing/multi-threading. Default set to 15.
@@ -698,20 +698,20 @@ def download_Irr_frac_from_LANID_yearly(data_name, download_dir, year_list, grid
 
     # Extracting dataset information required for downloading from GEE
     lanid_asset, _, _, _, _, _, _, _ = get_openet_gee_dict('LANID')
-    lanid_data_band_dict = {2000: 'lanid_2000', 2001: 'lanid_2001', 2002: 'lanid_2002', 2003: 'lanid_2003',
-                            2004: 'lanid_2004', 2005: 'lanid_2005', 2006: 'lanid_2006', 2007: 'lanid_2007',
-                            2008: 'lanid_2008', 2009: 'lanid_2009', 2010: 'lanid_2010', 2011: 'lanid_2011',
-                            2012: 'lanid_2012', 2013: 'lanid_2013', 2014: 'lanid_2014', 2015: 'lanid_2015',
-                            2016: 'lanid_2016', 2017: 'lanid_2017', 2018: 'lanid_2018', 2019: 'lanid_2019',
-                            2020: 'lanid_2020'}
+    lanid_data_band_dict = {1999: 'lanid_1999', 2000: 'lanid_2000', 2001: 'lanid_2001', 2002: 'lanid_2002',
+                            2003: 'lanid_2003', 2004: 'lanid_2004', 2005: 'lanid_2005', 2006: 'lanid_2006',
+                            2007: 'lanid_2007', 2008: 'lanid_2008', 2009: 'lanid_2009', 2010: 'lanid_2010',
+                            2011: 'lanid_2011', 2012: 'lanid_2012', 2013: 'lanid_2013', 2014: 'lanid_2014',
+                            2015: 'lanid_2015',2016: 'lanid_2016', 2017: 'lanid_2017', 2018: 'lanid_2018',
+                            2019: 'lanid_2019', 2020: 'lanid_2020'}
 
     aim_hpa_asset, _, _, _, _, _, _, _ = get_openet_gee_dict('AIM-HPA')
-    aim_hpa_band_dict = {2000: 'b2000', 2001: 'b2001', 2002: 'b2002', 2003: 'b2003',
-                         2004: 'b2004', 2005: 'b2005', 2006: 'b2006', 2007: 'b2007',
-                         2008: 'b2008', 2009: 'b2009', 2010: 'b2010', 2011: 'b2011',
-                         2012: 'b2012', 2013: 'b2013', 2014: 'b2014', 2015: 'b2015',
-                         2016: 'b2016', 2017: 'b2017', 2018: 'b2018', 2019: 'b2019',
-                         2020: 'b2020'}
+    aim_hpa_band_dict = {1999: 'b1999', 2000: 'b2000', 2001: 'b2001', 2002: 'b2002',
+                         2003: 'b2003', 2004: 'b2004', 2005: 'b2005', 2006: 'b2006',
+                         2007: 'b2007', 2008: 'b2008', 2009: 'b2009', 2010: 'b2010',
+                         2011: 'b2011', 2012: 'b2012', 2013: 'b2013', 2014: 'b2014',
+                         2015: 'b2015', 2016: 'b2016', 2017: 'b2017', 2018: 'b2018',
+                         2019: 'b2019', 2020: 'b2020'}
 
     # Loading grid files to be used for data download
     grids = gpd.read_file(grid_shape)
@@ -719,7 +719,7 @@ def download_Irr_frac_from_LANID_yearly(data_name, download_dir, year_list, grid
     grid_geometry = grids['geometry']
     grid_no = grids['grid_no']
 
-    for year in year_list:  # first loop for year_list
+    for year in year_list:  # first loop for years_list
         print('********')
         print(f'Getting data urls for year={year}.....')
 
@@ -816,30 +816,29 @@ def download_Irr_frac_from_LANID_yearly(data_name, download_dir, year_list, grid
                 local_file_paths_list = []
 
 
-def download_CropET_from_OpenET_IrrMapper_monthly(data_name, download_dir, year_list, month_range, grid_shape,
-                                                  scale=2200, use_cpu_while_multidownloading=15):
+def download_Irr_CropET_from_OpenET_IrrMapper_monthly(data_name, download_dir, year_list, month_range, grid_shape,
+                                                      scale=2200, use_cpu_while_multidownloading=15):
     """
-    Download cropET data (at monthly scale) from OpenET GEE by filtering ET data with irrigated field data from
+    Download irrigated cropET data (at monthly scale) from OpenET GEE by filtering ET data with irrigated field data from
     IrrMapper.
     **** Don't use this function to download crop ET data for ND, SD, OK, KS, NE, and TX.
-    Use download_CropET_from_OpenET_LANID_monthly()) function instead.
+    Use download_Irr_CropET_from_OpenET_LANID_monthly()) function instead.
 
     ########################
     # READ ME (for Irrigation Data)
-    IrrMapper Data is available for WA, OR, CA, ID, NV, UT, AZ, MT, WY, CO, and NM (11 states) for 2000-2023,
+    IrrMapper Data is available for WA, OR, CA, ID, NV, UT, AZ, MT, WY, CO, and NM (11 states) for 1986-2023,
     whereas LANID data consists datasets these 11 states and of ND, SD, OK, KS, NE, and TX (06 states) for 1997-2020.
-    Our target year is 2000-2020. We are using IrrMapper data as irrigated cropland data for 2000-2020 for the available
+    Our target year is 1999-2020. We are using IrrMapper data as irrigated cropland data for 1999-2020 for the available
     11 states' data (also it's available in GEE already). For the other 06 states, we clipped LANID data and compiled
     them as a GEE asset for 2000-2020. In summary, for WA, OR, CA, ID, NV, UT, AZ, MT, WY, CO, and NM (11 states)
     the irrigated field data comes from IrrMapper and for ND, SD, OK, KS, NE, and TX the irrigated field data comes from
     LANID. Also, adding AIM-HPA data with LANID to pick up irrigated fields that are unseen/undetected in LANID data.
-    As both LANID and AIM-HPA have data upto 2020, considering 2020 data as 2021-2020 datasets.
     ########################
 
     :param data_name: Data name which will be used to extract GEE path, band, reducer, valid date range info from
                      get_gee_dict() function. Current valid data name is - ['Irrig_crop_OpenET_IrrMapper']
     :param download_dir: File path of download directory.
-    :param year_list: List of year_list to download data for. Should be within 2016 to 2020.
+    :param year_list: List of years_list to download data for. Should be within 2016 to 2020.
     :param month_range: Tuple of month ranges to download data for, e.g., for months 1-12 use (1, 12).
     :param grid_shape: File path of grid shape for which data will be downloaded and mosaicked.
     :param scale: Resolution (in m) at which data will be downloaded from earth engine. Default set to 2200 m.
@@ -870,7 +869,7 @@ def download_CropET_from_OpenET_IrrMapper_monthly(data_name, download_dir, year_
     # creating list of months
     month_list = [m for m in range(month_range[0], month_range[1] + 1)]
 
-    for year in year_list:  # first loop for year_list
+    for year in year_list:  # first loop for years_list
         # # IrrMapper data for the year
         # In IrrMapper dataset irrigated fields are assigned as 0
         # Converting the irrigated values to 1 and setting others as nan
@@ -987,30 +986,29 @@ def download_CropET_from_OpenET_IrrMapper_monthly(data_name, download_dir, year_
                 pass
 
 
-def download_CropET_from_OpenET_LANID_monthly(data_name, download_dir, year_list, month_range, grid_shape, scale=2200,
-                                              use_cpu_while_multidownloading=15):
+def download_Irr_CropET_from_OpenET_LANID_monthly(data_name, download_dir, year_list, month_range, grid_shape, scale=2200,
+                                                  use_cpu_while_multidownloading=15):
     """
-    Download cropET data (at monthly scale) from OpenET GEE by filtering ET data with irrigated field data from
-    LANID + AIM-HPA.
+    Download irrigated cropET data (at monthly scale) from OpenET GEE by filtering ET data with irrigated field data
+    from LANID + AIM-HPA.
     **** Don't use this function to download crop ET data for states except ND, SD, OK, KS, NE, and TX.
-    Use download_CropET_from_OpenET_IrrMapper_monthly() function instead.
+    Use download_Irr_CropET_from_OpenET_IrrMapper_monthly() function instead.
 
     ########################
     # READ ME (for Irrigation Data)
-    IrrMapper Data is available for WA, OR, CA, ID, NV, UT, AZ, MT, WY, CO, and NM (11 states) for 2000-2023,
+    IrrMapper Data is available for WA, OR, CA, ID, NV, UT, AZ, MT, WY, CO, and NM (11 states) for 1986-2023,
     whereas LANID data consists datasets these 11 states and of ND, SD, OK, KS, NE, and TX (06 states) for 1997-2020.
-    Our target year is 2000-2020. We are using IrrMapper data as irrigated cropland data for 2000-2020 for the available
+    Our target year is 1999-2020. We are using IrrMapper data as irrigated cropland data for 1999-2020 for the available
     11 states' data (also it's available in GEE already). For the other 06 states, we clipped LANID data and compiled
-    them as a GEE asset for 2000-2020. In summary, for WA, OR, CA, ID, NV, UT, AZ, MT, WY, CO, and NM (11 states)
+    them as a GEE asset for 1999-2020. In summary, for WA, OR, CA, ID, NV, UT, AZ, MT, WY, CO, and NM (11 states)
     the irrigated field data comes from IrrMapper and for ND, SD, OK, KS, NE, and TX the irrigated field data comes from
     LANID. Also, adding AIM-HPA data with LANID to pick up irrigated fields that are unseen/undetected in LANID data.
-    As both LANID and AIM-HPA have data upto 2020, considering 2020 data as 2021-2020 datasets.
     ########################
 
     :param data_name: Data name which will be used to extract GEE path, band, reducer, valid date range info from
                      get_gee_dict() function. Current valid data name is - ['Irrig_crop_OpenET_LANID']
     :param download_dir: File path of download directory.
-    :param year_list: List of year_list to download data for. Should be within 2016 to 2020.
+    :param year_list: List of years_list to download data for. Should be within 2016 to 2020.
     :param month_range: Tuple of month ranges to download data for, e.g., for months 1-12 use (1, 12).
     :param grid_shape: File path of grid shape for which data will be downloaded and mosaicked.
     :param scale: Resolution (in m) at which data will be downloaded from earth engine. Default set to 2200 m.
@@ -1032,20 +1030,20 @@ def download_CropET_from_OpenET_LANID_monthly(data_name, download_dir, year_list
 
     # Extracting irrigated (LANID + AIM-HPA) dataset information (saved as an asset) from GEE
     lanid_asset, _, _, _, _, _, _, _ = get_openet_gee_dict('LANID')
-    lanid_data_band_dict = {2000: 'lanid_2000', 2001: 'lanid_2001', 2002: 'lanid_2002', 2003: 'lanid_2003',
-                            2004: 'lanid_2004', 2005: 'lanid_2005', 2006: 'lanid_2006', 2007: 'lanid_2007',
-                            2008: 'lanid_2008', 2009: 'lanid_2009', 2010: 'lanid_2010', 2011: 'lanid_2011',
-                            2012: 'lanid_2012', 2013: 'lanid_2013', 2014: 'lanid_2014', 2015: 'lanid_2015',
-                            2016: 'lanid_2016', 2017: 'lanid_2017', 2018: 'lanid_2018', 2019: 'lanid_2019',
-                            2020: 'lanid_2020'}
+    lanid_data_band_dict = {1999: 'lanid_1999', 2000: 'lanid_2000', 2001: 'lanid_2001', 2002: 'lanid_2002',
+                            2003: 'lanid_2003', 2004: 'lanid_2004', 2005: 'lanid_2005', 2006: 'lanid_2006',
+                            2007: 'lanid_2007', 2008: 'lanid_2008', 2009: 'lanid_2009', 2010: 'lanid_2010',
+                            2011: 'lanid_2011', 2012: 'lanid_2012', 2013: 'lanid_2013', 2014: 'lanid_2014',
+                            2015: 'lanid_2015',2016: 'lanid_2016', 2017: 'lanid_2017', 2018: 'lanid_2018',
+                            2019: 'lanid_2019', 2020: 'lanid_2020'}
 
     aim_hpa_asset, _, _, _, _, _, _, _ = get_openet_gee_dict('AIM-HPA')
-    aim_hpa_band_dict = {2000: 'b2000', 2001: 'b2001', 2002: 'b2002', 2003: 'b2003',
-                         2004: 'b2004', 2005: 'b2005', 2006: 'b2006', 2007: 'b2007',
-                         2008: 'b2008', 2009: 'b2009', 2010: 'b2010', 2011: 'b2011',
-                         2012: 'b2012', 2013: 'b2013', 2014: 'b2014', 2015: 'b2015',
-                         2016: 'b2016', 2017: 'b2017', 2018: 'b2018', 2019: 'b2019',
-                         2020: 'b2020'}
+    aim_hpa_band_dict = {1999: 'b1999', 2000: 'b2000', 2001: 'b2001', 2002: 'b2002',
+                         2003: 'b2003', 2004: 'b2004', 2005: 'b2005', 2006: 'b2006',
+                         2007: 'b2007', 2008: 'b2008', 2009: 'b2009', 2010: 'b2010',
+                         2011: 'b2011', 2012: 'b2012', 2013: 'b2013', 2014: 'b2014',
+                         2015: 'b2015', 2016: 'b2016', 2017: 'b2017', 2018: 'b2018',
+                         2019: 'b2019', 2020: 'b2020'}
 
     # Loading grid files to be used for data download
     grids = gpd.read_file(grid_shape)
@@ -1056,7 +1054,7 @@ def download_CropET_from_OpenET_LANID_monthly(data_name, download_dir, year_list
     # creating list of months
     month_list = [m for m in range(month_range[0], month_range[1] + 1)]
 
-    for year in year_list:  # first loop for year_list
+    for year in year_list:  # first loop for years_list
         # # LANID data for the year
         # In LANID dataset irrigated fields are assigned as 1
         lanid_band = lanid_data_band_dict[year]
@@ -1196,21 +1194,21 @@ def download_Rainfed_frac_from_IrrMapper_yearly(data_name, download_dir, year_li
     ########################
     # READ ME (for Rainfed Data)
     The rainfed fields/pixels dataset has been created combining CDL cropland data with IrrMapper and LANID datasets.
-    IrrMapper data is available for WA, OR, CA, ID, NV, UT, AZ, MT, WY, CO, and NM (11 states) for 2000-2023, whereas,
+    IrrMapper data is available for WA, OR, CA, ID, NV, UT, AZ, MT, WY, CO, and NM (11 states) for 1986-2023, whereas,
     LANID data consists datasets of these 11 states and ND, SD, OK, KS, NE, and TX (06 states) for 1997-2020.
-    The CDL data for entire CONUS is available from 2008. Therefore, we have to create rainfed field/pixel data in
-    multiple steps-
+    The CDL data for entire CONUS is available from 2008.
+
+    We have to create rainfed field/pixel data in multiple steps-
         1. Combine CDL cropland and IrrMapper to get rainfed data for WA, OR, CA, ID, NV, UT, AZ, MT, WY, CO, and NM
             (11 states) for 2008-2020.
         2. Combine CDL cropland and LANID to get rainfed data for ND, SD, OK, KS, NE, and TX (06 states) for 2008-2020
         3. Download rainfed field data (or fraction of rainfed field in each 2km pixel) for 2008-2020 from GEE and do
             binary classification (1- rainfed, 0- irrigated/some other type)
-        4. Extend rainfed data for 2000-2007 by maximum occurrence approach.
     ########################
     :param data_name: Data name which will be used to extract GEE path, band, reducer, valid date range info from
                      get_gee_dict() function. Current valid data name is - ['Rainfed_Frac_IrrMapper']
     :param download_dir: File path of download directory.
-    :param year_list: List of year_list to download data for. Should be within 2016 to 2020.
+    :param year_list: List of years_list to download data for. Should be within 2016 to 2020.
     :param grid_shape: File path of grid shape for which data will be downloaded and mosaicked.
     :param scale: Resolution (in m) at which data will be downloaded from earth engine. Default set to 2200 m.
     :param use_cpu_while_multidownloading: Number (Int) of CPU cores to use for multi-download by
@@ -1236,120 +1234,121 @@ def download_Rainfed_frac_from_IrrMapper_yearly(data_name, download_dir, year_li
     grid_geometry = grids['geometry'].tolist()
     grid_no = grids['grid_no'].tolist()
 
-    for year in year_list:  # first loop for year_list
-        print('********')
-        print(f'Getting data urls for year={year}.....')
+    for year in year_list:  # first loop for years_list
+        if year >= 2008:
+            print('********')
+            print(f'Getting data urls for year={year}.....')
 
-        # # # # # # # # # Creating Rainfed dataset by combining IrrMapper and USDA CDL data
+            # # # # # # # # # Creating Rainfed dataset by combining IrrMapper and USDA CDL data
 
-        # # IrrMapper data for the year
-        irrmap_imcol = ee.ImageCollection(irr_data)
-        irrmapper_img = irrmap_imcol.filter(ee.Filter.calendarRange(year, year, 'year')).select(irr_band) \
-            .reduce(irr_reducer)
-        # In IrrMapper dataset irrigated fields are assigned as 0, converting it to 1 and others to 0
-        irrmapper_img = irrmapper_img.eq(0)
+            # # IrrMapper data for the year
+            irrmap_imcol = ee.ImageCollection(irr_data)
+            irrmapper_img = irrmap_imcol.filter(ee.Filter.calendarRange(year, year, 'year')).select(irr_band) \
+                .reduce(irr_reducer)
+            # In IrrMapper dataset irrigated fields are assigned as 0, converting it to 1 and others to 0
+            irrmapper_img = irrmapper_img.eq(0)
 
-        # Extracting IrrMapper projection
-        projection_irrmap = irrmap_imcol.first().projection()
-        projection2km_scale = projection_irrmap.atScale(2200)  # 2km projection taken for IrrMapper
+            # Extracting IrrMapper projection
+            projection_irrmap = irrmap_imcol.first().projection()
+            projection2km_scale = projection_irrmap.atScale(2200)  # 2km projection taken for IrrMapper
 
-        # # USDA CDL data for the year
-        cdl_img = ee.ImageCollection(cdl_data).filter(ee.Filter.calendarRange(year, year, 'year')) \
-            .first().select(cdl_band)
-        #  List of non-crop pixels
-        noncrop_list = ee.List([0, 60, 61, 63, 64, 65, 81, 82, 83, 87, 88,
-                                111, 112, 121, 122, 123,
-                                124, 131, 141, 142, 143,
-                                152, 190, 195])  # 0 is no data value, keeping 176 (pasture) in cropland class
-        # Filtering out non-crop pixels
-        cdl_cropland = cdl_img.remap(noncrop_list, ee.List.repeat(0, noncrop_list.size()), 1)
+            # # USDA CDL data for the year
+            cdl_img = ee.ImageCollection(cdl_data).filter(ee.Filter.calendarRange(year, year, 'year')) \
+                .first().select(cdl_band)
+            #  List of non-crop pixels
+            noncrop_list = ee.List([0, 60, 61, 63, 64, 65, 81, 82, 83, 87, 88,
+                                    111, 112, 121, 122, 123,
+                                    124, 131, 141, 142, 143,
+                                    152, 190, 195])  # 0 is no data value, keeping 176 (pasture) in cropland class
+            # Filtering out non-crop pixels
+            cdl_cropland = cdl_img.remap(noncrop_list, ee.List.repeat(0, noncrop_list.size()), 1)
 
-        # Extracting rainfed (non-irrigated) croplands
-        # Converting 0 values (non-irrigated) to 1 then multiplying with
-        # CDL cropland data (reclassified to 1 for croplands and 0 for non-croplands).
-        # The remaining pixels will be rainfed croplands. Masking it again to remove the 0 values
-        irrmapper_reversed = irrmapper_img.remap([0], [1])
-        rainfed_cropland_for_IrrMapper = cdl_cropland.multiply(irrmapper_reversed)
-        mask = rainfed_cropland_for_IrrMapper.eq(1)
-        rainfed_cropland_for_IrrMapper = rainfed_cropland_for_IrrMapper.updateMask(mask) \
-            .setDefaultProjection(crs=projection_irrmap)
+            # Extracting rainfed (non-irrigated) croplands
+            # Converting 0 values (non-irrigated) to 1 then multiplying with
+            # CDL cropland data (reclassified to 1 for croplands and 0 for non-croplands).
+            # The remaining pixels will be rainfed croplands. Masking it again to remove the 0 values
+            irrmapper_reversed = irrmapper_img.remap([0], [1])
+            rainfed_cropland_for_IrrMapper = cdl_cropland.multiply(irrmapper_reversed)
+            mask = rainfed_cropland_for_IrrMapper.eq(1)
+            rainfed_cropland_for_IrrMapper = rainfed_cropland_for_IrrMapper.updateMask(mask) \
+                .setDefaultProjection(crs=projection_irrmap)
 
-        # Counting number of rainfed pixel in each 2km pixel
-        rainfed_pixel_count = rainfed_cropland_for_IrrMapper.reduceResolution(reducer=ee.Reducer.count(),
-                                                                              maxPixels=60000) \
-            .reproject(crs=projection2km_scale)
+            # Counting number of rainfed pixel in each 2km pixel
+            rainfed_pixel_count = rainfed_cropland_for_IrrMapper.reduceResolution(reducer=ee.Reducer.count(),
+                                                                                  maxPixels=60000) \
+                .reproject(crs=projection2km_scale)
 
-        # Unmaking the rainfed pixels so that non-rainfed pixels have 0 value
-        rainfed_with_total = rainfed_cropland_for_IrrMapper.unmask()
+            # Unmaking the rainfed pixels so that non-rainfed pixels have 0 value
+            rainfed_with_total = rainfed_cropland_for_IrrMapper.unmask()
 
-        # total 30m pixel count in 2km pixel
-        total_pixel_count = rainfed_with_total.reduceResolution(reducer=ee.Reducer.count(), maxPixels=60000) \
-            .reproject(crs=projection2km_scale)
+            # total 30m pixel count in 2km pixel
+            total_pixel_count = rainfed_with_total.reduceResolution(reducer=ee.Reducer.count(), maxPixels=60000) \
+                .reproject(crs=projection2km_scale)
 
-        # counting fraction of irrigated lands in a pixel
-        rainfed_frac_IrrMapper = rainfed_pixel_count.divide(total_pixel_count)
-        # # # # # # # # #
+            # counting fraction of irrigated lands in a pixel
+            rainfed_frac_IrrMapper = rainfed_pixel_count.divide(total_pixel_count)
+            # # # # # # # # #
 
-        # a condition to check whether start and end date falls in the available data range in GEE
-        # if not the block will not be executed
-        start_date_dt = datetime(year, 1, 1)
-        end_date_dt = datetime(year + 1, 1, 1)
+            # a condition to check whether start and end date falls in the available data range in GEE
+            # if not the block will not be executed
+            start_date_dt = datetime(year, 1, 1)
+            end_date_dt = datetime(year + 1, 1, 1)
 
-        if (start_date_dt >= cdl_year_start_date) and (end_date_dt <= cdl_year_end_date):
-            # will collect url and file name in url list and local_file_paths_list
-            data_url_list = []
-            local_file_paths_list = []
+            if (start_date_dt >= cdl_year_start_date) and (end_date_dt <= cdl_year_end_date):
+                # will collect url and file name in url list and local_file_paths_list
+                data_url_list = []
+                local_file_paths_list = []
 
-            for i in range(len(grid_no)):  # second loop for grids
-                # converting grid geometry info to a GEE extent
-                grid_sr = grid_no[i]
-                roi = grid_geometry[i].bounds
-                gee_extent = ee.Geometry.Rectangle(roi)
+                for i in range(len(grid_no)):  # second loop for grids
+                    # converting grid geometry info to a GEE extent
+                    grid_sr = grid_no[i]
+                    roi = grid_geometry[i].bounds
+                    gee_extent = ee.Geometry.Rectangle(roi)
 
-                # Getting Data URl for each grid from GEE
-                # The GEE connection gets disconnected sometimes, therefore, we adding the try-except block to retry
-                # failed connections
-                max_retries = 3
-                for attempt in range(max_retries):
-                    try:
-                        data_url = rainfed_frac_IrrMapper.getDownloadURL({'name': data_name,
-                                                                          'crs': 'EPSG:4269',  # NAD83
-                                                                          'scale': scale,
-                                                                          # in meter. equal to ~0.02 deg
-                                                                          'region': gee_extent,
-                                                                          'format': 'GEO_TIFF'})
-                        break  # if successful, exit the loop
-                    except ee.EEException as e:
-                        if attempt < max_retries - 1:
-                            time.sleep(5)  # wait for 5 seconds before retrying
-                            continue
-                        else:
-                            print(f"Failed to get data_url for year={year}, grid={grid_sr}: {e}")
-                            data_url = None
+                    # Getting Data URl for each grid from GEE
+                    # The GEE connection gets disconnected sometimes, therefore, we adding the try-except block to retry
+                    # failed connections
+                    max_retries = 3
+                    for attempt in range(max_retries):
+                        try:
+                            data_url = rainfed_frac_IrrMapper.getDownloadURL({'name': data_name,
+                                                                              'crs': 'EPSG:4269',  # NAD83
+                                                                              'scale': scale,
+                                                                              # in meter. equal to ~0.02 deg
+                                                                              'region': gee_extent,
+                                                                              'format': 'GEO_TIFF'})
+                            break  # if successful, exit the loop
+                        except ee.EEException as e:
+                            if attempt < max_retries - 1:
+                                time.sleep(5)  # wait for 5 seconds before retrying
+                                continue
+                            else:
+                                print(f"Failed to get data_url for year={year}, grid={grid_sr}: {e}")
+                                data_url = None
 
-                keyword = data_name
-                local_file_path = os.path.join(download_dir, f'{keyword}_{str(year)}_{str(grid_sr)}.tif')
+                    keyword = data_name
+                    local_file_path = os.path.join(download_dir, f'{keyword}_{str(year)}_{str(grid_sr)}.tif')
 
-                # Appending data url and local file path (to save data) to a central list
-                data_url_list.append(data_url)
-                local_file_paths_list.append(local_file_path)
+                    # Appending data url and local file path (to save data) to a central list
+                    data_url_list.append(data_url)
+                    local_file_paths_list.append(local_file_path)
 
-                # The GEE connection gets disconnected sometimes, therefore, we download the data in batches when
-                # there is enough data url gathered for download.
-                if (len(data_url_list) == 120) | (i == len(grid_no) - 1):  # downloads data when one of the conditions are met
-                    # Combining url and file paths together to pass in multiprocessing
-                    urls_to_file_paths_compile = []
-                    for i, j in zip(data_url_list, local_file_paths_list):
-                        urls_to_file_paths_compile.append([i, j])
+                    # The GEE connection gets disconnected sometimes, therefore, we download the data in batches when
+                    # there is enough data url gathered for download.
+                    if (len(data_url_list) == 120) | (i == len(grid_no) - 1):  # downloads data when one of the conditions are met
+                        # Combining url and file paths together to pass in multiprocessing
+                        urls_to_file_paths_compile = []
+                        for i, j in zip(data_url_list, local_file_paths_list):
+                            urls_to_file_paths_compile.append([i, j])
 
-                    # Download data by multi-processing/multi-threading
-                    download_data_from_GEE_by_multiprocess(download_urls_fp_list=urls_to_file_paths_compile,
-                                                           use_cpu=use_cpu_while_multidownloading)
+                        # Download data by multi-processing/multi-threading
+                        download_data_from_GEE_by_multiprocess(download_urls_fp_list=urls_to_file_paths_compile,
+                                                               use_cpu=use_cpu_while_multidownloading)
 
-                    # After downloading some data in a batch, we empty the data_utl_list and local_file_paths_list.
-                    # The empty lists will gather some new urls and file paths, and download a new batch of datasets
-                    data_url_list = []
-                    local_file_paths_list = []
+                        # After downloading some data in a batch, we empty the data_utl_list and local_file_paths_list.
+                        # The empty lists will gather some new urls and file paths, and download a new batch of datasets
+                        data_url_list = []
+                        local_file_paths_list = []
 
         else:
             print(f'Data for year {year} is out of range. Skipping query')
@@ -1367,22 +1366,21 @@ def download_Rainfed_frac_from_LANID_yearly(data_name, download_dir, year_list, 
     ########################
     # READ ME (for Rainfed Data)
     The rainfed fields/pixels dataset has been created combining CDL cropland data with IrrMapper and LANID datasets.
-    IrrMapper data is available for WA, OR, CA, ID, NV, UT, AZ, MT, WY, CO, and NM (11 states) for 2000-2023, whereas,
+    IrrMapper data is available for WA, OR, CA, ID, NV, UT, AZ, MT, WY, CO, and NM (11 states) for 1986-2023, whereas,
     LANID data consists datasets of these 11 states and ND, SD, OK, KS, NE, and TX (06 states) for 1997-2020.
-    The CDL data for entire CONUS is available from 2008. Therefore, we have to create rainfed field/pixel data in
-    multiple steps-
+    The CDL data for entire CONUS is available from 2008.
+    We have to create rainfed field/pixel data in multiple steps-
         1. Combine CDL cropland and IrrMapper to get rainfed data for WA, OR, CA, ID, NV, UT, AZ, MT, WY, CO, and NM
             (11 states) for 2008-2020.
         2. Combine CDL cropland and LANID to get rainfed data for ND, SD, OK, KS, NE, and TX (06 states) for 2008-2020
         3. Download rainfed field data (or fraction of rainfed field in each 2km pixel) for 2008-2020 from GEE and do
             binary classification (1- rainfed, 0- irrigated/some other type)
-        4. Extend rainfed data for 2000-2007 by maximum occurrence approach.
     ########################
 
     :param data_name: Data name which will be used to extract GEE path, band, reducer, valid date range info from
                      get_gee_dict() function. Current valid data name is - ['Rainfed_Frac_LANID']
     :param download_dir: File path of download directory.
-    :param year_list: List of year_list to download data for. Should be within 2016 to 2020.
+    :param year_list: List of years_list to download data for. Should be within 2016 to 2020.
     :param grid_shape: File path of grid shape for which data will be downloaded and mosaicked.
     :param scale: Resolution (in m) at which data will be downloaded from earth engine. Default set to 2200 m.
     :param use_cpu_while_multidownloading: Number (Int) of CPU cores to use for multi-download by
@@ -1399,24 +1397,24 @@ def download_Rainfed_frac_from_LANID_yearly(data_name, download_dir, year_list, 
 
     # Extracting LANID + AIM-HPA dataset information (saved as an asset) from GEE
     lanid_asset, _, _, _, _, _, _, _ = get_openet_gee_dict('LANID')
-    lanid_data_band_dict = {2000: 'lanid_2000', 2001: 'lanid_2001', 2002: 'lanid_2002', 2003: 'lanid_2003',
-                            2004: 'lanid_2004', 2005: 'lanid_2005', 2006: 'lanid_2006', 2007: 'lanid_2007',
-                            2008: 'lanid_2008', 2009: 'lanid_2009', 2010: 'lanid_2010', 2011: 'lanid_2011',
-                            2012: 'lanid_2012', 2013: 'lanid_2013', 2014: 'lanid_2014', 2015: 'lanid_2015',
-                            2016: 'lanid_2016', 2017: 'lanid_2017', 2018: 'lanid_2018', 2019: 'lanid_2019',
-                            2020: 'lanid_2020'}
+    lanid_data_band_dict = {1999: 'lanid_1999', 2000: 'lanid_2000', 2001: 'lanid_2001', 2002: 'lanid_2002',
+                            2003: 'lanid_2003', 2004: 'lanid_2004', 2005: 'lanid_2005', 2006: 'lanid_2006',
+                            2007: 'lanid_2007', 2008: 'lanid_2008', 2009: 'lanid_2009', 2010: 'lanid_2010',
+                            2011: 'lanid_2011', 2012: 'lanid_2012', 2013: 'lanid_2013', 2014: 'lanid_2014',
+                            2015: 'lanid_2015',2016: 'lanid_2016', 2017: 'lanid_2017', 2018: 'lanid_2018',
+                            2019: 'lanid_2019', 2020: 'lanid_2020'}
 
     aim_hpa_asset, _, _, _, _, _, _, _ = get_openet_gee_dict('AIM-HPA')
-    aim_hpa_band_dict = {2000: 'b2000', 2001: 'b2001', 2002: 'b2002', 2003: 'b2003',
-                         2004: 'b2004', 2005: 'b2005', 2006: 'b2006', 2007: 'b2007',
-                         2008: 'b2008', 2009: 'b2009', 2010: 'b2010', 2011: 'b2011',
-                         2012: 'b2012', 2013: 'b2013', 2014: 'b2014', 2015: 'b2015',
-                         2016: 'b2016', 2017: 'b2017', 2018: 'b2018', 2019: 'b2019',
-                         2020: 'b2020'}
+    aim_hpa_band_dict = {1999: 'b1999', 2000: 'b2000', 2001: 'b2001', 2002: 'b2002',
+                         2003: 'b2003', 2004: 'b2004', 2005: 'b2005', 2006: 'b2006',
+                         2007: 'b2007', 2008: 'b2008', 2009: 'b2009', 2010: 'b2010',
+                         2011: 'b2011', 2012: 'b2012', 2013: 'b2013', 2014: 'b2014',
+                         2015: 'b2015', 2016: 'b2016', 2017: 'b2017', 2018: 'b2018',
+                         2019: 'b2019', 2020: 'b2020'}
 
     # Extracting CDL dataset information required for downloading from GEE
     cdl_data, cdl_band, cdl_multiply_scale, cdl_reducer, _, _, \
-    cdl_year_start_date, cdl_year_end_date = get_openet_gee_dict('USDA_CDL')
+        cdl_year_start_date, cdl_year_end_date = get_openet_gee_dict('USDA_CDL')
 
     # Loading grid files to be used for data download
     grids = gpd.read_file(grid_shape)
@@ -1424,127 +1422,128 @@ def download_Rainfed_frac_from_LANID_yearly(data_name, download_dir, year_list, 
     grid_geometry = grids['geometry'].tolist()
     grid_no = grids['grid_no'].tolist()
 
-    for year in year_list:  # first loop for year_list
-        print('********')
-        print(f'Getting data urls for year={year}.....')
+    for year in year_list:  # first loop for years_list
+        if year >= 2008:
+            print('********')
+            print(f'Getting data urls for year={year}.....')
 
-        # # LANID data for the year
-        # In LANID dataset irrigated fields are assigned as 1
-        lanid_band = lanid_data_band_dict[year]
-        irr_lanid = ee.Image(lanid_asset).select(lanid_band)
-        irr_lanid = irr_lanid.eq(1)
+            # # LANID data for the year
+            # In LANID dataset irrigated fields are assigned as 1
+            lanid_band = lanid_data_band_dict[year]
+            irr_lanid = ee.Image(lanid_asset).select(lanid_band)
+            irr_lanid = irr_lanid.eq(1)
 
-        # 30m and 2km projection taken for LANID
-        projection_lanid = irr_lanid.projection()
-        projection2km_scale = irr_lanid.projection().atScale(2200)  # 2km projection taken for LANID
+            # 30m and 2km projection taken for LANID
+            projection_lanid = irr_lanid.projection()
+            projection2km_scale = irr_lanid.projection().atScale(2200)  # 2km projection taken for LANID
 
-        # AIM-HPA data for the year
-        aim_hpa = ee.Image(aim_hpa_asset)
-        aim_hpa_band = aim_hpa_band_dict[year]
-        irr_aim_hpa = aim_hpa.select(aim_hpa_band).eq(1)
-        irr_aim_hpa = irr_aim_hpa.updateMask(irr_aim_hpa)
-        irr_aim_hpa = irr_aim_hpa.rename([lanid_band])
+            # AIM-HPA data for the year
+            aim_hpa = ee.Image(aim_hpa_asset)
+            aim_hpa_band = aim_hpa_band_dict[year]
+            irr_aim_hpa = aim_hpa.select(aim_hpa_band).eq(1)
+            irr_aim_hpa = irr_aim_hpa.updateMask(irr_aim_hpa)
+            irr_aim_hpa = irr_aim_hpa.rename([lanid_band])
 
-        # Joining LANID and AIM-HPA
-        # In irrigated (LANID + AIM-HPA) dataset irrigated fields are assigned as 1
-        irr_total = ee.ImageCollection([irr_lanid, irr_aim_hpa]).mosaic()
-        irr_total = irr_total.gt(0).setDefaultProjection(projection_lanid)
-        irr_total = irr_total.unmask()  # assigning 0 value to non-irrigated pixels
+            # Joining LANID and AIM-HPA
+            # In irrigated (LANID + AIM-HPA) dataset irrigated fields are assigned as 1
+            irr_total = ee.ImageCollection([irr_lanid, irr_aim_hpa]).mosaic()
+            irr_total = irr_total.gt(0).setDefaultProjection(projection_lanid)
+            irr_total = irr_total.unmask()  # assigning 0 value to non-irrigated pixels
 
-        # # USDA CDL data for the year
-        cdl_img = ee.ImageCollection(cdl_data).filter(ee.Filter.calendarRange(year, year, 'year')) \
-            .first().select(cdl_band)
-        #  List of non-crop pixels
-        noncrop_list = ee.List([0, 60, 61, 63, 64, 65, 81, 82, 83, 87, 88,
-                                111, 112, 121, 122, 123, 124,
-                                131, 141, 142, 143, 195])  # 0 is no data value, keeping 176 (pasture) in cropland class
-        # Filtering out non-crop pixels
-        cdl_cropland = cdl_img.remap(noncrop_list, ee.List.repeat(0, noncrop_list.size()), 1)
+            # # USDA CDL data for the year
+            cdl_img = ee.ImageCollection(cdl_data).filter(ee.Filter.calendarRange(year, year, 'year')) \
+                .first().select(cdl_band)
+            #  List of non-crop pixels
+            noncrop_list = ee.List([0, 60, 61, 63, 64, 65, 81, 82, 83, 87, 88,
+                                    111, 112, 121, 122, 123, 124,
+                                    131, 141, 142, 143, 195])  # 0 is no data value, keeping 176 (pasture) in cropland class
+            # Filtering out non-crop pixels
+            cdl_cropland = cdl_img.remap(noncrop_list, ee.List.repeat(0, noncrop_list.size()), 1)
 
-        # Extracting rainfed (non-irrigated) croplands
-        # Converting 0 values (non-irrigated) to 1, and 1 (irrigated) to 0
-        # Then multiplying with CDL cropland data (reclassified to 1 for croplands and 0 for non-croplands).
-        # The remaining pixels will be rainfed croplands. Masking it again to remove the 0 values
-        irr_total_reversed = irr_total.remap([0, 1], [1, 0])
-        rainfed_cropland = cdl_cropland.multiply(irr_total_reversed)
-        mask = rainfed_cropland.eq(1)
-        rainfed_cropland = rainfed_cropland.updateMask(mask).setDefaultProjection(crs=projection_lanid)
+            # Extracting rainfed (non-irrigated) croplands
+            # Converting 0 values (non-irrigated) to 1, and 1 (irrigated) to 0
+            # Then multiplying with CDL cropland data (reclassified to 1 for croplands and 0 for non-croplands).
+            # The remaining pixels will be rainfed croplands. Masking it again to remove the 0 values
+            irr_total_reversed = irr_total.remap([0, 1], [1, 0])
+            rainfed_cropland = cdl_cropland.multiply(irr_total_reversed)
+            mask = rainfed_cropland.eq(1)
+            rainfed_cropland = rainfed_cropland.updateMask(mask).setDefaultProjection(crs=projection_lanid)
 
-        # Counting number of rainfed pixel in each 2km pixel
-        rainfed_pixel_count = rainfed_cropland.reduceResolution(reducer=ee.Reducer.count(), maxPixels=60000) \
-            .reproject(crs=projection2km_scale)
+            # Counting number of rainfed pixel in each 2km pixel
+            rainfed_pixel_count = rainfed_cropland.reduceResolution(reducer=ee.Reducer.count(), maxPixels=60000) \
+                .reproject(crs=projection2km_scale)
 
-        # Unmaking the rainfed pixels so that non-rainfed pixels have 0 value
-        rainfed_with_total = rainfed_cropland.unmask()
+            # Unmaking the rainfed pixels so that non-rainfed pixels have 0 value
+            rainfed_with_total = rainfed_cropland.unmask()
 
-        # total 30m pixel count in 2km pixel
-        total_pixel_count = rainfed_with_total.reduceResolution(reducer=ee.Reducer.count(), maxPixels=60000) \
-            .reproject(crs=projection2km_scale)
+            # total 30m pixel count in 2km pixel
+            total_pixel_count = rainfed_with_total.reduceResolution(reducer=ee.Reducer.count(), maxPixels=60000) \
+                .reproject(crs=projection2km_scale)
 
-        # counting fraction of irrigated lands in a pixel
-        rainfed_frac_LANID = rainfed_pixel_count.divide(total_pixel_count)
-        # # # # # # # # #
+            # counting fraction of irrigated lands in a pixel
+            rainfed_frac_LANID = rainfed_pixel_count.divide(total_pixel_count)
+            # # # # # # # # #
 
-        # a condition to check whether start and end date falls in the available data range in GEE
-        # if not the block will not be executed
-        start_date_dt = datetime(year, 1, 1)
-        end_date_dt = datetime(year + 1, 1, 1)
+            # a condition to check whether start and end date falls in the available data range in GEE
+            # if not the block will not be executed
+            start_date_dt = datetime(year, 1, 1)
+            end_date_dt = datetime(year + 1, 1, 1)
 
-        if (start_date_dt >= cdl_year_start_date) and (end_date_dt <= cdl_year_end_date):
-            # will collect url and file name in url list and local_file_paths_list
-            data_url_list = []
-            local_file_paths_list = []
+            if (start_date_dt >= cdl_year_start_date) and (end_date_dt <= cdl_year_end_date):
+                # will collect url and file name in url list and local_file_paths_list
+                data_url_list = []
+                local_file_paths_list = []
 
-            for i in range(len(grid_no)):  # second loop for grids
-                # converting grid geometry info to a GEE extent
-                grid_sr = grid_no[i]
-                roi = grid_geometry[i].bounds
-                gee_extent = ee.Geometry.Rectangle(roi)
+                for i in range(len(grid_no)):  # second loop for grids
+                    # converting grid geometry info to a GEE extent
+                    grid_sr = grid_no[i]
+                    roi = grid_geometry[i].bounds
+                    gee_extent = ee.Geometry.Rectangle(roi)
 
-                # Getting Data URl for each grid from GEE
-                # The GEE connection gets disconnected sometimes, therefore, we adding the try-except block to retry
-                # failed connections
-                max_retries = 3
-                for attempt in range(max_retries):
-                    try:
-                        data_url = rainfed_frac_LANID.getDownloadURL({'name': data_name,
-                                                                      'crs': 'EPSG:4269',  # NAD83
-                                                                      'scale': scale,  # in meter. equal to ~0.02 deg
-                                                                      'region': gee_extent,
-                                                                      'format': 'GEO_TIFF'})
-                        break  # if successful, exit the loop
-                    except ee.EEException as e:
-                        if attempt < max_retries - 1:
-                            time.sleep(5)  # wait for 5 seconds before retrying
-                            continue
-                        else:
-                            print(f"Failed to get data_url for year={year}, grid={grid_sr}: {e}")
-                            data_url = None
+                    # Getting Data URl for each grid from GEE
+                    # The GEE connection gets disconnected sometimes, therefore, we adding the try-except block to retry
+                    # failed connections
+                    max_retries = 3
+                    for attempt in range(max_retries):
+                        try:
+                            data_url = rainfed_frac_LANID.getDownloadURL({'name': data_name,
+                                                                          'crs': 'EPSG:4269',  # NAD83
+                                                                          'scale': scale,  # in meter. equal to ~0.02 deg
+                                                                          'region': gee_extent,
+                                                                          'format': 'GEO_TIFF'})
+                            break  # if successful, exit the loop
+                        except ee.EEException as e:
+                            if attempt < max_retries - 1:
+                                time.sleep(5)  # wait for 5 seconds before retrying
+                                continue
+                            else:
+                                print(f"Failed to get data_url for year={year}, grid={grid_sr}: {e}")
+                                data_url = None
 
-                keyword = data_name
-                local_file_path = os.path.join(download_dir, f'{keyword}_{str(year)}_{str(grid_sr)}.tif')
+                    keyword = data_name
+                    local_file_path = os.path.join(download_dir, f'{keyword}_{str(year)}_{str(grid_sr)}.tif')
 
-                # Appending data url and local file path (to save data) to a central list
-                data_url_list.append(data_url)
-                local_file_paths_list.append(local_file_path)
+                    # Appending data url and local file path (to save data) to a central list
+                    data_url_list.append(data_url)
+                    local_file_paths_list.append(local_file_path)
 
-                # The GEE connection gets disconnected sometimes, therefore, we download the data in batches when
-                # there is enough data url gathered for download.
-                if (len(data_url_list) == 120) | (
-                        i == len(grid_no) - 1):  # downloads data when one of the conditions are met
-                    # Combining url and file paths together to pass in multiprocessing
-                    urls_to_file_paths_compile = []
-                    for i, j in zip(data_url_list, local_file_paths_list):
-                        urls_to_file_paths_compile.append([i, j])
+                    # The GEE connection gets disconnected sometimes, therefore, we download the data in batches when
+                    # there is enough data url gathered for download.
+                    if (len(data_url_list) == 120) | (
+                            i == len(grid_no) - 1):  # downloads data when one of the conditions are met
+                        # Combining url and file paths together to pass in multiprocessing
+                        urls_to_file_paths_compile = []
+                        for i, j in zip(data_url_list, local_file_paths_list):
+                            urls_to_file_paths_compile.append([i, j])
 
-                    # Download data by multi-processing/multi-threading
-                    download_data_from_GEE_by_multiprocess(download_urls_fp_list=urls_to_file_paths_compile,
-                                                           use_cpu=use_cpu_while_multidownloading)
+                        # Download data by multi-processing/multi-threading
+                        download_data_from_GEE_by_multiprocess(download_urls_fp_list=urls_to_file_paths_compile,
+                                                               use_cpu=use_cpu_while_multidownloading)
 
-                    # After downloading some data in a batch, we empty the data_utl_list and local_file_paths_list.
-                    # The empty lists will gather some new urls and file paths, and download a new batch of datasets
-                    data_url_list = []
-                    local_file_paths_list = []
+                        # After downloading some data in a batch, we empty the data_utl_list and local_file_paths_list.
+                        # The empty lists will gather some new urls and file paths, and download a new batch of datasets
+                        data_url_list = []
+                        local_file_paths_list = []
 
         else:
             print(f'Data for year {year} is out of range. Skipping query')
@@ -1562,22 +1561,22 @@ def download_Rainfed_CropET_from_OpenET_IrrMapper_monthly(data_name, download_di
     ########################
     # READ ME (for Rainfed Data)
         The rainfed fields/pixels dataset has been created combining CDL cropland data with IrrMapper and LANID datasets.
-    IrrMapper data is available for WA, OR, CA, ID, NV, UT, AZ, MT, WY, CO, and NM (11 states) for 2000-2023, whereas,
+    IrrMapper data is available for WA, OR, CA, ID, NV, UT, AZ, MT, WY, CO, and NM (11 states) for 1986-2023, whereas,
     LANID data consists datasets of these 11 states and ND, SD, OK, KS, NE, and TX (06 states) for 1997-2020.
-    The CDL data for entire CONUS is available from 2008. Therefore, we have to create rainfed field/pixel data in
-    multiple steps-
+    The CDL data for entire CONUS is available from 2008.
+
+    We have to create rainfed field/pixel data in multiple steps-
         1. Combine CDL cropland and IrrMapper to get rainfed data for WA, OR, CA, ID, NV, UT, AZ, MT, WY, CO, and NM
             (11 states) for 2008-2020.
         2. Combine CDL cropland and LANID to get rainfed data for ND, SD, OK, KS, NE, and TX (06 states) for 2008-2020
         3. Download rainfed field data (or fraction of rainfed field in each 2km pixel) for 2008-2020 from GEE and do
             binary classification (1- rainfed, 0- irrigated/some other type)
-        4. Extend rainfed data for 2000-2007 by maximum occurrence approach.
     ########################
 
     :param data_name: Data name which will be used to extract GEE path, band, reducer, valid date range info from
                      get_gee_dict() function. Current valid data name is - ['Rainfed_crop_OpenET_IrrMapper']
     :param download_dir: File path of download directory.
-    :param year_list: List of year_list to download data for. Should be within 2016 to 2020.
+    :param year_list: List of years_list to download data for. Should be within 2016 to 2020.
     :param month_range: Tuple of month ranges to download data for, e.g., for months 1-12 use (1, 12).
     :param grid_shape: File path of grid shape for which data will be downloaded and mosaicked.
     :param scale: Resolution (in m) at which data will be downloaded from earth engine. Default set to 2200 m.
@@ -1609,142 +1608,140 @@ def download_Rainfed_CropET_from_OpenET_IrrMapper_monthly(data_name, download_di
     # creating list of months
     month_list = [m for m in range(month_range[0], month_range[1] + 1)]
 
-    for year in year_list:  # first loop for year_list
-        # # # # # # # # # Creating Rainfed dataset by combining IrrMapper and USDA CDL data
+    for year in year_list:  # first loop for years_list
+        if year < 2008:
+            print(f'Data for year {year} is out of range. Skipping query')
 
-        # # IrrMapper data for the year
-        irrmap_imcol = ee.ImageCollection(irr_data)
-        irrmapper_img = irrmap_imcol.filter(ee.Filter.calendarRange(year, year, 'year')).select(irr_band) \
-            .reduce(irr_reducer)
-        # In IrrMapper dataset irrigated fields are assigned as 0, converting it to 1 and others to nan
-        irrmapper_img = irrmapper_img.eq(0)
+        elif year >= 2008:
+            # # # # # # # # # Creating Rainfed dataset by combining IrrMapper and USDA CDL data
 
-        # Extracting IrrMapper projection
-        projection_irrmap = irrmapper_img.projection()
-        projection2km_scale = projection_irrmap.atScale(2200)  # 2km projection taken for IrrMapper
+            # # IrrMapper data for the year
+            irrmap_imcol = ee.ImageCollection(irr_data)
+            irrmapper_img = irrmap_imcol.filter(ee.Filter.calendarRange(year, year, 'year')).select(irr_band) \
+                .reduce(irr_reducer)
+            # In IrrMapper dataset irrigated fields are assigned as 0, converting it to 1 and others to nan
+            irrmapper_img = irrmapper_img.eq(0)
 
-        # # USDA CDL data for the year
-        cdl_img = ee.ImageCollection(cdl_data).filter(ee.Filter.calendarRange(year, year, 'year')) \
-            .first().select(cdl_band)
-        #  List of non-crop pixels
-        noncrop_list = ee.List([0, 60, 61, 63, 64, 65, 81, 82, 83, 87, 88, 111,
-                                112, 121, 122, 123, 124, 131, 141, 142,
-                                143, 152, 190, 195])  # 0 is no data value, keeping 176 (pasture) in cropland class
-        # Filtering out non-crop pixels
-        cdl_cropland = cdl_img.remap(noncrop_list, ee.List.repeat(0, noncrop_list.size()), 1)
+            # Extracting IrrMapper projection
+            projection_irrmap = irrmapper_img.projection()
+            projection2km_scale = projection_irrmap.atScale(2200)  # 2km projection taken for IrrMapper
 
-        # Extracting rainfed (non-irrigated) croplands
-        # Converting 0 values (non-irrigated) to 1 then multiplying with
-        # CDL cropland data (reclassified to 1 for croplands and 0 for non-croplands).
-        # The remaining pixels will be rainfed croplands. Masking it again to remove the 0 values
-        irrmapper_reversed = irrmapper_img.remap([0], [1])
-        rainfed_cropland_for_IrrMapper = cdl_cropland.multiply(irrmapper_reversed)
-        mask = rainfed_cropland_for_IrrMapper.eq(1)
-        rainfed_cropland_for_IrrMapper = rainfed_cropland_for_IrrMapper.updateMask(mask) \
-            .setDefaultProjection(crs=projection_irrmap)
-        # # # # # # # # #
+            # # USDA CDL data for the year
+            cdl_img = ee.ImageCollection(cdl_data).filter(ee.Filter.calendarRange(year, year, 'year')) \
+                .first().select(cdl_band)
+            #  List of non-crop pixels
+            noncrop_list = ee.List([0, 60, 61, 63, 64, 65, 81, 82, 83, 87, 88, 111,
+                                    112, 121, 122, 123, 124, 131, 141, 142,
+                                    143, 152, 190, 195])  # 0 is no data value, keeping 176 (pasture) in cropland class
+            # Filtering out non-crop pixels
+            cdl_cropland = cdl_img.remap(noncrop_list, ee.List.repeat(0, noncrop_list.size()), 1)
 
-        # selecting open vs provisional data asset in GEE
-        # openET 1985-2007 data is provisional and 2008 to upfront data in open in GEE
-        # selecting appropriate OpenET GEE asset based on year
-        if year >= 2008:
+            # Extracting rainfed (non-irrigated) croplands
+            # Converting 0 values (non-irrigated) to 1 then multiplying with
+            # CDL cropland data (reclassified to 1 for croplands and 0 for non-croplands).
+            # The remaining pixels will be rainfed croplands. Masking it again to remove the 0 values
+            irrmapper_reversed = irrmapper_img.remap([0], [1])
+            rainfed_cropland_for_IrrMapper = cdl_cropland.multiply(irrmapper_reversed)
+            mask = rainfed_cropland_for_IrrMapper.eq(1)
+            rainfed_cropland_for_IrrMapper = rainfed_cropland_for_IrrMapper.updateMask(mask) \
+                .setDefaultProjection(crs=projection_irrmap)
+            # # # # # # # # #
+
+            # selecting open vs provisional data asset in GEE
+            # openET 1985-2007 data is provisional and 2008 to upfront data in open in GEE
+            # selecting appropriate OpenET GEE asset based on year
+            # year 2008 and after tht will use the open GEE asset
+            # We don't need the provisional asset as rainfed cropET data will be downloaded >= 2008
             openet_asset = et_data[0]
 
-        elif year <= 2007:
-            openet_asset = et_data[1]
+            for month in month_list:  # second loop for months
+                print('********')
+                print(f'Getting data urls for year={year}, month={month}.....')
+                start_date = ee.Date.fromYMD(year, month, 1)
+                start_date_dt = datetime(year, month, 1)
 
-        for month in month_list:  # second loop for months
-            print('********')
-            print(f'Getting data urls for year={year}, month={month}.....')
-            start_date = ee.Date.fromYMD(year, month, 1)
-            start_date_dt = datetime(year, month, 1)
+                if month < 12:
+                    end_date = ee.Date.fromYMD(year, month + 1, 1)
+                    end_date_dt = datetime(year, month + 1, 1)
 
-            if month < 12:
-                end_date = ee.Date.fromYMD(year, month + 1, 1)
-                end_date_dt = datetime(year, month + 1, 1)
+                else:
+                    end_date = ee.Date.fromYMD(year + 1, 1, 1)  # for month 12 moving end date to next year
+                    end_date_dt = datetime(year + 1, 1, 1)
 
-            else:
-                end_date = ee.Date.fromYMD(year + 1, 1, 1)  # for month 12 moving end date to next year
-                end_date_dt = datetime(year + 1, 1, 1)
+                # a condition to check whether start and end date falls in the available data range in GEE
+                # if not the block will not be executed
+                if (start_date_dt >= et_month_start_range) and (end_date_dt <= et_month_end_range):
+                    openET_imcol = ee.ImageCollection(openet_asset)
+                    # getting default projection of OpenET
+                    projection_openET = ee.Image(openET_imcol.first()).projection()
 
-            # a condition to check whether start and end date falls in the available data range in GEE
-            # if not the block will not be executed
-            if (start_date_dt >= et_month_start_range) and (end_date_dt <= et_month_end_range):
-                openET_imcol = ee.ImageCollection(openet_asset)
-                # getting default projection of OpenET
-                projection_openET = ee.Image(openET_imcol.first()).projection()
+                    # getting image for year-month range.
+                    # the projection is lost during this image conversion, reapplying that at the end
+                    openET_img = openET_imcol.select(et_band).filterDate(start_date, end_date). \
+                        reduce(et_reducer).multiply(et_multiply_scale).toFloat(). \
+                        setDefaultProjection(crs=projection_openET)
 
-                # getting image for year-month range.
-                # the projection is lost during this image conversion, reapplying that at the end
-                openET_img = openET_imcol.select(et_band).filterDate(start_date, end_date). \
-                    reduce(et_reducer).multiply(et_multiply_scale).toFloat(). \
-                    setDefaultProjection(crs=projection_openET)
+                    # multiplying OpenET with IrrMapper-CDL Rainfed data. This will set irrigated pixels' ET value to zero
+                    cropET_from_OpenET = openET_img.multiply(rainfed_cropland_for_IrrMapper)
 
-                # multiplying OpenET with IrrMapper-CDL Rainfed data. This will set irrigated pixels' ET value to zero
-                cropET_from_OpenET = openET_img.multiply(rainfed_cropland_for_IrrMapper)
+                    # summing crop ET (from openET) from 30m to 2km scale
+                    cropET_from_OpenET = cropET_from_OpenET. \
+                        reduceResolution(reducer=ee.Reducer.mean(), maxPixels=60000). \
+                        reproject(crs=projection2km_scale)
 
-                # summing crop ET (from openET) from 30m to 2km scale
-                cropET_from_OpenET = cropET_from_OpenET. \
-                    reduceResolution(reducer=ee.Reducer.mean(), maxPixels=60000). \
-                    reproject(crs=projection2km_scale)
+                    # will collect url and file name in url list and local_file_paths_list
+                    data_url_list = []
+                    local_file_paths_list = []
 
-                # will collect url and file name in url list and local_file_paths_list
-                data_url_list = []
-                local_file_paths_list = []
+                    for i in range(len(grid_no)):  # third loop for grids
+                        # converting grid geometry info to a GEE extent
+                        grid_sr = grid_no[i]
+                        roi = grid_geometry[i].bounds
+                        gee_extent = ee.Geometry.Rectangle(roi)
 
-                for i in range(len(grid_no)):  # third loop for grids
-                    # converting grid geometry info to a GEE extent
-                    grid_sr = grid_no[i]
-                    roi = grid_geometry[i].bounds
-                    gee_extent = ee.Geometry.Rectangle(roi)
+                        # Getting Data URl for each grid from GEE
+                        # The GEE connection gets disconnected sometimes, therefore, we adding the try-except block to
+                        # retry failed connections
+                        max_retries = 3
+                        for attempt in range(max_retries):
+                            try:
+                                data_url = cropET_from_OpenET.getDownloadURL({'name': data_name,
+                                                                              'crs': 'EPSG:4269',  # NAD83
+                                                                              'scale': scale,  # in meter. equal to ~0.02 deg
+                                                                              'region': gee_extent,
+                                                                              'format': 'GEO_TIFF'})
+                                break  # if successful, exit the loop
+                            except ee.EEException as e:
+                                if attempt < max_retries - 1:
+                                    time.sleep(5)  # wait for 5 seconds before retrying
+                                    continue
+                                else:
+                                    print(f"Failed to get data_url for year={year}, month={month}, grid={grid_sr}: {e}")
+                                    data_url = None
 
-                    # Getting Data URl for each grid from GEE
-                    # The GEE connection gets disconnected sometimes, therefore, we adding the try-except block to
-                    # retry failed connections
-                    max_retries = 3
-                    for attempt in range(max_retries):
-                        try:
-                            data_url = cropET_from_OpenET.getDownloadURL({'name': data_name,
-                                                                          'crs': 'EPSG:4269',  # NAD83
-                                                                          'scale': scale,  # in meter. equal to ~0.02 deg
-                                                                          'region': gee_extent,
-                                                                          'format': 'GEO_TIFF'})
-                            break  # if successful, exit the loop
-                        except ee.EEException as e:
-                            if attempt < max_retries - 1:
-                                time.sleep(5)  # wait for 5 seconds before retrying
-                                continue
-                            else:
-                                print(f"Failed to get data_url for year={year}, month={month}, grid={grid_sr}: {e}")
-                                data_url = None
+                        local_file_path = os.path.join(download_dir, f'{data_name}_{str(year)}_{str(month)}_{str(grid_sr)}.tif')
 
-                    local_file_path = os.path.join(download_dir, f'{data_name}_{str(year)}_{str(month)}_{str(grid_sr)}.tif')
+                        # Appending data url and local file path (to save data) to a central list
+                        data_url_list.append(data_url)
+                        local_file_paths_list.append(local_file_path)
 
-                    # Appending data url and local file path (to save data) to a central list
-                    data_url_list.append(data_url)
-                    local_file_paths_list.append(local_file_path)
+                        # The GEE connection gets disconnected sometimes, therefore, we download the data in batches when
+                        # there is enough data url gathered for download.
+                        if (len(data_url_list) == 120) | (
+                                i == len(grid_no) - 1):  # downloads data when one of the conditions are met
+                            # Combining url and file paths together to pass in multiprocessing
+                            urls_to_file_paths_compile = []
+                            for i, j in zip(data_url_list, local_file_paths_list):
+                                urls_to_file_paths_compile.append([i, j])
 
-                    # The GEE connection gets disconnected sometimes, therefore, we download the data in batches when
-                    # there is enough data url gathered for download.
-                    if (len(data_url_list) == 120) | (
-                            i == len(grid_no) - 1):  # downloads data when one of the conditions are met
-                        # Combining url and file paths together to pass in multiprocessing
-                        urls_to_file_paths_compile = []
-                        for i, j in zip(data_url_list, local_file_paths_list):
-                            urls_to_file_paths_compile.append([i, j])
+                            # Download data by multi-processing/multi-threading
+                            download_data_from_GEE_by_multiprocess(download_urls_fp_list=urls_to_file_paths_compile,
+                                                                   use_cpu=use_cpu_while_multidownloading)
 
-                        # Download data by multi-processing/multi-threading
-                        download_data_from_GEE_by_multiprocess(download_urls_fp_list=urls_to_file_paths_compile,
-                                                               use_cpu=use_cpu_while_multidownloading)
-
-                        # After downloading some data in a batch, we empty the data_utl_list and local_file_paths_list.
-                        # The empty lists will gather some new urls and file paths, and download a new batch of datasets
-                        data_url_list = []
-                        local_file_paths_list = []
-
-            else:
-                print(f'Data for year {year}, month {month} is out of range. Skipping query')
-                pass
+                            # After downloading some data in a batch, we empty the data_utl_list and local_file_paths_list.
+                            # The empty lists will gather some new urls and file paths, and download a new batch of datasets
+                            data_url_list = []
+                            local_file_paths_list = []
 
 
 def download_Rainfed_CropET_from_OpenET_LANID_monthly(data_name, download_dir, year_list, month_range, grid_shape,
@@ -1758,22 +1755,21 @@ def download_Rainfed_CropET_from_OpenET_LANID_monthly(data_name, download_dir, y
     ########################
     # READ ME (for Rainfed Data)
     The rainfed fields/pixels dataset has been created combining CDL cropland data with IrrMapper and LANID datasets.
-    IrrMapper data is available for WA, OR, CA, ID, NV, UT, AZ, MT, WY, CO, and NM (11 states) for 2000-2023, whereas,
+    IrrMapper data is available for WA, OR, CA, ID, NV, UT, AZ, MT, WY, CO, and NM (11 states) for 1986-2023, whereas,
     LANID data consists datasets of these 11 states and ND, SD, OK, KS, NE, and TX (06 states) for 1997-2020.
-    The CDL data for entire CONUS is available from 2008. Therefore, we have to create rainfed field/pixel data in
-    multiple steps-
+    The CDL data for entire CONUS is available from 2008.
+    We have to create rainfed field/pixel data in multiple steps-
         1. Combine CDL cropland and IrrMapper to get rainfed data for WA, OR, CA, ID, NV, UT, AZ, MT, WY, CO, and NM
             (11 states) for 2008-2020.
         2. Combine CDL cropland and LANID to get rainfed data for ND, SD, OK, KS, NE, and TX (06 states) for 2008-2020
         3. Download rainfed field data (or fraction of rainfed field in each 2km pixel) for 2008-2020 from GEE and do
             binary classification (1- rainfed, 0- irrigated/some other type)
-        4. Extend rainfed data for 2000-2007 by maximum occurrence approach.
     ########################
 
     :param data_name: Data name which will be used to extract GEE path, band, reducer, valid date range info from
                      get_gee_dict() function. Current valid data name is - ['Rainfed_crop_OpenET_LANID']
     :param download_dir: File path of download directory.
-    :param year_list: List of year_list to download data for. Should be within 2016 to 2020.
+    :param year_list: List of years_list to download data for. Should be within 2016 to 2020.
     :param month_range: Tuple of month ranges to download data for, e.g., for months 1-12 use (1, 12).
     :param grid_shape: File path of grid shape for which data will be downloaded and mosaicked.
     :param scale: Resolution (in m) at which data will be downloaded from earth engine. Default set to 2200 m.
@@ -1791,20 +1787,20 @@ def download_Rainfed_CropET_from_OpenET_LANID_monthly(data_name, download_dir, y
 
     # Extracting LANID+AIM-HPA dataset information (saved as an asset) from GEE
     lanid_asset, _, _, _, _, _, _, _ = get_openet_gee_dict('LANID')
-    lanid_data_band_dict = {2000: 'lanid_2000', 2001: 'lanid_2001', 2002: 'lanid_2002', 2003: 'lanid_2003',
-                            2004: 'lanid_2004', 2005: 'lanid_2005', 2006: 'lanid_2006', 2007: 'lanid_2007',
-                            2008: 'lanid_2008', 2009: 'lanid_2009', 2010: 'lanid_2010', 2011: 'lanid_2011',
-                            2012: 'lanid_2012', 2013: 'lanid_2013', 2014: 'lanid_2014', 2015: 'lanid_2015',
-                            2016: 'lanid_2016', 2017: 'lanid_2017', 2018: 'lanid_2018', 2019: 'lanid_2019',
-                            2020: 'lanid_2020'}
+    lanid_data_band_dict = {1999: 'lanid_1999', 2000: 'lanid_2000', 2001: 'lanid_2001', 2002: 'lanid_2002',
+                            2003: 'lanid_2003', 2004: 'lanid_2004', 2005: 'lanid_2005', 2006: 'lanid_2006',
+                            2007: 'lanid_2007', 2008: 'lanid_2008', 2009: 'lanid_2009', 2010: 'lanid_2010',
+                            2011: 'lanid_2011', 2012: 'lanid_2012', 2013: 'lanid_2013', 2014: 'lanid_2014',
+                            2015: 'lanid_2015',2016: 'lanid_2016', 2017: 'lanid_2017', 2018: 'lanid_2018',
+                            2019: 'lanid_2019', 2020: 'lanid_2020'}
 
     aim_hpa_asset, _, _, _, _, _, _, _ = get_openet_gee_dict('AIM-HPA')
-    aim_hpa_band_dict = {2000: 'b2000', 2001: 'b2001', 2002: 'b2002', 2003: 'b2003',
-                         2004: 'b2004', 2005: 'b2005', 2006: 'b2006', 2007: 'b2007',
-                         2008: 'b2008', 2009: 'b2009', 2010: 'b2010', 2011: 'b2011',
-                         2012: 'b2012', 2013: 'b2013', 2014: 'b2014', 2015: 'b2015',
-                         2016: 'b2016', 2017: 'b2017', 2018: 'b2018', 2019: 'b2019',
-                         2020: 'b2020'}
+    aim_hpa_band_dict = {1999: 'b1999', 2000: 'b2000', 2001: 'b2001', 2002: 'b2002',
+                         2003: 'b2003', 2004: 'b2004', 2005: 'b2005', 2006: 'b2006',
+                         2007: 'b2007', 2008: 'b2008', 2009: 'b2009', 2010: 'b2010',
+                         2011: 'b2011', 2012: 'b2012', 2013: 'b2013', 2014: 'b2014',
+                         2015: 'b2015', 2016: 'b2016', 2017: 'b2017', 2018: 'b2018',
+                         2019: 'b2019', 2020: 'b2020'}
 
     # Extracting OpenET and CDL dataset information required for downloading from GEE
     et_data, et_band, et_multiply_scale, et_reducer, et_month_start_range, et_month_end_range, \
@@ -1821,151 +1817,156 @@ def download_Rainfed_CropET_from_OpenET_LANID_monthly(data_name, download_dir, y
     # creating list of months
     month_list = [m for m in range(month_range[0], month_range[1] + 1)]
 
-    for year in year_list:  # first loop for year_list
-        # # LANID data for the year
-        # In LANID dataset irrigated fields are assigned as 1
-        lanid_band = lanid_data_band_dict[year]
-        irr_lanid = ee.Image(lanid_asset).select(lanid_band)
-        irr_lanid = irr_lanid.eq(1)
+    for year in year_list:  # first loop for years_list
+        if year < 2008:
+            print(f'Data for year {year} is out of range. Skipping query')
 
-        # 30m and 2km projection taken for LANID
-        projection_lanid = irr_lanid.projection()
-        projection2km_scale = irr_lanid.projection().atScale(2200)  # 2km projection taken for LANID
+        elif year >= 2008:
+            # # LANID data for the year
+            # In LANID dataset irrigated fields are assigned as 1
+            lanid_band = lanid_data_band_dict[year]
+            irr_lanid = ee.Image(lanid_asset).select(lanid_band)
+            irr_lanid = irr_lanid.eq(1)
 
-        # AIM-HPA data for the year
-        aim_hpa = ee.Image(aim_hpa_asset)
-        aim_hpa_band = aim_hpa_band_dict[year]
-        irr_aim_hpa = aim_hpa.select(aim_hpa_band).eq(1)
-        irr_aim_hpa = irr_aim_hpa.updateMask(irr_aim_hpa)
-        irr_aim_hpa = irr_aim_hpa.rename([lanid_band])
+            # 30m and 2km projection taken for LANID
+            projection_lanid = irr_lanid.projection()
+            projection2km_scale = irr_lanid.projection().atScale(2200)  # 2km projection taken for LANID
 
-        # Joining LANID and AIM-HPA
-        # In irrigated (LANID + AIM-HPA) dataset irrigated fields are assigned as 1
-        irr_total = ee.ImageCollection([irr_lanid, irr_aim_hpa]).mosaic()
-        irr_total = irr_total.gt(0).setDefaultProjection(projection_lanid)
-        irr_total = irr_total.unmask()  # assigning 0 value to non-irrigated pixels
+            # AIM-HPA data for the year
+            aim_hpa = ee.Image(aim_hpa_asset)
+            aim_hpa_band = aim_hpa_band_dict[year]
+            irr_aim_hpa = aim_hpa.select(aim_hpa_band).eq(1)
+            irr_aim_hpa = irr_aim_hpa.updateMask(irr_aim_hpa)
+            irr_aim_hpa = irr_aim_hpa.rename([lanid_band])
 
-        # # USDA CDL data for the year
-        cdl_img = ee.ImageCollection(cdl_data).filter(ee.Filter.calendarRange(year, year, 'year')) \
-            .first().select(cdl_band)
-        #  List of non-crop pixels
-        noncrop_list = ee.List([0, 60, 61, 63, 64, 65, 81, 82, 83, 87, 88,
-                                111, 112, 121, 122, 123, 124,
-                                131, 141, 142, 143, 195])  # 0 is no data value, keeping 176 (pasture) in cropland class
-        # Filtering out non-crop pixels
-        cdl_cropland = cdl_img.remap(noncrop_list, ee.List.repeat(0, noncrop_list.size()), 1)
+            # Joining LANID and AIM-HPA
+            # In irrigated (LANID + AIM-HPA) dataset irrigated fields are assigned as 1
+            irr_total = ee.ImageCollection([irr_lanid, irr_aim_hpa]).mosaic()
+            irr_total = irr_total.gt(0).setDefaultProjection(projection_lanid)
+            irr_total = irr_total.unmask()  # assigning 0 value to non-irrigated pixels
 
-        # Creating Rainfed dataset by combining LANID and USDA CDL data
-        # Extracting rainfed (non-irrigated) croplands
-        # Converting 0 values (non-irrigated) to 1, and 1 (irrigated) to 0
-        # Then multiplying with CDL cropland data (reclassified to 1 for croplands and 0 for non-croplands).
-        # The remaining pixels will be rainfed croplands. Masking it again to remove the 0 values
-        irr_total_reversed = irr_total.remap([0, 1], [1, 0])
-        rainfed_cropland = cdl_cropland.multiply(irr_total_reversed)
-        mask = rainfed_cropland.eq(1)
-        rainfed_cropland = rainfed_cropland.updateMask(mask).setDefaultProjection(crs=projection_lanid)
+            # # USDA CDL data for the year
+            cdl_img = ee.ImageCollection(cdl_data).filter(ee.Filter.calendarRange(year, year, 'year')) \
+                .first().select(cdl_band)
 
-        # selecting open vs provisional data asset in GEE
-        # openET 1985-2007 data is provisional and 2008 to upfront data in open in GEE
-        # selecting appropriate OpenET GEE asset based on year
-        if year >= 2008:
+            #  List of non-crop pixels
+            noncrop_list = ee.List([0, 60, 61, 63, 64, 65, 81, 82, 83, 87, 88,
+                                    111, 112, 121, 122, 123, 124,
+                                    131, 141, 142, 143, 195])  # 0 is no data value, keeping 176 (pasture) in cropland class
+
+            # Filtering out non-crop pixels
+            cdl_cropland = cdl_img.remap(noncrop_list, ee.List.repeat(0, noncrop_list.size()), 1)
+
+            # Creating Rainfed dataset by combining LANID and USDA CDL data
+            # Extracting rainfed (non-irrigated) croplands
+            # Converting 0 values (non-irrigated) to 1, and 1 (irrigated) to 0
+            # Then multiplying with CDL cropland data (reclassified to 1 for croplands and 0 for non-croplands).
+            # The remaining pixels will be rainfed croplands. Masking it again to remove the 0 values
+            irr_total_reversed = irr_total.remap([0, 1], [1, 0])
+            rainfed_cropland = cdl_cropland.multiply(irr_total_reversed)
+            mask = rainfed_cropland.eq(1)
+            rainfed_cropland = rainfed_cropland.updateMask(mask).setDefaultProjection(crs=projection_lanid)
+
+            # selecting open vs provisional data asset in GEE
+            # openET 1985-2007 data is provisional and 2008 to upfront data in open in GEE
+            # selecting appropriate OpenET GEE asset based on year
+            # year 2008 and after tht will use the open GEE asset
+            # We don't need the provisional asset as rainfed cropET data will be downloaded >= 2008
             openet_asset = et_data[0]
 
-        elif year <= 2007:
-            openet_asset = et_data[1]
+            for month in month_list:  # second loop for months
+                print('********')
+                print(f'Getting data urls for year={year}, month={month}.....')
+                start_date = ee.Date.fromYMD(year, month, 1)
+                start_date_dt = datetime(year, month, 1)
 
-        for month in month_list:  # second loop for months
-            print('********')
-            print(f'Getting data urls for year={year}, month={month}.....')
-            start_date = ee.Date.fromYMD(year, month, 1)
-            start_date_dt = datetime(year, month, 1)
+                if month < 12:
+                    end_date = ee.Date.fromYMD(year, month + 1, 1)
+                    end_date_dt = datetime(year, month + 1, 1)
 
-            if month < 12:
-                end_date = ee.Date.fromYMD(year, month + 1, 1)
-                end_date_dt = datetime(year, month + 1, 1)
+                else:
+                    end_date = ee.Date.fromYMD(year + 1, 1, 1)  # for month 12 moving end date to next year
+                    end_date_dt = datetime(year + 1, 1, 1)
 
-            else:
-                end_date = ee.Date.fromYMD(year + 1, 1, 1)  # for month 12 moving end date to next year
-                end_date_dt = datetime(year + 1, 1, 1)
+                # a condition to check whether start and end date falls in the available data range in GEE
+                # if not the block will not be executed
+                if (start_date_dt >= et_month_start_range) and (end_date_dt <= et_month_end_range):
+                    openET_imcol = ee.ImageCollection(openet_asset)
 
-            # a condition to check whether start and end date falls in the available data range in GEE
-            # if not the block will not be executed
-            if (start_date_dt >= et_month_start_range) and (end_date_dt <= et_month_end_range):
-                openET_imcol = ee.ImageCollection(openet_asset)
-                # getting default projection of OpenET
-                projection_openET = ee.Image(openET_imcol.first()).projection()
+                    # getting default projection of OpenET
+                    projection_openET = ee.Image(openET_imcol.first()).projection()
 
-                # getting image for year-month range.
-                # the projection is lost during this image conversion, reapplying that at the end
-                openET_img = openET_imcol.select(et_band).filterDate(start_date, end_date). \
-                    reduce(et_reducer).multiply(et_multiply_scale).toFloat(). \
-                    setDefaultProjection(crs=projection_openET)
+                    # getting image for year-month range.
+                    # the projection is lost during this image conversion, reapplying that at the end
+                    openET_img = openET_imcol.select(et_band).filterDate(start_date, end_date). \
+                        reduce(et_reducer).multiply(et_multiply_scale).toFloat(). \
+                        setDefaultProjection(crs=projection_openET)
 
-                # multiplying OpenET with LANID Rainfed data. This will set irrigated pixels' ET value to zero
-                cropET_from_OpenET = openET_img.multiply(rainfed_cropland)
+                    # multiplying OpenET with LANID Rainfed data. This will set irrigated pixels' ET value to zero
+                    cropET_from_OpenET = openET_img.multiply(rainfed_cropland)
 
-                # summing crop ET (from openET) from 30m to 2km scale
-                cropET_from_OpenET = cropET_from_OpenET. \
-                    reduceResolution(reducer=ee.Reducer.mean(), maxPixels=60000). \
-                    reproject(crs=projection2km_scale)
+                    # summing crop ET (from openET) from 30m to 2km scale
+                    cropET_from_OpenET = cropET_from_OpenET. \
+                        reduceResolution(reducer=ee.Reducer.mean(), maxPixels=60000). \
+                        reproject(crs=projection2km_scale)
 
-                # will collect url and file name in url list and local_file_paths_list
-                data_url_list = []
-                local_file_paths_list = []
+                    # will collect url and file name in url list and local_file_paths_list
+                    data_url_list = []
+                    local_file_paths_list = []
 
-                for i in range(len(grid_no)):  # third loop for grids
-                    # converting grid geometry info to a GEE extent
-                    grid_sr = grid_no[i]
-                    roi = grid_geometry[i].bounds
-                    gee_extent = ee.Geometry.Rectangle(roi)
+                    for i in range(len(grid_no)):  # third loop for grids
+                        # converting grid geometry info to a GEE extent
+                        grid_sr = grid_no[i]
+                        roi = grid_geometry[i].bounds
+                        gee_extent = ee.Geometry.Rectangle(roi)
 
-                    # Getting Data URl for each grid from GEE
-                    # The GEE connection gets disconnected sometimes, therefore, we adding the try-except block to
-                    # retry failed connections
-                    max_retries = 3
-                    for attempt in range(max_retries):
-                        try:
-                            data_url = cropET_from_OpenET.getDownloadURL({'name': data_name,
-                                                                          'crs': 'EPSG:4269',  # NAD83
-                                                                          'scale': scale,  # in meter. equal to ~0.02 deg
-                                                                          'region': gee_extent,
-                                                                          'format': 'GEO_TIFF'})
-                            break  # if successful, exit the loop
-                        except ee.EEException as e:
-                            if attempt < max_retries - 1:
-                                time.sleep(5)  # wait for 5 seconds before retrying
-                                continue
-                            else:
-                                print(f"Failed to get data_url for year={year}, month={month}, grid={grid_sr}: {e}")
-                                data_url = None
+                        # Getting Data URl for each grid from GEE
+                        # The GEE connection gets disconnected sometimes, therefore, we adding the try-except block to
+                        # retry failed connections
+                        max_retries = 3
+                        for attempt in range(max_retries):
+                            try:
+                                data_url = cropET_from_OpenET.getDownloadURL({'name': data_name,
+                                                                              'crs': 'EPSG:4269',  # NAD83
+                                                                              'scale': scale,  # in meter. equal to ~0.02 deg
+                                                                              'region': gee_extent,
+                                                                              'format': 'GEO_TIFF'})
+                                break  # if successful, exit the loop
+                            except ee.EEException as e:
+                                if attempt < max_retries - 1:
+                                    time.sleep(5)  # wait for 5 seconds before retrying
+                                    continue
+                                else:
+                                    print(f"Failed to get data_url for year={year}, month={month}, grid={grid_sr}: {e}")
+                                    data_url = None
 
-                    local_file_path = os.path.join(download_dir, f'{data_name}_{str(year)}_{str(month)}_{str(grid_sr)}.tif')
+                        local_file_path = os.path.join(download_dir, f'{data_name}_{str(year)}_{str(month)}_{str(grid_sr)}.tif')
 
-                    # Appending data url and local file path (to save data) to a central list
-                    data_url_list.append(data_url)
-                    local_file_paths_list.append(local_file_path)
+                        # Appending data url and local file path (to save data) to a central list
+                        data_url_list.append(data_url)
+                        local_file_paths_list.append(local_file_path)
 
-                    # The GEE connection gets disconnected sometimes, therefore, we download the data in batches when
-                    # there is enough data url gathered for download.
-                    if (len(data_url_list) == 120) | (
-                            i == len(grid_no) - 1):  # downloads data when one of the conditions are met
-                        # Combining url and file paths together to pass in multiprocessing
-                        urls_to_file_paths_compile = []
-                        for i, j in zip(data_url_list, local_file_paths_list):
-                            urls_to_file_paths_compile.append([i, j])
+                        # The GEE connection gets disconnected sometimes, therefore, we download the data in batches when
+                        # there is enough data url gathered for download.
+                        if (len(data_url_list) == 120) | (
+                                i == len(grid_no) - 1):  # downloads data when one of the conditions are met
+                            # Combining url and file paths together to pass in multiprocessing
+                            urls_to_file_paths_compile = []
+                            for i, j in zip(data_url_list, local_file_paths_list):
+                                urls_to_file_paths_compile.append([i, j])
 
-                        # Download data by multi-procesing/multi-threading
-                        download_data_from_GEE_by_multiprocess(download_urls_fp_list=urls_to_file_paths_compile,
-                                                               use_cpu=use_cpu_while_multidownloading)
+                            # Download data by multi-procesing/multi-threading
+                            download_data_from_GEE_by_multiprocess(download_urls_fp_list=urls_to_file_paths_compile,
+                                                                   use_cpu=use_cpu_while_multidownloading)
 
-                        # After downloading some data in a batch, we empty the data_utl_list and local_file_paths_list.
-                        # The empty lists will gather some new urls and file paths, and download a new batch of datasets
-                        data_url_list = []
-                        local_file_paths_list = []
+                            # After downloading some data in a batch, we empty the data_utl_list and local_file_paths_list.
+                            # The empty lists will gather some new urls and file paths, and download a new batch of datasets
+                            data_url_list = []
+                            local_file_paths_list = []
 
-            else:
-                print(f'Data for year {year}, month {month} is out of range. Skipping query')
-                pass
+        else:
+            print(f'Data for year {year} is out of range. Skipping query')
+            pass
 
 
 def download_openET_data(data_list, download_dir, year_list, month_range,
@@ -1986,7 +1987,7 @@ def download_openET_data(data_list, download_dir, year_list, month_range,
         ******************************
 
     :param download_dir: File path of main download directory. It will consist directory of individual dataset.
-    :param year_list: List of year_list to download data for.
+    :param year_list: List of years_list to download data for.
     :param month_range: Tuple of month ranges to download data for, e.g., for months 1-12 use (1, 12).
     :param grid_shape_for_2km_ensemble: File path of larger grids to download data for Western US.
     :param grid_shape_for30m_irrmapper: File path of smaller grids to download data for IrrMapper extent and cropET from
@@ -2024,16 +2025,16 @@ def download_openET_data(data_list, download_dir, year_list, month_range,
                                                          westUS_shape=WestUS_shape)
 
             elif data_name == 'Irrig_crop_OpenET_IrrMapper':
-                download_CropET_from_OpenET_IrrMapper_monthly(data_name=data_name, download_dir=download_dir,
-                                                              year_list=year_list, month_range=month_range,
-                                                              grid_shape=grid_shape_for30m_irrmapper, scale=2200,
-                                                              use_cpu_while_multidownloading=use_cpu_while_multidownloading)
+                download_Irr_CropET_from_OpenET_IrrMapper_monthly(data_name=data_name, download_dir=download_dir,
+                                                                  year_list=year_list, month_range=month_range,
+                                                                  grid_shape=grid_shape_for30m_irrmapper, scale=2200,
+                                                                  use_cpu_while_multidownloading=use_cpu_while_multidownloading)
 
             elif data_name == 'Irrig_crop_OpenET_LANID':
-                download_CropET_from_OpenET_LANID_monthly(data_name=data_name, download_dir=download_dir,
-                                                          year_list=year_list, month_range=month_range,
-                                                          grid_shape=grid_shape_for30m_lanid, scale=2200,
-                                                          use_cpu_while_multidownloading=use_cpu_while_multidownloading)
+                download_Irr_CropET_from_OpenET_LANID_monthly(data_name=data_name, download_dir=download_dir,
+                                                              year_list=year_list, month_range=month_range,
+                                                              grid_shape=grid_shape_for30m_lanid, scale=2200,
+                                                              use_cpu_while_multidownloading=use_cpu_while_multidownloading)
 
             elif data_name == 'Irrigation_Frac_IrrMapper':
                 download_Irr_frac_from_IrrMapper_yearly(data_name=data_name, download_dir=download_dir,
@@ -2082,7 +2083,7 @@ def download_all_openET_datasets(year_list, month_range,
     """
     Download all GEE datasets.
 
-    :param year_list: List of year_list to download data for. We will use data for [2010, 2015] in the model.
+    :param year_list: List of years_list to download data for. We will use data for [2010, 2015] in the model.
     :param month_range: Tuple of month ranges to download data for, e.g., for months 1-12 use (1, 12).
     :param grid_shape_for_2km_ensemble: File path of larger grids to download data for Western US.
     :param grid_shape_for30m_irrmapper: File path of smaller grids to download data for IrrMapper extent and cropET from

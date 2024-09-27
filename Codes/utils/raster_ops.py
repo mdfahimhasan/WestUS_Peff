@@ -433,14 +433,14 @@ def sum_rasters(raster_dir, output_raster, raster_list=None, search_by='*.tif', 
     else:
         input_rasters = raster_list
 
-    sum_arr, file = None, None
+    sum_arr = None
     for raster in input_rasters:
         if raster == input_rasters[0]:
             arr = read_raster_arr_object(raster, get_file=False)
             sum_arr = arr
         else:
             arr = read_raster_arr_object(raster, get_file=False)
-            sum_arr = np.nansum(np.dstack((sum_arr, arr)), axis=2)
+            sum_arr = np.sum(np.dstack((sum_arr, arr)), axis=2)
 
     ref_arr, ref_file = read_raster_arr_object(ref_raster)
     sum_arr[np.isnan(ref_arr)] = nodata  # setting nodata using reference raster
@@ -471,18 +471,18 @@ def mean_rasters(raster_dir, output_raster, raster_list=None, search_by='*.tif',
     else:
         input_rasters = raster_list
 
-    sum_arr, file = None, None
-    val = 0
+    mean_arr, file = None, None
+    val = 1
     for raster in input_rasters:
         if raster == input_rasters[0]:
             arr = read_raster_arr_object(raster, get_file=False)
-            sum_arr = arr
+            mean_arr = arr
         else:
             arr = read_raster_arr_object(raster, get_file=False)
-            sum_arr += arr
+            mean_arr += arr
             val += 1
 
-    mean_arr = sum_arr / val
+    mean_arr = mean_arr / val
     ref_arr, ref_file = read_raster_arr_object(ref_raster)
     mean_arr[np.isnan(ref_arr)] = nodata  # setting nodata using reference raster
 

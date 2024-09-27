@@ -9,5 +9,5 @@
 #SBATCH --mail-type=BEGIN,END,FAIL,TIME_LIMIT
 #SBATCH --mail-user=Fahim.Hasan@colostate.edu
 
-python eff_precip_model.py
+python m01_peff_model_monthly.py
 

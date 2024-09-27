@@ -6,8 +6,9 @@ from Codes.utils.system_ops import makedirs
 from Codes.utils.stats_ops import calculate_r2
 
 
-def scatter_plot_of_same_vars(Y_pred, Y_obsv, x_label, y_label, plot_name, savedir, alpha=0.03,
-                              color_format='o', marker_size=0.5, title=None, axis_lim=None):
+def scatter_plot_of_same_vars(Y_pred, Y_obsv, x_label, y_label, plot_name, savedir, alpha=0.1,
+                              color_format='o', marker_size=0.5, title=None,
+                              axis_lim=None, tick_interval=50):
     """
     Makes scatter plot of model prediction vs observed data.
 
@@ -23,6 +24,8 @@ def scatter_plot_of_same_vars(Y_pred, Y_obsv, x_label, y_label, plot_name, saved
     :param title: Str of title. Default set to None.
     :param axis_lim: A list of minimum and maximum values of x and y axis.
                      Default set to None (will calculate and set xlim, ylim itself)
+    :param tick_interval: X and Y tick intervals to plot.
+                          Default set to 50 for units of mm/month. For annual model use fraction.
 
     :return: A scatter plot of model prediction vs observed data.
     """
@@ -35,7 +38,7 @@ def scatter_plot_of_same_vars(Y_pred, Y_obsv, x_label, y_label, plot_name, saved
     fig.set_facecolor('none')
 
     ax.plot(Y_obsv, Y_pred, color_format, alpha=alpha, markersize=marker_size)
-    ax.plot([0, 1], [0, 1], '-r', transform=ax.transAxes)
+    ax.plot([min_value, max_value], [min_value, max_value], '-r', linewidth=2)
     ax.set_xlabel(x_label)  # 'Observed'
     ax.set_ylabel(y_label)  # 'Predicted'
 
@@ -45,6 +48,8 @@ def scatter_plot_of_same_vars(Y_pred, Y_obsv, x_label, y_label, plot_name, saved
     else:
         ax.set_xlim([min_value, max_value])
         ax.set_ylim([min_value, max_value])
+        ax.set_xticks(np.arange(0, max_value, tick_interval))
+        ax.set_yticks(np.arange(0, max_value, tick_interval))
 
     if title is not None:
         ax.set_title(title)
@@ -58,8 +63,9 @@ def scatter_plot_of_same_vars(Y_pred, Y_obsv, x_label, y_label, plot_name, saved
     fig.savefig(fig_loc, dpi=300)
 
 
-def density_grid_plot_of_same_vars(Y_pred, Y_obsv, x_label, y_label, plot_name, savedir, bins=80,
-                                   title=None, axis_lim=None):
+def density_grid_plot_of_same_vars(Y_pred, Y_obsv, x_label, y_label, plot_name, savedir,
+                                   bins=80, title=None,
+                                   axis_lim=None, tick_interval=50):
     """
     Makes density grid plot for model prediction vs observed data. In the density grid plot, each grid represents a bin
     and each bin value represents the number/fraction of point in that bin.
@@ -74,6 +80,8 @@ def density_grid_plot_of_same_vars(Y_pred, Y_obsv, x_label, y_label, plot_name, 
     :param title: Str of title. Default set to None.
     :param axis_lim: A list of minimum and maximum values of x and y axis.
                      Default set to None (will calculate and set xlim, ylim itself)
+    :param tick_interval: X and Y tick intervals to plot.
+                      Default set to 50 for units of mm/month. For annual model use fraction.
 
     :return: A scatter plot of model prediction vs observed data.
     """
@@ -90,15 +98,25 @@ def density_grid_plot_of_same_vars(Y_pred, Y_obsv, x_label, y_label, plot_name, 
     fig.set_facecolor('none')
 
     # Plot the density grid as a heatmap
-    density_plot = ax.imshow(heatmap, origin='lower', extent=[min_value, max_value, min_value, max_value],
-                             cmap='RdYlBu_r')
+    # plt.imshow() expects data in the format where the rows of the matrix correspond to the y-axis and
+    # the columns correspond to the x-axis
+    # However, np.histogram2d() returns the 2D array (heatmap) such that the first dimension corresponds to the x-axis
+    # (observed values) and the second dimension corresponds to the y-axis (predicted values).
+    # So, we use heatmap.T
+    density_plot = ax.imshow(heatmap.T, origin='lower', cmap='RdYlBu_r', aspect='auto',
+                             extent=[min_value, max_value, min_value, max_value])
+
     ax.set_xlabel(x_label, fontsize=18)  # 'Observed'
     ax.set_ylabel(y_label, fontsize=18)  # 'Predicted'
-    ax.plot([0, 1], [0, 1], '-r', transform=ax.transAxes)
+
+    ax.plot([min_value, max_value], [min_value, max_value], '-r', linewidth=2)
+
     ax.tick_params(axis='both', labelsize=18)
+
     cbar = fig.colorbar(mappable=density_plot)
     cbar.ax.tick_params(labelsize=18)
     cbar.set_label('Number of samples in each bin', size=18)
+
     plt.tight_layout()
 
     if axis_lim:
@@ -107,6 +125,8 @@ def density_grid_plot_of_same_vars(Y_pred, Y_obsv, x_label, y_label, plot_name, 
     else:
         ax.set_xlim([min_value, max_value])
         ax.set_ylim([min_value, max_value])
+        ax.set_xticks(np.arange(0, max_value, tick_interval))
+        ax.set_yticks(np.arange(0, max_value, tick_interval))
 
     if title is not None:
         ax.set_title(title)
@@ -120,7 +140,7 @@ def density_grid_plot_of_same_vars(Y_pred, Y_obsv, x_label, y_label, plot_name, 
     fig.savefig(fig_loc, dpi=300)
 
 
-def scatter_plot(X, Y, x_label, y_label, plot_name, savedir, alpha=0.03,
+def scatter_plot(X, Y, x_label, y_label, plot_name, savedir, alpha=0.1,
                   color_format='o', marker_size=0.5, title=None):
     """
     Makes scatter plot between 2 variables.

@@ -7,7 +7,7 @@ import geopandas as gpd
 
 from Codes.utils.system_ops import makedirs
 from Codes.utils.vector_ops import clip_vector
-from Codes.utils.ml_ops import create_train_test_dataframe
+from Codes.utils.ml_ops import create_train_test_monthly_dataframe
 from Codes.utils.raster_ops import read_raster_arr_object, write_array_to_raster, shapefile_to_raster, \
     clip_resample_reproject_raster, make_lat_lon_array_from_raster
 
@@ -24,7 +24,7 @@ def clip_netGW_Irr_frac_for_basin(years, basin_shp, netGW_input_dir, basin_netGW
     """
     Clip netGW and irrigated fraction datasets for a basin, Clipping irrigation fraction data is optional.
 
-    :param years: List of years to process data.
+    :param years: List of years_list to process data.
     :param basin_shp: Filepath of basin shapefile.
     :param netGW_input_dir: Directory path of Western US netGW estimates.
     :param basin_netGW_output_dir: Output directory path to save the clipped netGW estimates for the basin.
@@ -74,7 +74,7 @@ def pumping_AF_pts_to_mm_raster(years, irrigated_fraction_dir, pumping_pts_shp, 
     For individual pixels (2km) sums up all the pumping values inside it.
     Also, generates intermediate pumping in AF rasters.
 
-    :param years: List of years to process data.
+    :param years: List of years_list to process data.
     :param irrigated_fraction_dir: Directory path of Western US annual irrigation fraction datasets.
     :param pumping_pts_shp: Filepath of point shapefile with annual pumping estimates.
     :param pumping_attr_AF: Attribute in the point shapefile with pumping in AF values.
@@ -166,7 +166,7 @@ def compile_pixelwise_basin_df_for_netGW_pumping(years, basin_netGW_dir, basin_p
     """
     Compiling pixel-wise annual netGW and pumping data for a basin.
 
-    :param years: List of years to process data.
+    :param years: List of years_list to process data.
     :param basin_netGW_dir: Basin netGW directory.
     :param basin_pumping_mm_dir: Basin pumping (in mm) directory.
     :param basin_pumping_AF_dir: Basin pumping (in AF) directory.
@@ -221,7 +221,7 @@ def compile_pixelwise_netGW_to_annual_df(years, basin_netGW_dir, output_csv):
     """
     Compiling pixel-wise netGW to annual total dataframe.
 
-    :param years: List of years to process data.
+    :param years: List of years_list to process data.
     :param basin_netGW_dir: Basin netGW directory.
     :param output_csv: Filepath of output csv.
 
@@ -262,7 +262,7 @@ def aggregate_USGS_pumping_annual_csv(years, usgs_GW_shp_for_basin, convert_to_c
     """
     Aggregate USGS HUC12-scale GW pumping estimates to a annual scale for a basin of interest.
 
-    :param years: List of years to process the data for.
+    :param years: List of years_list to process the data for.
     :param usgs_GW_shp_for_basin: USGS HUC12-level shapefile (for the basin) with annual GW pumping estimates in AF.
     :param convert_to_crs: For estimating HUC12 areas inside the basin of interest, use this crs.
     :param output_csv: Filepath of output csv with USGS annual GW pumping estimates for a basin of interest.
@@ -271,7 +271,7 @@ def aggregate_USGS_pumping_annual_csv(years, usgs_GW_shp_for_basin, convert_to_c
     """
     print(f'aggregating annual USGS GW irrigation vs pumping ...')
 
-    # converting integer years to str
+    # converting integer years_list to str
     years = [str(y) for y in years]
 
     # read USGS dataset
@@ -298,7 +298,7 @@ def aggregate_USGS_pumping_annual_csv(years, usgs_GW_shp_for_basin, convert_to_c
     usgs_df['area_ratio'] = area_ratio
     usgs_df = usgs_df[years].mul(usgs_df['area_ratio'], axis=0)
 
-    # transposing to bring years in a columns
+    # transposing to bring years_list in a columns
     usgs_df_T = usgs_df.T
     usgs_df_T['year'] = usgs_df_T.index
     usgs_df_T['year'] = usgs_df_T['year'].astype(
@@ -423,7 +423,7 @@ def aggregate_netGW_insitu_usgs_pumping_to_annualCSV_NV(years, basin_netGW_dir,
     Aggregates (by sum) pixel-wise annual netGW, in-situ pumping records and usgs pumping estimates for
     Diamond Valley, Nevada.
 
-    :param years: List of years to process data.
+    :param years: List of years_list to process data.
     :param basin_netGW_dir: Basin netGW directory.
     :param pumping_csv: Filepath  of pumping csv dataset for the Diamond valley basin.
     :param pump_AF_attr: Pumping attribute (in AF) in the csv file.
@@ -460,12 +460,12 @@ def aggregate_netGW_insitu_usgs_pumping_to_annualCSV_NV(years, basin_netGW_dir,
     # loading pumping data
     pump_df = pd.read_csv(pumping_csv)
 
-    # aggregating netGW and pumping dataset by year_list
+    # aggregating netGW and pumping dataset by years_list
     df_annual = df.groupby('year')[['netGW_AF']].sum().reset_index()
     pump_df_annual = pump_df.groupby('year')[pump_AF_attr].sum().reset_index()
 
     # joining the annual netGW and in-situ pumping dataframes
-    yearly_df = df_annual.merge(pump_df_annual, on='year', how='outer')  # doing outer merge to keep all years' records
+    yearly_df = df_annual.merge(pump_df_annual, on='year', how='outer')  # doing outer merge to keep all years_list' records
 
     # loading USGS annual pumping estimates data
     usgs_df = pd.read_csv(annual_usgs_GW_csv)
@@ -475,7 +475,7 @@ def aggregate_netGW_insitu_usgs_pumping_to_annualCSV_NV(years, basin_netGW_dir,
 
     # calculating m3 values
     yearly_df['netGW_m3'] = yearly_df['netGW_AF'] * 1233.48
-    yearly_df['pumping_m3'] = yearly_df['pumping_AF'] * 1233.48  # will get nans in years with no pumping records
+    yearly_df['pumping_m3'] = yearly_df['pumping_AF'] * 1233.48  # will get nans in years_list with no pumping records
     yearly_df['USGS_m3'] = yearly_df['USGS_AF'] * 1233.48
 
     # # calculating mean netGW + mean pumping + mean USGS pumping (in mm)
@@ -543,7 +543,7 @@ def run_annual_csv_processing_KS_CO(years, basin_code, basin_shp,
     Run processes to compile a basins' netGW, pumping, and USGS pumping data at annual scale in a csv for
     groundwater management districts in KS and republican basin in CO.
 
-    :param years: List of years to process data.
+    :param years: List of years_list to process data.
     :param basin_code: Basin keyword to get area and save processed datasets. Must be one of the following-
                         ['gmd4', 'gmd3', 'rpb']
     :param basin_shp: Filepath of basin shapefile.
@@ -648,7 +648,7 @@ def run_annual_csv_processing_AZ(years, basin_code, basin_shp,
     Run processes to compile a basins' netGW, pumping, and USGS pumping data at annual scale in a csv for
     Harquahala INA and Douglas AMA in Arizona.
 
-    :param years: List of years to process data.
+    :param years: List of years_list to process data.
     :param basin_code: Basin keyword to get area and save processed datasets. Must be one of the following-
                         ['hqr', 'doug']
     :param basin_shp: Filepath of basin shapefile.
@@ -756,7 +756,7 @@ def run_annual_csv_processing_NV(years, basin_code, basin_shp,
     """
     Run processes to compile Diamond Valley's (Nevada)  netGW, pumping, and USGS pumping data at annual scale in a csv.
 
-    :param years: ist of years to process data.
+    :param years: ist of years_list to process data.
     :param basin_code: Basin keyword to get area and save processed datasets. Must be - 'dv'.
     :param basin_shp: Filepath of basin shapefile.
     :param westUS_netGW_dir: WestUS netGW directory.
@@ -831,7 +831,7 @@ def run_annual_csv_processing_CA_ID(years, basin_code, basin_shp, westUS_netGW_d
     Run processes to compile a basins' netGW, pumping, and USGS pumping data at annual scale in a csv for
     Central Valley, CA and Snake River Basin, ID.
 
-    :param years: List of years to process data.
+    :param years: List of years_list to process data.
     :param basin_code: Basin keyword to get area and save processed datasets. Must be one of the following-
                         ['cv', 'srb]
     :param basin_shp: Filepath of basin shapefile.
@@ -969,7 +969,7 @@ def extract_pumping_estimate_with_lat_lon(years, input_csv, input_data_dir, resa
     Extract pumping values using latitude and longitude from a pumping value raster.
     ** using it to extract pumping value from Majumdar et al.'s simulated Arizona's pumping data.
 
-    :param years: List of years to process data.
+    :param years: List of years_list to process data.
     :param input_csv: Filepath of original pixel-wise annual netGW and pumping csv for a basin.
     :param input_data_dir: Input pumping data directory path.
     :param resampled_output_dir: Directory path to save intermediate resampled pumping data.
@@ -1179,7 +1179,7 @@ def compile_annual_irr_rainfed_ET(years, area_code, area_shape, area_ref_raster,
     Compile annual irrigated + rainfed cropland, annual cdl, and monthly (growing season months)
     irrigated + rainfed cropET dataset into a csv.
 
-    :param years: List of years' data to include in the dataframe.
+    :param years: List of years_list' data to include in the dataframe.
     :param area_code: A shortname of area/state that will be used to save the data, e.g., 'KS' or 'TX'.
     :param area_shape: Filepath of the shapefile of the area.
     :param area_ref_raster: Filepath of the refraster of the area.
@@ -1310,14 +1310,14 @@ def compile_annual_irr_rainfed_ET(years, area_code, area_shape, area_ref_raster,
 
         makedirs([os.path.dirname(output_csv)])
 
-        create_train_test_dataframe(years_list=years,
-                                    month_range=(4, 10),
-                                    monthly_data_path_dict=monthly_data_path_dict,
-                                    yearly_data_path_dict=yearly_data_path_dict,
-                                    static_data_path_dict=None,
-                                    datasets_to_include=datasets_to_include,
-                                    output_parquet=output_csv,
-                                    skip_processing=False)
+        create_train_test_monthly_dataframe(years_list=years,
+                                            month_range=(4, 10),
+                                            monthly_data_path_dict=monthly_data_path_dict,
+                                            yearly_data_path_dict=yearly_data_path_dict,
+                                            static_data_path_dict=None,
+                                            datasets_to_include=datasets_to_include,
+                                            output_parquet=output_csv,
+                                            skip_processing=False)
 
 
 def clip_Peff_for_basin(years, basin_shp, Peff_input_dir, basin_Peff_output_dir, basin_code,
@@ -1325,7 +1325,7 @@ def clip_Peff_for_basin(years, basin_shp, Peff_input_dir, basin_Peff_output_dir,
     """
     Clip effective precipitation estimates for growing seasons or months.
 
-    :param years: List of years to process data.
+    :param years: List of years_list to process data.
     :param basin_shp: Filepath of basin shapefile.
     :param Peff_input_dir: Directory path of Western US effective precipitation estimates (growing seasons or months).
     :param basin_Peff_output_dir: Output directory path to save the clipped effective precipitation estimates for the basin.
@@ -1377,7 +1377,7 @@ def clip_precip_for_basin(years, basin_shp, precip_input_dir, basin_precip_outpu
     """
     Clip effective precipitation estimates for growing seasons or months for the basin.
 
-    :param years: List of years to process data.
+    :param years: List of years_list to process data.
     :param basin_shp: Filepath of basin shapefile.
     :param precip_input_dir: Directory path of Western US water year precipitation estimates.
     :param basin_precip_output_dir: Output directory path to save the clipped water year precipitation estimates for the basin.
@@ -1427,7 +1427,7 @@ def compile_basin_growS_peff_water_yr_precip_to_csv(years, basin_peff_dir, basin
     """
     Compiling pixel-wise growing season effective precipitation and water year precipitation data for a basin into a csv.
 
-    :param years: List of years to process data.
+    :param years: List of years_list to process data.
     :param basin_peff_dir: Basin effective precipitation directory.
     :param basin_water_yr_precip_dir: Basin water year precipitation directory.
     :param basin_code: Basin keyword to add before the processed raster's name. Preferred to use from
@@ -1501,7 +1501,7 @@ def compile_basin_monthly_peff_to_csv(years, month_range, basin_peff_dir, basin_
     """
     Compiling pixel-wise monthly effective precipitation data for a basin into a csv.
 
-    :param years: List of years to process data.
+    :param years: List of years_list to process data.
     :param month_range: Range of month to process data for. Example - (4, 10).
     :param basin_peff_dir: Basin monthly effective precipitation directory.
     :param basin_code: Basin keyword to add before the processed raster's name. Preferred to use from
@@ -1560,7 +1560,7 @@ def compile_basin_monthly_precip_mv_avg_to_csv(years, month_range, basin_precip_
     """
     Compiling pixel-wise monthly effective precipitation data for a basin into a csv.
 
-    :param years: List of years to process data.
+    :param years: List of years_list to process data.
     :param month_range: Range of month to process data for. Example - (4, 10).
     :param basin_precip_dir: Basin monthly precipitation directory.
     :param basin_code: Basin keyword to add before the processed raster's name. Preferred to use from
@@ -1633,7 +1633,7 @@ def calc_moving_avg_monthly_precip(monthly_precip_csv, basin_code, output_csv):
     # Sort the dataframe by index and month
     df_test = df.sort_values(by=['index', 'month'])
 
-    # summing precip for all years for each month in a pixel.
+    # summing precip for all years_list for each month in a pixel.
     # Also, keeping count of total values summed for a pixel (each count value account for a year)
     df_test = df_test.groupby(['index', 'month'])['precip'].agg(['sum', 'count']).reset_index()
 

@@ -22,11 +22,11 @@ def create_canal_coverage_raster(years_list, canal_shapefile, irrig_cropET_grow_
                                  canal_coverage_output_dir, irrigated_CropET_with_canal_coverage_dir,
                                  ref_raster=WestUS_raster, resolution=model_res, skip_processing=False):
     """
-    Create canal coverage rasters for all year_list. Canal coverage is only assigned to pixels that fall
+    Create canal coverage rasters for all years_list. Canal coverage is only assigned to pixels that fall
     within canal coverage shapefile (or touches canal coverage shapefile) and there is irrigated cropET in that pixel
     for that year.
 
-    :param years_list: A list of year_list to process data for.
+    :param years_list: A list of years_list to process data for.
     :param canal_shapefile: Filepath of canal coverage shapefile.
     :param irrig_cropET_grow_season_dir: Directory path of irrigated cropET growing season rasters.
     :param canal_coverage_output_dir: Output directory path to save canal coverage rasters.
@@ -81,7 +81,7 @@ def estimate_sw_mm_HUC12(years_list, HUC12_input_shapefile, irrigated_CropET_wit
     HUC12 watershed. Also, calculates growing season SW irrigation in mm (area averaged, considers canal covered
     irrigated cropET pixels, growing season) for all HUC12s.
 
-    :param years_list: A list of year_list to process data for.
+    :param years_list: A list of years_list to process data for.
     :param HUC12_input_shapefile: Filepath of WestUS HUC12 shapefile.
     :param irrigated_CropET_with_canal_coverage_dir: Directory path of irrigated cropET growing season
                                                      rasters (overlaid with canal coverage raster).
@@ -152,7 +152,7 @@ def distribute_SW_consmp_use_to_pixels(years_list, HUC12_shapefile, HUC12_Irr_ef
     Distribute HUC12 level surface water consumptive use (unit mm/growing season) to irrigated pixels that have
     canal coverage (within 2 km buffer of canal).
 
-    :param years_list:  A list of year_list to process data for.
+    :param years_list:  A list of years_list to process data for.
     :param HUC12_shapefile: Filepath of HUC12 shapefile with total canal covered pixels, total
                              irrigated cropET data, and SW irrigation data in mm.
     :param HUC12_Irr_eff_shapefile: Filepath of HUC12 shapefile with annual irrigation efficiency data for each basin.

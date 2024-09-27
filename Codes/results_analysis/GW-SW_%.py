@@ -22,7 +22,7 @@ def clip_netGW_SW_for_basin(years, basin_shp, netGW_input_dir, SW_input_dir,
     """
     Clip netGW and SW consumptive use datasets for a basin.
 
-    :param years: List of years to process data.
+    :param years: List of years_list to process data.
     :param basin_shp: Filepath of basin shapefile.
     :param netGW_input_dir: Directory path of Western US netGW estimates.
     :param SW_input_dir: Directory path of Western US SW consumptive use estimates.
@@ -67,7 +67,7 @@ def compile_basin_netGW_SW(years, basin_netGW_dir, basin_SW_dir, basin_name, out
     """
     Compiling pixel-wise annual netGW and pumping data for a basin.
 
-    :param years: List of years to process data.
+    :param years: List of years_list to process data.
     :param basin_netGW_dir: Basin netGW directory.
     :param basin_pumping_mm_dir: Basin pumping (in mm) directory.
     :param basin_water_yr_precip_dir: Basin pumping (in AF) directory.

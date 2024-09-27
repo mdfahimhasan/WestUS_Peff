@@ -8,6 +8,7 @@ import pandas as pd
 from glob import glob
 import dask.dataframe as ddf
 import matplotlib.pyplot as plt
+from datetime import datetime, timedelta
 from timeit import default_timer as timer
 
 import lightgbm as lgb
@@ -51,21 +52,19 @@ def apply_OneHotEncoding(input_df):
     return input_df_enc
 
 
-def create_train_test_dataframe(years_list, month_range, monthly_data_path_dict, yearly_data_path_dict,
-                                static_data_path_dict, datasets_to_include, output_parquet,
-                                skip_processing=False, n_partitions=20):
+def create_train_test_monthly_dataframe(years_list, monthly_data_path_dict, yearly_data_path_dict,
+                                        static_data_path_dict, datasets_to_include, output_parquet,
+                                        skip_processing=False, n_partitions=20):
     """
     Compile monthly/yearly/static datasets into a dataframe. This function-generated dataframe will be used as
-    train-test data for ML models.
+    train-test data for ML model at monthly scale.
 
-    *** if there is no monthly dataset, set month_range and monthly_data_path_dict to None.
     *** if there is no yearly dataset, set yearly_data_path_dict to None.
     *** if there is no static data, set static_data_path_dict to None.
 
-    :param years_list: A list of year_list for which data to include in the dataframe.
-    :param month_range: A tuple of start and end month for which data to filter. Set to None if there is no monthly dataset.
+    :param years_list: A list of years_list for which data to include in the dataframe.
     :param monthly_data_path_dict: A dictionary with monthly variables' names as keys and their paths as values.
-                                   Set to None if there is no monthly dataset.
+                                   This can't be None.
     :param yearly_data_path_dict: A dictionary with yearly variables' names as keys and their paths as values.
                                   Set to None if there is no yearly dataset.
     :param static_data_path_dict: A dictionary with static variables' names as keys and their paths as values.
@@ -79,23 +78,69 @@ def create_train_test_dataframe(years_list, month_range, monthly_data_path_dict,
     :return: The filepath of the output parquet file.
     """
     if not skip_processing:
+        print('creating train-test dataframe for monthly model...')
+
         output_dir = os.path.dirname(output_parquet)
         makedirs([output_dir])
 
         variable_dict = {}
         yearly_month_count_dict = {}
 
-        if month_range is not None:
-            month_list = [m for m in range(month_range[0], month_range[1] + 1)]  # creating list of months
-        else:
-            month_list = None
+        # monthly data compilation
+        for var in monthly_data_path_dict.keys():
+            if var in datasets_to_include:
+                print(f'processing data for {var}...')
 
-        if monthly_data_path_dict is not None:
-            for var in monthly_data_path_dict.keys():
-                if var in datasets_to_include:
-                    print(f'processing data for {var}...')
+                for year in years_list:
+                    # creating list of month to be included for each year
+                    if year == 2008:
+                        month_list = range(10, 13)
+                    elif year == 2020:
+                        month_list = range(1, 10)
+                    else:
+                        month_list = range(1, 13)
 
-                    for year in years_list:
+                    if var == 'GRIDMET_Precip':  # for including monthly and lagged monthly GRIDMET_precip in the dataframe
+                        for month_count, month in enumerate(month_list):
+                            current_precip_data = glob(os.path.join(monthly_data_path_dict[var], f'*{year}_{month}.tif*'))[0]
+
+                            current_month_date = datetime(year, month, 1)
+
+                            # Collect previous month's precip data
+                            prev_month_date = current_month_date - timedelta(30)
+                            prev_2_month_date = current_month_date - timedelta(60)
+
+                            prev_month_precip_data = glob(os.path.join(monthly_data_path_dict[var], f'*{prev_month_date.year}_{prev_month_date.month}.tif*'))[0]
+                            prev_2_month_precip_data = glob(os.path.join(monthly_data_path_dict[var], f'*{prev_2_month_date.year}_{prev_2_month_date.month}.tif*'))[0]
+
+                            # reading datasets
+                            current_precip_arr = read_raster_arr_object(current_precip_data, get_file=False).flatten()
+                            len_arr = len(list(current_precip_arr))
+                            year_data = [int(year)] * len_arr
+                            month_data = [int(month)] * len_arr
+
+                            prev_month_precip_arr = read_raster_arr_object(prev_month_precip_data, get_file=False).flatten()
+                            prev_2_month_precip_arr = read_raster_arr_object(prev_2_month_precip_data, get_file=False).flatten()
+
+                            if (month_count == 0) & (var not in variable_dict.keys()):  # initiating the key and adding first series of data
+                                variable_dict[var] = list(current_precip_arr)
+                                variable_dict['year'] = year_data
+                                variable_dict['month'] = month_data
+
+                                variable_dict['GRIDMET_Precip_1_lag'] = list(prev_month_precip_arr)
+                                variable_dict['GRIDMET_Precip_2_lag'] = list(prev_2_month_precip_arr)
+
+                            else:  # if key already found, extending the data list
+                                variable_dict[var].extend(list(current_precip_arr))
+                                variable_dict['year'].extend(year_data)
+                                variable_dict['month'].extend(month_data)
+
+                                variable_dict['GRIDMET_Precip_1_lag'].extend(list(prev_month_precip_arr))
+                                variable_dict['GRIDMET_Precip_2_lag'].extend(list(prev_2_month_precip_arr))
+
+                            yearly_month_count_dict[year] = month_count + 1
+
+                    else:
                         for month_count, month in enumerate(month_list):
                             monthly_data = glob(os.path.join(monthly_data_path_dict[var], f'*{year}_{month}.tif*'))[0]
 
@@ -104,17 +149,18 @@ def create_train_test_dataframe(years_list, month_range, monthly_data_path_dict,
                             year_data = [int(year)] * len_arr
                             month_data = [int(month)] * len_arr
 
-                            if (month_count == 0) & (var not in variable_dict.keys()):
+                            if (month_count == 0) & (var not in variable_dict.keys()):  # initiating the key and adding first series of data
                                 variable_dict[var] = list(data_arr)
                                 variable_dict['year'] = year_data
                                 variable_dict['month'] = month_data
-                            else:
+                            else:  # if key already found, extending the data list
                                 variable_dict[var].extend(list(data_arr))
                                 variable_dict['year'].extend(year_data)
                                 variable_dict['month'].extend(month_data)
 
                             yearly_month_count_dict[year] = month_count + 1
 
+        # annual data compilation
         if yearly_data_path_dict is not None:
             for var in yearly_data_path_dict.keys():
                 if var in datasets_to_include:
@@ -126,17 +172,14 @@ def create_train_test_dataframe(years_list, month_range, monthly_data_path_dict,
                         data_arr = read_raster_arr_object(yearly_data, get_file=False).flatten()
 
                         if (year_count == 0) & (var not in variable_dict.keys()):
-                            if monthly_data_path_dict is not None:
-                                variable_dict[var] = list(data_arr) * yearly_month_count_dict[year]
-                            else:  # if no monthly data
-                                variable_dict[var] = list(data_arr)
+                            variable_dict[var] = list(data_arr) * yearly_month_count_dict[year]
 
                         else:
-                            if monthly_data_path_dict is not None:
-                                variable_dict[var].extend(list(data_arr) * yearly_month_count_dict[year])
-                            else:  # if no monthly data
-                                variable_dict[var].extend(list(data_arr))
+                            variable_dict[var].extend(list(data_arr) * yearly_month_count_dict[year])
 
+        # static data compilation
+        # counting total number of months in all years_list
+        # need only for monthly train-test dataframe creation
         total_month_count = 0
         for i in yearly_month_count_dict.values():
             total_month_count += i
@@ -156,9 +199,78 @@ def create_train_test_dataframe(years_list, month_range, monthly_data_path_dict,
         train_test_ddf = ddf.from_dict(variable_dict, npartitions=n_partitions)
         train_test_ddf = train_test_ddf.dropna()
 
-        if 'Rainfed_Frac' in train_test_ddf.columns:  # renaming 'Rainfed_Frac' as this attribute will not be
-                                                      # available for Irrigated pixels
-            train_test_ddf = train_test_ddf.rename(columns={'Rainfed_Frac': 'Cropland_Frac'})
+        if '.parquet' in output_parquet:
+            train_test_ddf.to_parquet(output_parquet, write_index=False)
+        elif '.csv' in output_parquet:
+            train_test_df = train_test_ddf.compute()
+            train_test_df.to_csv(output_parquet, index=False)
+
+        return output_parquet
+
+    else:
+        return output_parquet
+
+
+def create_train_test_annual_dataframe(years_list, yearly_data_path_dict,
+                                       static_data_path_dict, datasets_to_include, output_parquet,
+                                       skip_processing=False, n_partitions=20):
+    """
+    Compile monthly/yearly/static datasets into a dataframe. This function-generated dataframe will be used as
+    train-test data for ML model at annual scale.
+
+    *** if there is no static data, set static_data_path_dict to None.
+
+    :param years_list: A list of years_list for which data to include in the dataframe.
+    :param yearly_data_path_dict: A dictionary with yearly variables' names as keys and their paths as values.
+                                  Can't be None.
+    :param static_data_path_dict: A dictionary with static variables' names as keys and their paths as values.
+                                  Set to None if there is static dataset.
+    :param datasets_to_include: A list of datasets to include in the dataframe.
+    :param output_parquet: Output filepath of the parquet file to save. Using parquet as it requires lesser memory.
+                            Can also save smaller dataframe as csv file if name has '.csv' extension.
+    :param skip_processing: Set to True to skip this dataframe creation process.
+    :param n_partitions: Number of partitions to save the parquet file in using dask dataframe.
+
+    :return: The filepath of the output parquet file.
+    """
+    if not skip_processing:
+        print('creating train-test dataframe for annual model...')
+
+        output_dir = os.path.dirname(output_parquet)
+        makedirs([output_dir])
+
+        variable_dict = {}
+
+        # annual data compilation
+        for var in yearly_data_path_dict.keys():
+            if var in datasets_to_include:
+                print(f'processing data for {var}..')
+
+                for year_count, year in enumerate(years_list):
+                    yearly_data = glob(os.path.join(yearly_data_path_dict[var], f'*{year}*.tif'))[0]
+
+                    data_arr = read_raster_arr_object(yearly_data, get_file=False).flatten()
+
+                    if (year_count == 0) & (var not in variable_dict.keys()):
+                        variable_dict[var] = list(data_arr)
+
+                    else:
+                        variable_dict[var].extend(list(data_arr))
+
+        # static data compilation
+        if static_data_path_dict is not None:
+            for var in static_data_path_dict.keys():
+                if var in datasets_to_include:
+                    print(f'processing data for {var}..')
+
+                    static_data = glob(os.path.join(static_data_path_dict[var], '*.tif'))[0]
+                    data_arr = read_raster_arr_object(static_data, get_file=False).flatten()
+
+                    data_duplicated_for_total_years = list(data_arr) * len(years_list)
+                    variable_dict[var] = data_duplicated_for_total_years
+
+        train_test_ddf = ddf.from_dict(variable_dict, npartitions=n_partitions)
+        train_test_ddf = train_test_ddf.dropna()
 
         if '.parquet' in output_parquet:
             train_test_ddf.to_parquet(output_parquet, write_index=False)
@@ -200,9 +312,11 @@ def split_train_val_test_set(input_csv, pred_attr, exclude_columns, output_dir, 
     global x_val, y_val
 
     if not skip_processing:
+        print('Splitting train-test dataframe into train and test dataset...')
+
         input_df = pd.read_parquet(input_csv)
 
-        if month_range is not None: # filter for specific month ranges
+        if month_range is not None:  # filter for specific month ranges
             month_list = [m for m in range(month_range[0], month_range[1] + 1)]  # creating list of months
             input_df = input_df[input_df['month'].isin(month_list)]
 
@@ -284,7 +398,7 @@ def split_train_val_test_set_by_year(input_csv, pred_attr, exclude_columns,
     :param input_csv : Input csv file (with filepath) containing all the predictors.
     :param pred_attr : Variable name which will be predicted. Defaults to 'Subsidence'.
     :param exclude_columns : Tuple of columns that will not be included in training the fitted_model.
-    :param years_in_train: List of year_list to keep as train dataset. Input multiple year_list.
+    :param years_in_train: List of years_list to keep as train dataset. Input multiple years_list.
     :param year_in_test: List of year to keep as test dataset. Input single year.
     :param output_dir : Set a output directory if training and test dataset need to be saved. Defaults to None.
     :param verbose : Set to True if want to print which columns are being dropped and which will be included
@@ -295,14 +409,14 @@ def split_train_val_test_set_by_year(input_csv, pred_attr, exclude_columns,
     """
     if not skip_processing:
         print(f'Making train-test split with...', '\n',
-              f'year_list {years_in_train} in train set', '\n',
+              f'years_list {years_in_train} in train set', '\n',
               f'year {year_in_test} in test set')
 
         input_df = pd.read_parquet(input_csv)
         drop_columns = exclude_columns + [
             pred_attr]  # dropping unwanted columns/columns that will not be used in model training
 
-        # making train-test split based on provided year_list
+        # making train-test split based on provided years_list
         train_df = input_df[input_df['year'].isin(years_in_train)]
         test_df = input_df[input_df['year'].isin(year_in_test)]
 
@@ -596,8 +710,10 @@ def train_model(x_train, y_train, params_dict, n_jobs=-1,
     return trained_model
 
 
-def create_pdplots(trained_model, x_train, features_to_include, output_dir, plot_name, skip_processing=False):
+def create_pdplots(trained_model, x_train, features_to_include, output_dir, plot_name, ylabel='Effective Precipitation \n (mm)',
+                   skip_processing=False):
     """
+    Plot partial dependence plot.
 
     :param trained_model: Trained model object.
     :param x_train: x_train dataframe (if the model was trained with a x_train as dataframe) or array.
@@ -605,6 +721,7 @@ def create_pdplots(trained_model, x_train, features_to_include, output_dir, plot
                                 all input variables will be created.
     :param output_dir: Filepath of output directory to save the PDP plot.
     :param plot_name: str of plot name. Must include '.jpeg' or 'png'.
+    :param ylabel: Ylabel for partial dependence plot. Default set to Effective Precipitation \n (mm)' for monthly model.
     :param skip_processing: Set to True to skip this process.
 
     :return: None.
@@ -628,14 +745,15 @@ def create_pdplots(trained_model, x_train, features_to_include, output_dir, plot
 
         # creating a dictionary to rename PDP plot labels
         feature_dict = {
-            'GRIDMET_Precip': 'Precipitation (mm)',
+            'GRIDMET_Precip': 'Precipitation (mm)', 'GRIDMET_Precip_1_lag': 'Precipitation lagged - 1 month (mm)',
+            'GRIDMET_Precip_2_lag': 'Precipitation lagged - 2 month (mm)', 'PRISM_Tmax': f'Max. Temperature ({deg_cel_unit})',
             'GRIDMET_RET': 'Reference ET (mm)', 'GRIDMET_vap_pres_def': 'Vapour pressure deficit (kpa)',
             'GRIDMET_max_RH': 'Max. relative humidity (%)', 'GRIDMET_min_RH': 'Min relative humidity (%)',
             'GRIDMET_wind_vel': 'Wind velocity (m/s)', 'GRIDMET_short_rad': 'Downward shortwave radiation (W/$m^2$)',
             'DAYMET_sun_hr': 'Daylight duration (hr)', 'Bulk_density': 'Bulk Density (kg/$m^3$)',
             'Clay_content': 'Clay content (%)', 'Field_capacity': 'Field Capacity (%)', 'Sand_content': 'Sand Content (%)',
-            'AWC': 'Available water capacity (mm)', 'DEM': 'Elevation', 'month': 'Month',
-            'Latitude': f'Latitude ({deg_unit})', 'Longitude': f'Longitude ({deg_unit})'
+            'AWC': 'Available water capacity (mm)', 'DEM': 'Elevation', 'month': 'Month', 'Slope': 'Slope (%)',
+            'Latitude': f'Latitude ({deg_unit})', 'Longitude': f'Longitude ({deg_unit})', 'TERRACLIMATE_SR': 'Surface runoff (mm)'
         }
         # Subplot labels
         subplot_labels = ['(a)', '(b)', '(c)', '(d)', '(e)', '(f)', '(g)', '(h)', '(i)', '(j)', '(k)',
@@ -660,7 +778,7 @@ def create_pdplots(trained_model, x_train, features_to_include, output_dir, plot
                     pass
 
         for row_idx in range(0, pdisp.axes_.shape[0]):
-            pdisp.axes_[row_idx][0].set_ylabel('Effective Precipitation \n (mm)')
+            pdisp.axes_[row_idx][0].set_ylabel(ylabel)
 
         fig = plt.gcf()
         fig.set_size_inches(30, 30)
@@ -722,11 +840,13 @@ def plot_permutation_importance(trained_model, x_test, y_test, output_dir, plot_
                                    columns=predictor_cols[sorted_importances_idx])
 
         # renaming predictor names
-        rename_dict = {'GRIDMET_Precip' : 'Precipitation', 'GRIDMET_RET': 'Reference ET',
+        rename_dict = {'GRIDMET_Precip': 'Precipitation', 'GRIDMET_Precip_1_lag': 'Precipitation lagged - 1 month',
+                       'GRIDMET_Precip_2_lag': 'Precipitation lagged - 2 month', 'GRIDMET_RET': 'Reference ET',
                        'GRIDMET_vap_pres_def': 'Vapor pressure deficit', 'GRIDMET_max_RH': 'Max. relative humidity',
                        'GRIDMET_short_rad': 'Downward shortwave radiation', 'DAYMET_sun_hr': 'Daylight duration',
                        'Field_capacity': 'Field capacity', 'Sand_content': 'Sand content',
-                       'AWC': 'Available water capacity', 'DEM': 'Elevation', 'month': 'Month'}
+                       'AWC': 'Available water capacity', 'DEM': 'Elevation', 'month': 'Month',
+                       'PRISM_Tmax': f'Max. temperature', 'TERRACLIMATE_SR': 'Surface runoff'}
 
         importances = importances.rename(columns=rename_dict)
 

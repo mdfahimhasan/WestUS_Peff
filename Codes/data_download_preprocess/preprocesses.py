@@ -878,7 +878,8 @@ def dynamic_gs_sum_peff(year_list, growing_season_dir, monthly_input_dir, gs_out
 
             # previous year: gathering datasets for months 10-12 of the previous year
             datasets_previous_year = glob(os.path.join(monthly_input_dir, f'*{year - 1}*.tif'))
-            datasets_prev_10_12 = [f for f in datasets_previous_year if 10 <= int(month_pattern_prev_yr.search(f).group(1)) <= 12]
+            datasets_prev_10_12 = [f for f in datasets_previous_year if
+                                   10 <= int(month_pattern_prev_yr.search(f).group(1)) <= 12]
             sorted_datasets_prev_yr = sorted(datasets_prev_10_12,
                                              key=lambda x: int(month_pattern_prev_yr.search(x).group(1)))
 
@@ -908,7 +909,8 @@ def dynamic_gs_sum_peff(year_list, growing_season_dir, monthly_input_dir, gs_out
             # Then it is broadcasted across the array and named as the kernel_mask.
             # The kernel_mask acts as a mask, and only sum peff values for months that are 'True'.
             kernel_current_year = np.arange(1, 13, 1).reshape(12, 1, 1)
-            kernel_mask_current_year = (kernel_current_year >= start_gs_arr_current_yr) & (kernel_current_year <= end_gs_arr_current_yr)
+            kernel_mask_current_year = (kernel_current_year >= start_gs_arr_current_yr) & (
+                    kernel_current_year <= end_gs_arr_current_yr)
 
             # sum peff arrays over the valid months using the kernel_mask
             summed_arr_current_yr = np.sum(arrs_stck_current_yr * kernel_mask_current_year, axis=0)
@@ -919,7 +921,8 @@ def dynamic_gs_sum_peff(year_list, growing_season_dir, monthly_input_dir, gs_out
             # Then it is broadcasted across the array and named as the kernel_mask.
             # The kernel_mask acts as a mask, and only sum peff values for months that are 'True'.
             kernel_prev_year = np.arange(10, 13, 1).reshape(3, 1, 1)
-            kernel_mask_prev_year = (kernel_prev_year >= start_gs_arr_prev_yr) & (kernel_prev_year <= end_gs_arr_prev_yr)
+            kernel_mask_prev_year = (kernel_prev_year >= start_gs_arr_prev_yr) & (
+                    kernel_prev_year <= end_gs_arr_prev_yr)
 
             # sum peff arrays over the valid months using the kernel_mask
             summed_arr_prev_yr = np.sum(arrs_stck_prev_yr * kernel_mask_prev_year, axis=0)
@@ -979,7 +982,9 @@ def filter_effective_precip_training_data(training_zone_shp, general_output_dir,
         final_filtered_cropET_dir = os.path.join(general_output_dir, 'final_filtered_cropET_for_training')
 
         # removing old directory and making a new one
-        shutil.rmtree(general_output_dir)
+        if os.path.exists(general_output_dir):
+            shutil.rmtree(general_output_dir)
+
         makedirs([general_output_dir, shape_temp_output_dir, cropET_interim_shape_dir, final_filtered_cropET_dir])
 
         for id, geom in zip(training_zone_gdf['id'], training_zone_gdf['geometry']):
@@ -1121,7 +1126,8 @@ def accumulate_monthly_datasets_to_water_year(skip_processing=False):
         'GRIDMET_wind_vel': '../../Data_main/Raster_data/GRIDMET_wind_vel/WestUS_monthly',
         'GRIDMET_short_rad': '../../Data_main/Raster_data/GRIDMET_short_rad/WestUS_monthly',
         'DAYMET_sun_hr': '../../Data_main/Raster_data/DAYMET_sun_hr/WestUS_monthly',
-        'TERRACLIMATE_SR': '../../Data_main/Raster_data/TERRACLIMATE_SR/WestUS_monthly'}
+        'TERRACLIMATE_SR': '../../Data_main/Raster_data/TERRACLIMATE_SR/WestUS_monthly',
+        'Rainy_days': '../../Data_main/Raster_data/Rainy_days/WestUS_monthly'}
 
     water_yr_accum_dict = {
         'Effective_precip_train': 'sum',
@@ -1136,7 +1142,8 @@ def accumulate_monthly_datasets_to_water_year(skip_processing=False):
         'GRIDMET_wind_vel': 'mean',
         'GRIDMET_short_rad': 'mean',
         'DAYMET_sun_hr': 'mean',
-        'TERRACLIMATE_SR': 'mean'}
+        'TERRACLIMATE_SR': ['sum', 'mean'],
+        'Rainy_days': 'sum'}
 
     if not skip_processing:
         # # processing the variables/predictors
@@ -1170,17 +1177,183 @@ def accumulate_monthly_datasets_to_water_year(skip_processing=False):
                 # data name extraction
                 data_name_extraction = os.path.basename(total_data_list[0]).split('_')[:-2]
                 data_name = '_'.join(data_name_extraction) + f'_{yr}' + '.tif'
-                output_raster = os.path.join(output_dir, data_name)
 
                 # sum() or mean() accumulation
-                if accum_by == 'sum':
-                    sum_rasters(raster_dir=None, raster_list=total_data_list, output_raster=output_raster,
+                if var == 'TERRACLIMATE_SR':  # we perform both mean and sum
+                    sum_rasters(raster_dir=None, raster_list=total_data_list,
+                                output_raster=os.path.join(output_dir, 'sum', data_name),
                                 ref_raster=total_data_list[0], nodata=no_data_value)
-                elif accum_by == 'mean':
-                    mean_rasters(raster_dir=None, raster_list=total_data_list, output_raster=output_raster,
+
+                    mean_rasters(raster_dir=None, raster_list=total_data_list,
+                                 output_raster=os.path.join(output_dir, 'mean', data_name),
                                  ref_raster=total_data_list[0], nodata=no_data_value)
+
+                else:
+                    if accum_by == 'sum':
+                        sum_rasters(raster_dir=None, raster_list=total_data_list,
+                                    output_raster=os.path.join(output_dir, data_name),
+                                    ref_raster=total_data_list[0], nodata=no_data_value)
+                    elif accum_by == 'mean':
+                        mean_rasters(raster_dir=None, raster_list=total_data_list,
+                                     output_raster=os.path.join(output_dir, data_name),
+                                     ref_raster=total_data_list[0], nodata=no_data_value)
     else:
         pass
+
+
+def fraction_SR_precip_water_yr(years_list, input_dir_runoff, input_dir_precip, output_dir, nodata=no_data_value,
+                                skip_processing=False):
+    """
+    Estimate water year fraction of surface runoff to precipitation.
+
+    :param years_list: List of years to process data for.
+    :param input_dir_runoff: Filepath of water year summed surface runoff data directory.
+    :param input_dir_precip: Filepath of water year summed precipitation data directory.
+    :param output_dir: Filepath of output directory.
+    :param nodata: No data value. Default set to -9999.
+    :param skip_processing: Set to true if want to skip this process.
+
+    :return: None.
+    """
+    if not skip_processing:
+        makedirs([output_dir])
+
+        for year in years_list:
+            print(f'estimating water year runoff/precipitation fraction for year {year}...')
+
+            # loading and reading datasets
+            sr_data = glob(os.path.join(input_dir_runoff, f'*{year}*.tif'))[0]
+            precip_data = glob(os.path.join(input_dir_precip, f'*{year}*.tif'))[0]
+
+            sr_arr, raster_file = read_raster_arr_object(sr_data)
+            precip_arr = read_raster_arr_object(precip_data, get_file=False)
+
+            # calculating runoff/precip fraction for the water year
+            frac_arr = np.where((sr_arr != -9999) & (precip_arr != -9999), sr_arr / precip_arr, nodata)
+
+            # saving estimated raster
+            output_raster = os.path.join(output_dir, f'Runoff_precip_fraction_{year}.tif')
+            write_array_to_raster(frac_arr, raster_file, raster_file.transform, output_raster)
+
+    else:
+        pass
+
+
+def estimate_precip_intensity_water_yr(years_list, input_dir_precip, input_dir_rainy_day, output_dir,
+                                       nodata=no_data_value,
+                                       skip_processing=False):
+    """
+    Estimate precipitation intensity (water year precipitation / num of rainy days).
+
+    :param years_list: List of years to process data for.
+    :param input_dir_precip: Filepath of water year summed precipitation data directory.
+    :param input_dir_rainy_day: Filepath of water year summed rainy days data directory.
+    :param output_dir: Filepath of output directory.
+    :param nodata: No data value. Default set to -9999.
+    :param skip_processing: Set to true if want to skip this process.
+
+    :return: None
+    """
+    if not skip_processing:
+        makedirs([output_dir])
+
+        for year in years_list:
+            print(f'estimating water year precipitation intensity for year {year}...')
+
+            # loading and reading datasets
+            precip_data = glob(os.path.join(input_dir_precip, f'*{year}*.tif'))[0]
+            rainy_data = glob(os.path.join(input_dir_rainy_day, f'*{year}*.tif'))[0]
+
+            precip_arr, raster_file = read_raster_arr_object(precip_data)
+            rainy_arr = read_raster_arr_object(rainy_data, get_file=False)
+
+            # calculating precipitation intensity (water year precipitation / num of rainy days)
+            intensity_arr = np.where((precip_arr != -9999) & (rainy_arr != -9999) & (rainy_arr != 0),
+                                     precip_arr / rainy_arr, nodata)
+
+            # saving estimated raster
+            output_raster = os.path.join(output_dir, f'Precipitation_intensity_{year}.tif')
+            write_array_to_raster(intensity_arr, raster_file, raster_file.transform, output_raster)
+
+    else:
+        pass
+
+
+def estimate_PET_by_P_water_yr(years_list, input_dir_PET, input_dir_precip, output_dir, nodata=no_data_value,
+                               skip_processing=False):
+    """
+    Estimate PET/P (dryness index) for water year.
+
+    :param years_list: List of years to process data for.
+    :param input_dir_PET: ilepath of water year summed PET data directory.
+    :param input_dir_precip: Filepath of water year summed precipitation data directory.
+    :param output_dir: Filepath of output directory.
+    :param nodata: No data value. Default set to -9999.
+    :param skip_processing: Set to True if want to skip this process.
+
+    :return: None.
+    """
+    if not skip_processing:
+        makedirs([output_dir])
+
+        for year in years_list:
+            print(f'estimating water year PET/P for year {year}...')
+
+            # loading and reading datasets
+            pet_data = glob(os.path.join(input_dir_PET, f'*{year}*.tif'))[0]
+            precip_data = glob(os.path.join(input_dir_precip, f'*{year}*.tif'))[0]
+
+            pet_arr = read_raster_arr_object(pet_data, get_file=False)
+            precip_arr, raster_file = read_raster_arr_object(precip_data)
+
+            # calculating PET/P
+            dry_arr = np.where((precip_arr != -9999) & (pet_arr != -9999), pet_arr / precip_arr, nodata)
+
+            # saving estimated raster
+            output_raster = os.path.join(output_dir, f'dryness_index_{year}.tif')
+            write_array_to_raster(dry_arr, raster_file, raster_file.transform, output_raster)
+
+    else:
+        pass
+
+
+def estimate_indices_for_Budyko(years_list, input_dir_PET, input_dir_precip, output_dir, nodata=no_data_value,
+                                skip_processing=False):
+    """
+    Estimate PET/P (dryness index) for water year.
+
+    :param years_list: List of years to process data for.
+    :param input_dir_PET: ilepath of water year summed PET data directory.
+    :param input_dir_precip: Filepath of water year summed precipitation data directory.
+    :param output_dir: Filepath of output directory.
+    :param nodata: No data value. Default set to -9999.
+    :param skip_processing: Set to True if want to skip this process.
+
+    :return: None.
+    """
+    if not skip_processing:
+        makedirs([output_dir])
+
+        for year in years_list:
+            print(f'estimating water year PET/P for year {year}...')
+
+            # loading and reading datasets
+            pet_data = glob(os.path.join(input_dir_PET, f'*{year}*.tif'))[0]
+            precip_data = glob(os.path.join(input_dir_precip, f'*{year}*.tif'))[0]
+
+            pet_arr = read_raster_arr_object(pet_data, get_file=False)
+            precip_arr, raster_file = read_raster_arr_object(precip_data)
+
+            # calculating PET/P
+            dry_arr = np.where((precip_arr != -9999) & (pet_arr != -9999), pet_arr / precip_arr, nodata)
+
+            # saving estimated raster
+            output_raster = os.path.join(output_dir, f'dryness_index_{year}.tif')
+            write_array_to_raster(dry_arr, raster_file, raster_file.transform, output_raster)
+
+    else:
+        pass
+
 
 
 def run_all_preprocessing(skip_process_GrowSeason_data=False,
@@ -1203,6 +1376,9 @@ def run_all_preprocessing(skip_process_GrowSeason_data=False,
                           skip_effective_precip_training_data_filtering=False,
                           skip_accum_to_water_year_datasets=False,
                           skip_summing_irrigated_cropET_water_yr=False,
+                          skip_estimate_runoff_precip_frac=False,
+                          skip_estimate_precip_intensity=False,
+                          skip_estimate_dryness_index=False,
                           skip_estimate_peff_water_yr_frac=False,
                           ref_raster=WestUS_raster):
     """
@@ -1230,6 +1406,9 @@ def run_all_preprocessing(skip_process_GrowSeason_data=False,
     :param skip_effective_precip_training_data_filtering: Set to True if want to skip filtering.
     :param skip_accum_to_water_year_datasets: Set to True to skip accumulating monthly dataset to water year.
     :param skip_summing_irrigated_cropET_water_yr: Set to True if want to skip summing irrigated cropET for water year.
+    :param skip_estimate_runoff_precip_frac: Set to True to skip processing water year runoff/precipitation fraction data.
+    :param skip_estimate_precip_intensity: Set to True to skip processing water year precipitation intensity data.
+    :param skip_estimate_dryness_index: Set to True to skip processing water year PET/P (dryness Index) data.
     :param skip_estimate_peff_water_yr_frac: Set to True if want to skip water year Peff/water year precip fraction
                                              estimation for annual scale model.
     :param ref_raster: Filepath of Western US reference raster to use in 2km pixel lat-lon raster creation and to use
@@ -1360,11 +1539,12 @@ def run_all_preprocessing(skip_process_GrowSeason_data=False,
                        keyword='prism_tmin', skip_processing=skip_prism_processing)
 
     # gridmet precip yearly data processing
-    sum_GridMET_precip_yearly_data(year_list=(1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011,
-                                              2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020),
-                                   input_gridmet_monthly_dir='../../Data_main/Raster_data/GRIDMET_Precip/WestUS_monthly',
-                                   output_dir_yearly='../../Data_main/Raster_data/GRIDMET_Precip/WestUS_yearly',
-                                   skip_processing=skip_gridmet_precip_processing)
+    sum_GridMET_precip_yearly_data(
+        year_list=(1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011,
+                   2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020),
+        input_gridmet_monthly_dir='../../Data_main/Raster_data/GRIDMET_Precip/WestUS_monthly',
+        output_dir_yearly='../../Data_main/Raster_data/GRIDMET_Precip/WestUS_yearly',
+        skip_processing=skip_gridmet_precip_processing)
 
     # OpenET ensemble growing season summing
     dynamic_gs_sum_ET(year_list=(2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007,
@@ -1428,7 +1608,7 @@ def run_all_preprocessing(skip_process_GrowSeason_data=False,
                                           resolution=model_res,
                                           skip_processing=skip_effective_precip_training_data_filtering)
 
-    # # # # # # # # # # # # # # # # # # # # # # # # for annual model # # # # # # # # # # # # # # # # # # # # # # # # # #
+    # # # # # # # # # # # # # # # # # # # # # # for water year model # # # # # # # # # # # # # # # # # # # # # # # # # #
 
     # accumulating monthly dataset to water year
     accumulate_monthly_datasets_to_water_year(skip_processing=skip_accum_to_water_year_datasets)
@@ -1441,6 +1621,33 @@ def run_all_preprocessing(skip_process_GrowSeason_data=False,
                         output_dir_water_yr='../../Data_main/Raster_data/Irrigated_cropET/WestUS_water_year',
                         save_keyword='Irrigated_cropET',
                         skip_processing=skip_summing_irrigated_cropET_water_yr)
+
+    # estimate fraction of water year surface runoff to precipitation
+    fraction_SR_precip_water_yr(years_list=(2000, 2001, 2002, 2003, 2004, 2005, 2006,
+                                            2007, 2008, 2009, 2010, 2011, 2012, 2013,
+                                            2014, 2015, 2016, 2017, 2018, 2019, 2020),
+                                input_dir_runoff='../../Data_main/Raster_data/TERRACLIMATE_SR/WestUS_water_year/sum',
+                                input_dir_precip='../../Data_main/Raster_data/GRIDMET_Precip/WestUS_water_year',
+                                output_dir='../../Data_main/Raster_data/Runoff_precip_fraction',
+                                skip_processing=skip_estimate_runoff_precip_frac)
+
+    # estimate water year precipitation intensity (precipitation / rainy days)
+    estimate_precip_intensity_water_yr(years_list=(2000, 2001, 2002, 2003, 2004, 2005, 2006,
+                                                   2007, 2008, 2009, 2010, 2011, 2012, 2013,
+                                                   2014, 2015, 2016, 2017, 2018, 2019, 2020),
+                                       input_dir_precip='../../Data_main/Raster_data/GRIDMET_Precip/WestUS_water_year',
+                                       input_dir_rainy_day='../../Data_main/Raster_data/Rainy_days/WestUS_water_year',
+                                       output_dir='../../Data_main/Raster_data/Precipitation_intensity',
+                                       skip_processing=skip_estimate_precip_intensity)
+
+    # estimate PET/P (dryness index) for water year
+    estimate_PET_by_P_water_yr(years_list=(2000, 2001, 2002, 2003, 2004, 2005, 2006,
+                                           2007, 2008, 2009, 2010, 2011, 2012, 2013,
+                                           2014, 2015, 2016, 2017, 2018, 2019, 2020),
+                               input_dir_PET='../../Data_main/Raster_data/GRIDMET_RET/WestUS_water_year',
+                               input_dir_precip='../../Data_main/Raster_data/GRIDMET_Precip/WestUS_water_year',
+                               output_dir='../../Data_main/Raster_data/Dryness_index',
+                               skip_processing=skip_estimate_dryness_index)
 
     # processing the training data
     # water year rainfed cropET (effective precip) / water year precip fraction estimation

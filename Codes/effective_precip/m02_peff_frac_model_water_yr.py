@@ -35,33 +35,42 @@ yearly_data_path_dict = {
     'GRIDMET_wind_vel': '../../Data_main/Raster_data/GRIDMET_wind_vel/WestUS_water_year',
     'GRIDMET_short_rad': '../../Data_main/Raster_data/GRIDMET_short_rad/WestUS_water_year',
     'DAYMET_sun_hr': '../../Data_main/Raster_data/DAYMET_sun_hr/WestUS_water_year',
-    'TERRACLIMATE_SR': '../../Data_main/Raster_data/TERRACLIMATE_SR/WestUS_water_year'}
+    'TERRACLIMATE_SR': '../../Data_main/Raster_data/TERRACLIMATE_SR/WestUS_water_year/mean',
+    'Runoff_precip_fraction': '../../Data_main/Raster_data/Runoff_precip_fraction',
+    'Precipitation_intensity': '../../Data_main/Raster_data/Precipitation_intensity',
+    'Dryness_index': '../../Data_main/Raster_data/Dryness_index'
+}
+
 
 static_data_path_dict = {
     'Bulk_density': '../../Data_main/Raster_data/Bulk_density/WestUS',
     'Clay_content': '../../Data_main/Raster_data/Clay_content/WestUS',
-    'Field_capacity': '../../Data_main/Raster_data/Field_capacity/WestUS',
     'Sand_content': '../../Data_main/Raster_data/Sand_content/WestUS',
+    'Field_capacity': '../../Data_main/Raster_data/Field_capacity/WestUS',
     'DEM': '../../Data_main/Raster_data/DEM/WestUS',
     'Slope': '../../Data_main/Raster_data/Slope/WestUS',
     'AWC': '../../Data_main/Raster_data/Available_water_capacity/WestUS',
     'Latitude': '../../Data_main/Raster_data/Latitude/WestUS',
-    'Longitude': '../../Data_main/Raster_data/Longitude/WestUS'}
+    'Longitude': '../../Data_main/Raster_data/Longitude/WestUS'
+}
 
 # datasets to include in the dataframe (not all will go into the final model)
 datasets_to_include = ['Peff_frac',
                        'PRISM_Tmax', 'PRISM_Tmin', 'GRIDMET_Precip', 'GRIDMET_RET',
                        'GRIDMET_vap_pres_def', 'GRIDMET_max_RH', 'GRIDMET_min_RH',
                        'GRIDMET_wind_vel', 'GRIDMET_short_rad', 'DAYMET_sun_hr',
-                       'TERRACLIMATE_SR', 'Bulk_density', 'Clay_content',
-                       'Field_capacity', 'Sand_content', 'AWC', 'DEM',
-                       'Slope', 'Latitude', 'Longitude']
+                       'TERRACLIMATE_SR', 'Runoff_precip_fraction',
+                       'Precipitation_intensity', 'Dryness_index',
+                       'Bulk_density', 'Clay_content', 'Field_capacity',
+                       'Sand_content', 'AWC', 'DEM', 'Slope',
+                       'Latitude', 'Longitude']
 
 # exclude columns during training
-exclude_columns_in_training = ['PRISM_Tmin',
+exclude_columns_in_training = ['PRISM_Tmin', 'GRIDMET_vap_pres_def',
+                               'Precipitation_intensity',
                                'GRIDMET_min_RH', 'GRIDMET_wind_vel',
-                               'DAYMET_sun_hr', 'Field_capacity',
-                               'Sand_content', 'Bulk_density', 'Clay_content',
+                               'Runoff_precip_fraction', 'DAYMET_sun_hr',
+                               'Field_capacity', 'Bulk_density', 'Dryness_index',
                                'AWC', 'DEM', 'Latitude', 'Longitude']
 
 # training time periods
@@ -72,33 +81,35 @@ train_test_years_list = [2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2
 datasets_to_include_annual_predictors = ['PRISM_Tmax', 'PRISM_Tmin', 'GRIDMET_Precip', 'GRIDMET_RET',
                                          'GRIDMET_vap_pres_def', 'GRIDMET_max_RH', 'GRIDMET_min_RH',
                                          'GRIDMET_wind_vel', 'GRIDMET_short_rad', 'DAYMET_sun_hr',
-                                         'TERRACLIMATE_SR', 'Bulk_density', 'Clay_content',
-                                         'Field_capacity', 'Sand_content', 'AWC', 'DEM',
-                                         'Slope', 'Latitude', 'Longitude']
+                                         'TERRACLIMATE_SR', 'Runoff_precip_fraction',
+                                         'Precipitation_intensity', 'Dryness_index',
+                                         'Bulk_density', 'Clay_content', 'Field_capacity',
+                                         'Sand_content', 'AWC', 'DEM', 'Slope',
+                                         'Latitude', 'Longitude']
 
 # exclude columns during prediction (the prediction dataframes don't have 'year' column)
 exclude_columns_in_prediction = exclude_columns_in_training
 
 # prediction time periods
-prediction_years = [2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010,
+prediction_years = [2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010,
                     2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020]
 
 if __name__ == '__main__':
-    model_version = 'v14'                                       ######
+    model_version = 'v15'                                       ######
 
-    skip_train_test_df_creation = True                         ######
+    skip_train_test_df_creation = True                        ######
     skip_train_test_split = False                               ######
     skip_tune_hyperparams = True                               ######
     load_model = False                                          ######
     save_model = True                                          ######
     skip_plot_pdp = False                                       ######
     skip_plot_perm_import = False                               ######
-    skip_processing_annual_predictor_dataframe = False          ######
-    skip_processing_nan_pos_irrig_cropET = False                ######
+    skip_processing_annual_predictor_dataframe = True          ######
+    skip_processing_nan_pos_irrig_cropET = True                ######
     skip_estimate_water_year_peff_frac_WestUS = False           ######
     skip_storing_peff_frac_pred_annual_csv = False              ######
 
-    # ********************************* Dataframe creation and train-test split (westUS) ***********************************
+    # ******************************* Dataframe creation and train-test split (westUS) *********************************
     # # create dataframe
     print(f'Running model version {model_version}...')
 
@@ -111,7 +122,7 @@ if __name__ == '__main__':
                                                           datasets_to_include=datasets_to_include,
                                                           output_parquet=train_test_parquet_path,
                                                           skip_processing=skip_train_test_df_creation,
-                                                          n_partitions=5)
+                                                          n_partitions=5, filter_for_slope=False)
 
     # # train-test split
     output_dir = '../../Eff_Precip_Model_Run/annual_model/Model_csv'
@@ -126,7 +137,7 @@ if __name__ == '__main__':
                                  skip_processing=skip_train_test_split,
                                  remove_outlier=False, outlier_upper_val=None)
 
-    # ******************************** Model training and performance evaluation (westUS) **********************************
+    # ****************************** Model training and performance evaluation (westUS) ********************************
 
     # # model training  (if hyperparameter tuning is on, the default parameter dictionary will be disregarded)
     print('########## Model training')
@@ -240,9 +251,9 @@ if __name__ == '__main__':
                                    bins=100, tick_interval=0.25)
 
     # partial dependence plots (pdp)
-    features_in_pdp_plot = ['GRIDMET_RET', 'GRIDMET_Precip', 'GRIDMET_vap_pres_def',
-                            'PRISM_Tmax', 'GRIDMET_max_RH', 'GRIDMET_short_rad',
-                            'Slope', 'TERRACLIMATE_SR']
+    features_in_pdp_plot = ['PRISM_Tmax', 'GRIDMET_Precip', 'GRIDMET_RET',
+                            'GRIDMET_max_RH', 'GRIDMET_short_rad',
+                            'TERRACLIMATE_SR', 'Slope']
 
     create_pdplots(trained_model=lgbm_reg_trained, x_train=x_train,
                    features_to_include=features_in_pdp_plot, output_dir=plot_dir,
@@ -256,7 +267,7 @@ if __name__ == '__main__':
 
     print('##################################')
 
-    # ************************ Generating monthly effective precip estimates for 17 states (westUS) ************************
+    # ****************** Generating annual effective precip fraction estimates for 17 states (westUS) ******************
     print('**********************************')
 
     # # Creating monthly predictor dataframe for model prediction

@@ -415,17 +415,17 @@ def aggregate_netGW_insitu_usgs_pumping_to_annualCSV_AZ(pixel_netGW_csv, annual_
     yearly_df.to_csv(output_annual_csv, index=False)
 
 
-def aggregate_netGW_insitu_usgs_pumping_to_annualCSV_NV(years, basin_netGW_dir,
-                                                        pumping_csv, pump_AF_attr,
-                                                        annual_usgs_GW_csv,
-                                                        area_basin_mm2, output_csv):
+def aggregate_netGW_insitu_usgs_pumping_to_annualCSV_NV_UT(years, basin_netGW_dir,
+                                                           pumping_csv, pump_AF_attr,
+                                                           annual_usgs_GW_csv,
+                                                           area_basin_mm2, output_csv):
     """
     Aggregates (by sum) pixel-wise annual netGW, in-situ pumping records and usgs pumping estimates for
-    Diamond Valley, Nevada.
+    Diamond Valley, Nevada and Parowan Valley, Utah.
 
     :param years: List of years_list to process data.
     :param basin_netGW_dir: Basin netGW directory.
-    :param pumping_csv: Filepath  of pumping csv dataset for the Diamond valley basin.
+    :param pumping_csv: Filepath  of pumping csv dataset for the Diamond valley/Nevada and parowan valley basin.
     :param pump_AF_attr: Pumping attribute (in AF) in the csv file.
     :param annual_usgs_GW_csv: USGS annual pumping estimates' csv for the basin
     :param area_basin_mm2: Area of the basin in mm2.
@@ -433,7 +433,7 @@ def aggregate_netGW_insitu_usgs_pumping_to_annualCSV_NV(years, basin_netGW_dir,
 
     :return: None.
     """
-    print(f'Compiling growing season netGW vs annual pumping aggregated dataframe for Diamond Valley, NV...')
+    print(f'Compiling growing season netGW vs annual pumping aggregated dataframe...')
 
     # empty dictionary with to store data
     extract_dict = {'year': [], 'netGW_mm': []}
@@ -475,12 +475,12 @@ def aggregate_netGW_insitu_usgs_pumping_to_annualCSV_NV(years, basin_netGW_dir,
 
     # calculating m3 values
     yearly_df['netGW_m3'] = yearly_df['netGW_AF'] * 1233.48
-    yearly_df['pumping_m3'] = yearly_df['pumping_AF'] * 1233.48  # will get nans in years_list with no pumping records
+    yearly_df['pumping_m3'] = yearly_df[pump_AF_attr] * 1233.48  # will get nans in years_list with no pumping records
     yearly_df['USGS_m3'] = yearly_df['USGS_AF'] * 1233.48
 
     # # calculating mean netGW + mean pumping + mean USGS pumping (in mm)
     yearly_df['mean netGW_mm'] = yearly_df['netGW_AF'] * 1233481837548 / area_basin_mm2
-    yearly_df['mean pumping_mm'] = yearly_df['pumping_AF'] * 1233481837548 / area_basin_mm2
+    yearly_df['mean pumping_mm'] = yearly_df[pump_AF_attr] * 1233481837548 / area_basin_mm2
     yearly_df['mean USGS_mm'] = yearly_df['USGS_AF'] * 1233481837547.5 / area_basin_mm2  # AF >> mm3 >> mean mm
 
     yearly_df.to_csv(output_csv, index=False)
@@ -745,18 +745,19 @@ def run_annual_csv_processing_AZ(years, basin_code, basin_shp,
         pass
 
 
-def run_annual_csv_processing_NV(years, basin_code, basin_shp,
-                                 westUS_netGW_dir,
-                                 pumping_csv, pumping_attr_AF,
-                                 main_output_dir,
-                                 usgs_westUS_GW_shp,
-                                 usgs_annual_GW_estimates_csv,
-                                 final_annual_csv,
-                                 skip_processing=False):
+def run_annual_csv_processing_NV_UT(years, basin_code, basin_shp,
+                                    westUS_netGW_dir,
+                                    pumping_csv, pumping_attr_AF,
+                                    main_output_dir,
+                                    usgs_westUS_GW_shp,
+                                    usgs_annual_GW_estimates_csv,
+                                    final_annual_csv,
+                                    skip_processing=False):
     """
-    Run processes to compile Diamond Valley's (Nevada)  netGW, pumping, and USGS pumping data at annual scale in a csv.
+    Run processes to compile Diamond Valley's (Nevada) and Parowan Valley's (Utah) netGW, pumping, and USGS pumping data
+    at annual scale in a csv.
 
-    :param years: ist of years_list to process data.
+    :param years: List of years_list to process data.
     :param basin_code: Basin keyword to get area and save processed datasets. Must be - 'dv'.
     :param basin_shp: Filepath of basin shapefile.
     :param westUS_netGW_dir: WestUS netGW directory.
@@ -772,7 +773,7 @@ def run_annual_csv_processing_NV(years, basin_code, basin_shp,
     """
     if not skip_processing:
         # area of basins
-        basin_area_dict = {'dv': 1933578136.225 * (1000 * 1000)}  # in mm2
+        basin_area_dict = {'dv': 1933578136.225 * (1000 * 1000), 'pv': 1339578824.848 * (1000 * 1000)}  # in mm2
 
         # creating output directories for different processes
         # pumping AF and mm raster directories will be created inside the pumping_AF_pts_to_mm_raster() function
@@ -812,11 +813,11 @@ def run_annual_csv_processing_NV(years, basin_code, basin_shp,
         # # Compile the basin's pixelwise netGW and in-situ pumping to a common csv
         print('# # # # #  STEP 4 # # # # #')
 
-        aggregate_netGW_insitu_usgs_pumping_to_annualCSV_NV(years=years, basin_netGW_dir=basin_netGW_dir,
-                                                            pumping_csv=pumping_csv, pump_AF_attr=pumping_attr_AF,
-                                                            annual_usgs_GW_csv=usgs_annual_GW_estimates_csv,
-                                                            area_basin_mm2=basin_area_dict[basin_code],
-                                                            output_csv=final_annual_csv)
+        aggregate_netGW_insitu_usgs_pumping_to_annualCSV_NV_UT(years=years, basin_netGW_dir=basin_netGW_dir,
+                                                               pumping_csv=pumping_csv, pump_AF_attr=pumping_attr_AF,
+                                                               annual_usgs_GW_csv=usgs_annual_GW_estimates_csv,
+                                                               area_basin_mm2=basin_area_dict[basin_code],
+                                                               output_csv=final_annual_csv)
     else:
         pass
 
@@ -926,7 +927,7 @@ def compile_annual_pumping_netGW_all_basins(annual_csv_list, output_csv):
     # basin name dict
     basin_name_dict = {'gmd4': 'GMD4, KS', 'gmd3': 'GMD3, KS', 'rpb': 'Republican Basin, CO',
                        'hqr': 'Harquahala INA, AZ', 'doug': 'Douglas AMA, AZ',
-                       'dv': 'Diamond Valley, NV'}
+                       'dv': 'Diamond Valley, NV', 'pv': 'Parowan Valley, UT'}
 
     for csv in annual_csv_list:
         df = pd.read_csv(csv)
@@ -942,19 +943,18 @@ def compile_annual_pumping_netGW_all_basins(annual_csv_list, output_csv):
     compiled_annual_df['sim_mean_pumping_mm'] = compiled_annual_df['mean netGW_mm'] / avg_irrig_efficiency
 
     # dynamic irrigation efficiency for each basin
-    basin_irr_eff_dict = {'gmd4': 0.85, 'gmd3': 0.85, 'rpb': 0.80,
-                          'hqr': 0.65, 'doug': 0.65, 'dv': 0.87}
+    basin_irr_eff_dict = {'gmd4': 0.88, 'gmd3': 0.88, 'rpb': 0.80,
+                          'hqr': 0.75, 'doug': 0.85, 'dv': 0.87, 'pv': 0.78}
     compiled_annual_df['dyn_irr_eff'] = compiled_annual_df.apply(lambda x: basin_irr_eff_dict[x['basin_code']], axis=1)
     compiled_annual_df['sim_pumping_m3_dy'] = compiled_annual_df['netGW_m3'] / compiled_annual_df['dyn_irr_eff']
     compiled_annual_df['sim_mean_pumping_mm_dy'] = compiled_annual_df['mean netGW_mm'] / compiled_annual_df['dyn_irr_eff']
 
-    # Error range with 60-90% efficiency
-    compiled_annual_df['sim_pumping_m3_60'] = compiled_annual_df['netGW_m3'] / 0.60
+    # Error range with 70-90% efficiency
+    compiled_annual_df['sim_pumping_m3_70'] = compiled_annual_df['netGW_m3'] / 0.70
     compiled_annual_df['sim_pumping_m3_90'] = compiled_annual_df['netGW_m3'] / 0.90
 
-    compiled_annual_df['sim_mean_pumping_mm_60'] = compiled_annual_df['mean netGW_mm'] / 0.60
+    compiled_annual_df['sim_mean_pumping_mm_70'] = compiled_annual_df['mean netGW_mm'] / 0.70
     compiled_annual_df['sim_mean_pumping_mm_90'] = compiled_annual_df['mean netGW_mm'] / 0.90
-
 
     # setting all zero values to np.nan
     compiled_annual_df = compiled_annual_df.replace({0: np.nan})
@@ -1311,7 +1311,6 @@ def compile_annual_irr_rainfed_ET(years, area_code, area_shape, area_ref_raster,
         makedirs([os.path.dirname(output_csv)])
 
         create_train_test_monthly_dataframe(years_list=years,
-                                            month_range=(4, 10),
                                             monthly_data_path_dict=monthly_data_path_dict,
                                             yearly_data_path_dict=yearly_data_path_dict,
                                             static_data_path_dict=None,

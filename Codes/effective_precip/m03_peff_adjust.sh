@@ -9,4 +9,4 @@
 #SBATCH --mail-type=BEGIN,END,FAIL,TIME_LIMIT
 #SBATCH --mail-user=Fahim.Hasan@colostate.edu
 
-python m02_peff_frac_model_water_yr.py
+python m03_peff_adjust.py

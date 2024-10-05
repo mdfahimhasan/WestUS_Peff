@@ -213,7 +213,7 @@ def create_train_test_monthly_dataframe(years_list, monthly_data_path_dict, year
 
 def create_train_test_annual_dataframe(years_list, yearly_data_path_dict,
                                        static_data_path_dict, datasets_to_include, output_parquet,
-                                       skip_processing=False, n_partitions=20):
+                                       skip_processing=False, n_partitions=20, filter_for_slope=False):
     """
     Compile monthly/yearly/static datasets into a dataframe. This function-generated dataframe will be used as
     train-test data for ML model at annual scale.
@@ -271,6 +271,9 @@ def create_train_test_annual_dataframe(years_list, yearly_data_path_dict,
 
         train_test_ddf = ddf.from_dict(variable_dict, npartitions=n_partitions)
         train_test_ddf = train_test_ddf.dropna()
+
+        if filter_for_slope:
+            train_test_ddf = train_test_ddf[train_test_ddf['Slope'] < 1.5]
 
         if '.parquet' in output_parquet:
             train_test_ddf.to_parquet(output_parquet, write_index=False)
@@ -753,8 +756,11 @@ def create_pdplots(trained_model, x_train, features_to_include, output_dir, plot
             'DAYMET_sun_hr': 'Daylight duration (hr)', 'Bulk_density': 'Bulk Density (kg/$m^3$)',
             'Clay_content': 'Clay content (%)', 'Field_capacity': 'Field Capacity (%)', 'Sand_content': 'Sand Content (%)',
             'AWC': 'Available water capacity (mm)', 'DEM': 'Elevation', 'month': 'Month', 'Slope': 'Slope (%)',
-            'Latitude': f'Latitude ({deg_unit})', 'Longitude': f'Longitude ({deg_unit})', 'TERRACLIMATE_SR': 'Surface runoff (mm)'
+            'Latitude': f'Latitude ({deg_unit})', 'Longitude': f'Longitude ({deg_unit})', 'TERRACLIMATE_SR': 'Surface runoff (mm)',
+            'Runoff_precip_fraction': 'Runoff-Precipitation fraction', 'Precipitation_intensity': 'Precipitation intensity (mm/day)',
+            'Dryness_index': 'PET/P'
         }
+
         # Subplot labels
         subplot_labels = ['(a)', '(b)', '(c)', '(d)', '(e)', '(f)', '(g)', '(h)', '(i)', '(j)', '(k)',
                           '(l)', '(m)', '(n)', '(o)', '(p)']
@@ -846,7 +852,10 @@ def plot_permutation_importance(trained_model, x_test, y_test, output_dir, plot_
                        'GRIDMET_short_rad': 'Downward shortwave radiation', 'DAYMET_sun_hr': 'Daylight duration',
                        'Field_capacity': 'Field capacity', 'Sand_content': 'Sand content',
                        'AWC': 'Available water capacity', 'DEM': 'Elevation', 'month': 'Month',
-                       'PRISM_Tmax': f'Max. temperature', 'TERRACLIMATE_SR': 'Surface runoff'}
+                       'PRISM_Tmax': f'Max. temperature', 'TERRACLIMATE_SR': 'Surface runoff',
+                       'Runoff_precip_fraction': 'Runoff-Precipitation fraction',
+                       'Precipitation_intensity': 'Precipitation intensity',
+                       'Dryness_index': 'PET/P'}
 
         importances = importances.rename(columns=rename_dict)
 

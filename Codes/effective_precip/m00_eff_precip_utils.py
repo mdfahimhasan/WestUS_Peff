@@ -48,50 +48,55 @@ def create_monthly_dataframes_for_eff_precip_prediction(years_list, month_range,
 
         for year in years_list:  # 1st loop controlling years_list
             for month in month_list:  # 2nd loop controlling months
-                print(f'creating dataframe for prediction - year={year}, month={month}...')
 
-                variable_dict = {}
+                if year == 1999 and month in range(1, 10):  # skipping dataframe creation for 1999 January-September
+                    continue
 
-                # reading monthly data and storing it in a dictionary
-                for var in monthly_data_path_dict.keys():
-                    if var in datasets_to_include:
+                else:
+                    print(f'creating dataframe for prediction - year={year}, month={month}...')
 
-                        if var == 'GRIDMET_Precip':  # for including monthly and lagged monthly GRIDMET_precip in the dataframe
-                            current_precip_data = glob(os.path.join(monthly_data_path_dict[var], f'*{year}_{month}.tif*'))[0]
+                    variable_dict = {}
 
-                            current_month_date = datetime(year, month, 1)
+                    # reading monthly data and storing it in a dictionary
+                    for var in monthly_data_path_dict.keys():
+                        if var in datasets_to_include:
 
-                            # Collect previous month's precip data
-                            prev_month_date = current_month_date - timedelta(30)
-                            prev_2_month_date = current_month_date - timedelta(60)
+                            if var == 'GRIDMET_Precip':  # for including monthly and lagged monthly GRIDMET_precip in the dataframe
+                                current_precip_data = glob(os.path.join(monthly_data_path_dict[var], f'*{year}_{month}.tif*'))[0]
 
-                            prev_month_precip_data = glob(os.path.join(monthly_data_path_dict[var],
-                                                                       f'*{prev_month_date.year}_{prev_month_date.month}.tif*'))[0]
-                            prev_2_month_precip_data = glob(os.path.join(monthly_data_path_dict[var],
-                                                                         f'*{prev_2_month_date.year}_{prev_2_month_date.month}.tif*'))[0]
+                                current_month_date = datetime(year, month, 1)
 
-                            # reading datasets
-                            current_precip_arr = read_raster_arr_object(current_precip_data, get_file=False).flatten()
+                                # Collect previous month's precip data
+                                prev_month_date = current_month_date - timedelta(30)
+                                prev_2_month_date = current_month_date - timedelta(60)
 
-                            prev_month_precip_arr = read_raster_arr_object(prev_month_precip_data, get_file=False).flatten()
-                            prev_2_month_precip_arr = read_raster_arr_object(prev_2_month_precip_data, get_file=False).flatten()
+                                prev_month_precip_data = glob(os.path.join(monthly_data_path_dict[var],
+                                                                           f'*{prev_month_date.year}_{prev_month_date.month}.tif*'))[0]
+                                prev_2_month_precip_data = glob(os.path.join(monthly_data_path_dict[var],
+                                                                             f'*{prev_2_month_date.year}_{prev_2_month_date.month}.tif*'))[0]
 
-                            current_precip_arr[np.isnan(current_precip_arr)] = 0  # setting nan-position values with 0
-                            prev_month_precip_arr[np.isnan(prev_month_precip_arr)] = 0  # setting nan-position values with 0
-                            prev_2_month_precip_arr [np.isnan(prev_2_month_precip_arr)] = 0  # setting nan-position values with 0
+                                # reading datasets
+                                current_precip_arr = read_raster_arr_object(current_precip_data, get_file=False).flatten()
 
-                            variable_dict[var] = list(current_precip_arr)
-                            variable_dict['month'] = [int(month)] * len(current_precip_arr)
-                            variable_dict['GRIDMET_Precip_1_lag'] = list(prev_month_precip_arr)
-                            variable_dict['GRIDMET_Precip_2_lag'] = list(prev_2_month_precip_arr)
+                                prev_month_precip_arr = read_raster_arr_object(prev_month_precip_data, get_file=False).flatten()
+                                prev_2_month_precip_arr = read_raster_arr_object(prev_2_month_precip_data, get_file=False).flatten()
 
-                        else:
-                            monthly_data = glob(os.path.join(monthly_data_path_dict[var], f'*{year}_{month}.tif*'))[0]
-                            data_arr = read_raster_arr_object(monthly_data, get_file=False).flatten()
+                                current_precip_arr[np.isnan(current_precip_arr)] = 0  # setting nan-position values with 0
+                                prev_month_precip_arr[np.isnan(prev_month_precip_arr)] = 0  # setting nan-position values with 0
+                                prev_2_month_precip_arr [np.isnan(prev_2_month_precip_arr)] = 0  # setting nan-position values with 0
 
-                            data_arr[np.isnan(data_arr)] = 0  # setting nan-position values with 0
-                            variable_dict[var] = list(data_arr)
-                            variable_dict['month'] = [int(month)] * len(data_arr)
+                                variable_dict[var] = list(current_precip_arr)
+                                variable_dict['month'] = [int(month)] * len(current_precip_arr)
+                                variable_dict['GRIDMET_Precip_1_lag'] = list(prev_month_precip_arr)
+                                variable_dict['GRIDMET_Precip_2_lag'] = list(prev_2_month_precip_arr)
+
+                            else:
+                                monthly_data = glob(os.path.join(monthly_data_path_dict[var], f'*{year}_{month}.tif*'))[0]
+                                data_arr = read_raster_arr_object(monthly_data, get_file=False).flatten()
+
+                                data_arr[np.isnan(data_arr)] = 0  # setting nan-position values with 0
+                                variable_dict[var] = list(data_arr)
+                                variable_dict['month'] = [int(month)] * len(data_arr)
 
                 # reading yearly data and storing it in a dictionary
                 if yearly_data_path_dict is not None:

@@ -1,3 +1,8 @@
+import sys
+from os.path import dirname, abspath
+
+sys.path.insert(0, dirname(dirname(dirname(abspath(__file__)))))
+
 from Codes.data_download_preprocess.preprocesses import sum_cropET_water_yr, dynamic_gs_sum_peff
 from Codes.effective_precip.m00_eff_precip_utils import estimate_peff_precip_water_year_fraction, \
     estimate_water_yr_peff_using_peff_frac, scale_monthy_peff_with_wateryr_peff_model
@@ -12,7 +17,7 @@ from Codes.effective_precip.m00_eff_precip_utils import estimate_peff_precip_wat
 # Step 5: sum scaled monthly peff to growing season (with added 3 months' peff before growing season to consider carried over soil moisture storage)
 
 if __name__ == '__main__':
-    model_version = 'v14'                           #####
+    model_version = 'v15'                           #####
     skip_estimating_peff_water_yr_total = False      #####
     skip_peff_monthly_scaling = False                #####
     skip_sum_scaled_peff_water_year = False          #####
@@ -57,7 +62,7 @@ if __name__ == '__main__':
     # # # # #  Step4: estimating water year peff fraction for scaled peff data # # # # #
     scaled_frac_dir = f'../../Data_main/Raster_data/Effective_precip_prediction_WestUS/{model_version}_peff_fraction_scaled'
 
-    estimate_peff_precip_water_year_fraction(years_list=(2001, 2002, 2003, 2004, 2005, 2006, 2007,
+    estimate_peff_precip_water_year_fraction(years_list=(2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007,
                                                          2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015,
                                                          2016, 2017, 2018, 2019, 2020),
                                              peff_dir_water_yr=output_peff_scaled_water_year_summed_dir,

@@ -80,24 +80,24 @@ exclude_columns_in_prediction = ['Latitude', 'Longitude', 'Bulk_density', 'Clay_
                                  'Slope', 'PRISM_Tmax', 'PRISM_Tmin', 'PRISM_Precip',
                                  'GRIDMET_wind_vel', 'GRIDMET_min_RH', 'GRIDMET_vap_pres_def']
 # prediction time periods
-prediction_years = [2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010,
+prediction_years = [1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010,
                     2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020]
 
 if __name__ == '__main__':
-    model_version = 'v14'                                   ######
+    model_version = 'v15'                                   ######
 
     skip_train_test_df_creation = True                      ######
-    skip_train_test_split = False                            ######
+    skip_train_test_split = True                            ######
     skip_tune_hyperparams = True                            ######
     load_model = False                                       ######
     save_model = True                                       ######
     skip_plot_pdp = False                                    ######
     skip_plot_perm_import = False                            ######
-    skip_processing_monthly_predictor_dataframe = True      ######
-    skip_processing_nan_pos_irrig_cropET = True             ######
+    skip_processing_monthly_predictor_dataframe = False      ######
+    skip_processing_nan_pos_irrig_cropET = False             ######
     skip_estimate_monthly_eff_precip_WestUS = False          ######
     skip_storing_peff_pred_monthly_csv = False               ######
-    skip_sum_peff_water_year = False                              ######
+    skip_sum_peff_water_year = False                         ######
 
     # ********************************* Dataframe creation and train-test split (westUS) ***********************************
     # # create dataframe
@@ -283,7 +283,9 @@ if __name__ == '__main__':
     # # summing monthly effective precipitation for water year
     water_yr_peff_dir = f'../../Data_main/Raster_data/Effective_precip_prediction_WestUS/{model_version}_water_year'
 
-    sum_peff_water_year(monthly_peff_dir=effective_precip_monthly_output_dir,
+    sum_peff_water_year(years_list=[2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010,
+                                    2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020],
+                        monthly_peff_dir=effective_precip_monthly_output_dir,
                         output_peff_dir=water_yr_peff_dir, skip_processing=skip_sum_peff_water_year)
 
     print('**********************************')

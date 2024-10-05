@@ -93,8 +93,8 @@ def get_gee_dict(data_name):
         'SMAP_SM': 'NASA_USDA/HSL/SMAP10KM_soil_moisture',
         'LANDSAT_NDWI': 'LANDSAT/LC08/C01/T1_8DAY_NDWI',  # check for cloudcover
         'LANDSAT_NDVI': 'LANDSAT/LC08/C01/T1_8DAY_NDVI',  # check for cloudcover
-        'GPM_Precip': 'NASA/GPM_L3/IMERG_MONTHLY_V06',
         'GRIDMET_Precip': 'IDAHO_EPSCOR/GRIDMET',
+        'Rainy_days': 'IDAHO_EPSCOR/GRIDMET',
         'MODIS_Day_LST': 'MODIS/006/MOD11A2',  # check for cloudcover
         'MODIS_Terra_NDVI': 'MODIS/006/MOD13Q1',  # cloudcover mask added later
         'MODIS_Terra_EVI': 'MODIS/006/MOD13Q1',  # cloudcover mask added later
@@ -124,8 +124,8 @@ def get_gee_dict(data_name):
         'SMAP_SM': 'ssm',
         'LANDSAT_NDWI': 'NDWI',
         'LANDSAT_NDVI': 'NDVI',
-        'GPM_Precip': 'precipitation',
         'GRIDMET_Precip': 'pr',
+        'Rainy_days': 'pr',
         'MODIS_Day_LST': 'LST_Day_1km',
         'MODIS_Terra_NDVI': 'NDVI',
         'MODIS_Terra_EVI': 'EVI',
@@ -155,8 +155,8 @@ def get_gee_dict(data_name):
         'SMAP_SM': 1,
         'LANDSAT_NDWI': 1,
         'LANDSAT_NDVI': 1,
-        'GPM_Precip': 1,
         'GRIDMET_Precip': 1,
+        'Rainy_days': 1,
         'MODIS_Day_LST': 0.02,
         'MODIS_Terra_NDVI': 0.0001,
         'MODIS_Terra_EVI': 0.0001,
@@ -186,8 +186,8 @@ def get_gee_dict(data_name):
         'SMAP_SM': ee.Reducer.sum(),
         'LANDSAT_NDWI': ee.Reducer.mean(),
         'LANDSAT_NDVI': ee.Reducer.mean(),
-        'GPM_Precip': ee.Reducer.sum(),
         'GRIDMET_Precip': ee.Reducer.sum(),
+        'Rainy_days': None,
         'MODIS_Day_LST': ee.Reducer.mean(),
         'MODIS_Terra_NDVI': ee.Reducer.mean(),
         'MODIS_Terra_EVI': ee.Reducer.mean(),
@@ -195,7 +195,7 @@ def get_gee_dict(data_name):
         'MODIS_NDVI': ee.Reducer.mean(),
         'MODIS_LAI': ee.Reducer.mean(),
         'MODIS_ET': ee.Reducer.sum(),
-        'TERRACLIMATE_SR': ee.Reducer.mean(),
+        'TERRACLIMATE_SR': ee.Reducer.sum(),
         'GRIDMET_RET': ee.Reducer.sum(),
         'GRIDMET_max_RH': ee.Reducer.mean(),
         'GRIDMET_min_RH': ee.Reducer.mean(),
@@ -222,8 +222,8 @@ def get_gee_dict(data_name):
         'SMAP_SM': datetime(2015, 4, 1),
         'LANDSAT_NDWI': datetime(2013, 4, 1),
         'LANDSAT_NDVI': datetime(2013, 4, 1),
-        'GPM_Precip': datetime(2006, 6, 1),
         'GRIDMET_Precip': datetime(1979, 1, 1),
+        'Rainy_days': datetime(1979, 1, 1),
         'MODIS_Day_LST': datetime(2000, 2, 1),
         'MODIS_Terra_NDVI': datetime(2000, 2, 1),
         'MODIS_Terra_EVI': datetime(2000, 2, 1),
@@ -253,8 +253,8 @@ def get_gee_dict(data_name):
         'SMAP_SM': datetime(2022, 8, 2),
         'LANDSAT_NDWI': datetime(2022, 1, 1),
         'LANDSAT_NDVI': datetime(2022, 1, 1),
-        'GPM_Precip': datetime(2021, 9, 1),
         'GRIDMET_Precip': datetime(2023, 9, 15),
+        'Rainy_days': datetime(2023, 9, 15),
         'MODIS_Day_LST': datetime(2023, 8, 29),
         'MODIS_Terra_NDVI': datetime(2023, 8, 13),
         'MODIS_Terra_EVI': datetime(2023, 8, 13),
@@ -284,8 +284,8 @@ def get_gee_dict(data_name):
         'SMAP_SM': datetime(2015, 1, 1),
         'LANDSAT_NDWI': datetime(2013, 1, 1),
         'LANDSAT_NDVI': datetime(2013, 1, 1),
-        'GPM_Precip': datetime(2006, 1, 1),
         'GRIDMET_Precip': datetime(1979, 1, 1),
+        'Rainy_days': datetime(1979, 1, 1),
         'MODIS_Day_LST': datetime(2000, 1, 1),
         'MODIS_Terra_NDVI': datetime(2000, 1, 1),
         'MODIS_Terra_EVI': datetime(2000, 1, 1),
@@ -315,8 +315,8 @@ def get_gee_dict(data_name):
         'SMAP_SM': datetime(2023, 1, 1),
         'LANDSAT_NDWI': datetime(2022, 1, 1),
         'LANDSAT_NDVI': datetime(2022, 1, 1),
-        'GPM_Precip': datetime(2022, 1, 1),
         'GRIDMET_Precip': datetime(2024, 1, 1),
+        'Rainy_days': datetime(2024, 1, 1),
         'MODIS_Day_LST': datetime(2024, 1, 1),
         'MODIS_Terra_NDVI': datetime(2024, 1, 1),
         'MODIS_Terra_EVI': datetime(2024, 1, 1),
@@ -623,7 +623,7 @@ def download_gee_data_yearly(data_name, download_dir, year_list, month_range, me
 
     :param data_name: Data name.
     Current valid data names are -
-        ['SMAP_SM', 'LANDSAT_NDWI', 'LANDSAT_NDVI', 'GPM_Precip', 'GRIDMET_Precip',
+        ['SMAP_SM', 'LANDSAT_NDWI', 'LANDSAT_NDVI', 'GRIDMET_Precip',
         'MODIS_Day_LST', 'MODIS_Terra_NDVI', 'MODIS_Terra_EVI', 'MODIS_NDWI', 'MODIS_NDVI',
         'MODIS_LAI', 'MODIS_ET', 'TERRACLIMATE_SR',
         'GRIDMET_max_RH', 'GRIDMET_min_RH', 'GRIDMET_wind_vel',
@@ -646,7 +646,7 @@ def download_gee_data_yearly(data_name, download_dir, year_list, month_range, me
 
     # Extracting dataset information required for downloading from GEE
     data, band, multiply_scale, reducer, month_start_range, month_end_range, \
-        year_start_range, year_end_range = get_gee_dict(data_name)
+    year_start_range, year_end_range = get_gee_dict(data_name)
 
     # Loading grid files to be used for data download
     grids = gpd.read_file(grid_shape)
@@ -774,9 +774,9 @@ def download_gee_data_monthly(data_name, download_dir, year_list, month_range, m
 
     :param data_name: Data name.
     Current valid data names are -
-        ['SMAP_SM', 'LANDSAT_NDWI', 'LANDSAT_NDVI', 'GPM_Precip', 'GRIDMET_Precip', 'MODIS_Day_LST',
+        ['SMAP_SM', 'LANDSAT_NDWI', 'LANDSAT_NDVI','GRIDMET_Precip', 'MODIS_Day_LST',
         'MODIS_Terra_NDVI', 'MODIS_Terra_EVI', 'MODIS_NDWI', 'MODIS_NDVI', 'MODIS_LAI', 'MODIS_ET',
-        'TERRSCLIMATE_SR', 'GRIDMET_max_RH', 'GRIDMET_min_RH', 'GRIDMET_wind_vel',
+        'TERRSCLIMATE_SR', 'GRIDMET_max_RH', 'GRIDMET_min_RH', 'GRIDMET_wind_vel', 'Rainy_days',
         'GRIDMET_short_rad', 'GRIDMET_RET', 'GRIDMET_vap_pres_def', 'DAYMET_sun_hr']
     :param download_dir: File path of download directory.
     :param year_list: List of years_list to download data for.
@@ -848,7 +848,7 @@ def download_gee_data_monthly(data_name, download_dir, year_list, month_range, m
                         if data_name in ('MODIS_Terra_NDVI', 'MODIS_Terra_EVI'):
                             download_data = cloud_cover_filter(data_name, start_date, end_date, 0, 1,
                                                                gee_extent).select(band). \
-                                                                reduce(reducer).multiply(multiply_scale).toFloat()
+                                reduce(reducer).multiply(multiply_scale).toFloat()
 
                         elif data_name == 'MODIS_NDWI':
                             nir = cloud_cover_filter(data_name, start_date, end_date, 0, 1, gee_extent).select(band[0]). \
@@ -877,6 +877,17 @@ def download_gee_data_monthly(data_name, download_dir, year_list, month_range, m
                             # dividing by 3600 to convert from second to hr
                             download_data = ee.ImageCollection(data).select(band).filterDate(start_date, end_date). \
                                 filterBounds(gee_extent).reduce(reducer).divide(3600).multiply(multiply_scale).toFloat()
+
+                        elif data_name == 'Rainy_days':
+                            precipitation = ee.ImageCollection(data).select(band).filterDate(start_date, end_date). \
+                                select(band)
+
+                            def count_rainy_day(img):
+                                return img.gt(1)  # boolean image where pixels with precip > 1 mm/day are True (source - WMO)
+
+                            rainy_day = precipitation.map(count_rainy_day)
+                            total_rainy_day = rainy_day.reduce(ee.Reducer.sum())
+                            download_data = total_rainy_day
 
                         else:
                             download_data = ee.ImageCollection(data).select(band).filterDate(start_date, end_date). \
@@ -1120,7 +1131,7 @@ def download_all_gee_data(data_list, download_dir, year_list, month_range,
     Current valid data names are -
         ['MODIS_Day_LST', 'MODIS_NDWI', 'MODIS_NDVI', 'MODIS_LAI', 'TERRACLIMATE_SR',
         'GRIDMET_Precip', 'GRIDMET_max_RH', 'GRIDMET_min_RH', 'GRIDMET_wind_vel',
-        'GRIDMET_short_rad', 'GRIDMET_RET', 'GRIDMET_vap_pres_def',
+        'GRIDMET_short_rad', 'GRIDMET_RET', 'GRIDMET_vap_pres_def', 'Rainy_days',
         'DAYMET_sun_hr', 'OpenET_ensemble', 'USDA_CDL', 'Field_capacity', 'Bulk_density',
         'Organic_carbon_content', 'Sand_content', 'Clay_content', 'DEM', 'Effect_precip_DK']
         ******************************
@@ -1231,7 +1242,7 @@ def download_ssebop_et(years_list, month_range_list, download_dir='../../Data_ma
 
 
 def download_all_datasets(year_list, month_range, grid_shape_large,
-                          gee_data_list,  data_download_dir,
+                          gee_data_list, data_download_dir,
                           skip_download_gee_data=True,
                           use_cpu_while_multidownloading=15):
     """
@@ -1245,7 +1256,7 @@ def download_all_datasets(year_list, month_range, grid_shape_large,
                           Datasets currently downloaded by this code:
                             ['MODIS_Day_LST', 'MODIS_NDWI', 'MODIS_NDVI', 'MODIS_LAI', 'TERRACLIMATE_SR',
                             'GRIDMET_Precip', 'GRIDMET_max_RH', 'GRIDMET_min_RH', 'GRIDMET_wind_vel',
-                            'GRIDMET_short_rad', 'GRIDMET_RET', 'GRIDMET_vap_pres_def',
+                            'GRIDMET_short_rad', 'GRIDMET_RET', 'GRIDMET_vap_pres_def', 'Rainy_days',
                             'DAYMET_sun_hr', 'OpenET_ensemble', 'USDA_CDL', 'Field_capacity', 'Bulk_density',
                             'Organic_carbon_content', 'Sand_content', 'Clay_content', 'DEM', 'Effect_precip_DK']
     :param data_download_dir: Directory path to download and save data.
@@ -1260,5 +1271,3 @@ def download_all_datasets(year_list, month_range, grid_shape_large,
                           year_list=year_list, month_range=month_range,
                           grid_shape_large=grid_shape_large, skip_download=skip_download_gee_data,
                           use_cpu_while_multidownloading=use_cpu_while_multidownloading)
-
-

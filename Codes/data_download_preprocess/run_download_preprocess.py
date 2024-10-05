@@ -14,7 +14,7 @@ GEE_merging_refraster_large_grids = '../../Data_main/reference_rasters/GEE_mergi
 gee_data_list = ['Field_capacity', 'Bulk_density', 'Sand_content', 'Clay_content',
                  'GRIDMET_RET', 'GRIDMET_vap_pres_def','GRIDMET_max_RH','GRIDMET_Precip',
                  'GRIDMET_min_RH', 'GRIDMET_wind_vel', 'GRIDMET_short_rad', 'DAYMET_sun_hr',
-                 'TERRACLIMATE_SR', 'USDA_CDL', 'Tree_cover', 'DEM']
+                 'TERRACLIMATE_SR', 'USDA_CDL', 'Tree_cover', 'DEM', 'Rainy_days']
 
 openET_data_list = ['Irrig_crop_OpenET_IrrMapper', 'Irrig_crop_OpenET_LANID',
                     'Irrigation_Frac_IrrMapper', 'Irrigation_Frac_LANID'
@@ -22,8 +22,8 @@ openET_data_list = ['Irrig_crop_OpenET_IrrMapper', 'Irrig_crop_OpenET_LANID',
                     'Rainfed_Frac_IrrMapper', 'Rainfed_Frac_LANID',
                     'OpenET_ensemble', 'OpenET_indiv_models_grow_season']
 
-years = [1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008,
-         2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020]
+years = [1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010,
+         2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020]
 months = (1, 12)
 
 gee_grid_shape_large = '../../Data_main/shapefiles/Western_US_ref_shapes/WestUS_gee_grid.shp'
@@ -33,7 +33,7 @@ data_download_dir = '../../Data_main/Raster_data'
 use_cpu_while_multidownloading = 15
 
 skip_download_gee_data = True                           ######
-skip_download_OpenET_data = False                       ######
+skip_download_OpenET_data = True                        ######
 
 # # # #  data preprocess args # # # #
 skip_process_GrowSeason_data = True                     ######
@@ -56,6 +56,9 @@ skip_process_AWC_data = True                            ######
 skip_peff_training_data_filtering = True                ######
 skip_accum_to_water_year_datasets = True                ######
 skip_summing_irrigated_cropET_water_yr = True           ######
+skip_estimate_runoff_precip_frac = True                 ######
+skip_estimate_precip_intensity = True                   ######
+skip_estimate_dryness_index = False                      ######
 skip_estimate_peff_water_yr_frac = True                 ######
 
 # # # #  runs # # # #
@@ -99,5 +102,8 @@ if __name__ == '__main__':
                           skip_accum_to_water_year_datasets=skip_accum_to_water_year_datasets,
                           skip_summing_irrigated_cropET_water_yr=skip_summing_irrigated_cropET_water_yr,
                           skip_estimate_peff_water_yr_frac=skip_estimate_peff_water_yr_frac,
+                          skip_estimate_runoff_precip_frac=skip_estimate_runoff_precip_frac,
+                          skip_estimate_precip_intensity=skip_estimate_precip_intensity,
+                          skip_estimate_dryness_index=skip_estimate_dryness_index,
                           ref_raster=WestUS_raster)
 

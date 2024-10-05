@@ -428,6 +428,8 @@ def sum_rasters(raster_dir, output_raster, raster_list=None, search_by='*.tif', 
 
     :return: Summed array and output raster.
     """
+    makedirs([os.path.dirname(output_raster)])
+
     if raster_dir is not None:
         input_rasters = glob(os.path.join(raster_dir, search_by))
     else:
@@ -466,6 +468,8 @@ def mean_rasters(raster_dir, output_raster, raster_list=None, search_by='*.tif',
 
     :return: Mean raster.
     """
+    makedirs([os.path.dirname(output_raster)])
+
     if raster_dir is not None:
         input_rasters = glob(os.path.join(raster_dir, search_by))
     else:

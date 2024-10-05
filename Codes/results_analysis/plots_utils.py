@@ -156,7 +156,8 @@ def make_BOI_netGW_vs_pumping_vs_USGS_scatter_plot(df, x1, y1, x2, y2, error_xmi
                     'Republican Basin, CO': '#55a868',
                     'Harquahala INA, AZ': '#c44e52',
                     'Douglas AMA, AZ': '#8172b3',
-                    'Diamond Valley, NV': '#64b5cd'}
+                    'Diamond Valley, NV': '#64b5cd',
+                    'Parowan Valley, UT': '#ffb000'}
 
     fig, ax = plt.subplots(1, 2, figsize=figsize)
     plt.rcParams['font.size'] = fontsize

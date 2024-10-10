@@ -184,8 +184,8 @@ def classify_irrigated_rainfed_cropland(rainfed_fraction_dir, irrigated_fraction
         # Criteria of irrigated and rainfed cropland classification
         # More than 30% (fraction 0.3) rainfed and less than 2% irrigated 30m pixels in a 2km pixel will be classified
         # as "Rainfed cropland". Also, it should have <6% tree cover.
-        rainfed_frac_threshold = 0.30
-        irrigated_frac_threshold_for_rainfed_class = 0.02
+        rainfed_frac_threshold = 0.10
+        # irrigated_frac_threshold_for_rainfed_class = 0.02
         tree_threshold = 6  # unit in %
 
         # # Irrigated
@@ -213,9 +213,9 @@ def classify_irrigated_rainfed_cropland(rainfed_fraction_dir, irrigated_fraction
 
             # classification using defined rainfed, irrigated fraction, and tree fraction threshold. -9999 is no data
             rainfed_cropland = np.where((rain_arr >= rainfed_frac_threshold) &
-                                        ((irrig_arr == irrigated_frac_threshold_for_rainfed_class) | (
-                                            np.isnan(irrig_arr)))
-                                        & (tree_arr <= tree_threshold), 1, -9999)
+                                        # ((irrig_arr == irrigated_frac_threshold_for_rainfed_class) | (
+                                        #     np.isnan(irrig_arr))) &
+                                        (tree_arr <= tree_threshold), 1, -9999)
 
             irrigated_cropland = np.where((irrig_arr > irrigated_frac_threshold_for_irrigated_class), 1, -9999)
 
@@ -1010,6 +1010,7 @@ def filter_effective_precip_training_data(training_zone_shp, general_output_dir,
         irrigated_cropland_dir = '../../Data_main/Raster_data/Irrigated_cropland'
         usda_cdl_dir = '../../Data_main/Raster_data/USDA_CDL/WestUS_yearly'
         excess_ET_filter_dir = '../../Data_main/Raster_data/Excess_ET_filter'
+        slope_dir = '../../Data_main/Raster_data/Slope/WestUS'
 
         # collecting all rainfed cropET dataset
         rainfed_cropET_datasets = []
@@ -1036,6 +1037,7 @@ def filter_effective_precip_training_data(training_zone_shp, general_output_dir,
             rainfed_cropland_data = glob(os.path.join(rainfed_cropland_dir, f'*{year}*.tif'))[0]
             irrigated_cropland_data = glob(os.path.join(irrigated_cropland_dir, f'*{year}*.tif'))[0]
             cdl_data = glob(os.path.join(usda_cdl_dir, f'*{year}*.tif'))[0]
+            slope_data = glob(os.path.join(slope_dir, '*.tif'))[0]
 
             # selecting excess ET filter based on water year of the monthly rainfed cropland ET data
             if month in list(range(1, 10)):  # January-September, use excess ET filter of the same water year
@@ -1048,6 +1050,7 @@ def filter_effective_precip_training_data(training_zone_shp, general_output_dir,
             irrigated_cropland_arr = read_raster_arr_object(irrigated_cropland_data, get_file=False)
             cdl_arr = read_raster_arr_object(cdl_data, get_file=False)
             excess_et_arr = read_raster_arr_object(excess_et_filter_data, get_file=False)
+            slope_arr = read_raster_arr_object(slope_data, get_file=False)
 
             # grass/pasture lands with rainfed croplands or any rainfed cropland with no overlapping with irrigated croplands,
             # excess_et_filter = 1 in both cases
@@ -1060,8 +1063,10 @@ def filter_effective_precip_training_data(training_zone_shp, general_output_dir,
                 zone_arr = read_raster_arr_object(zone_ras, get_file=False)
 
                 filtered_cropET_arr = np.where(((cdl_arr == 176) & (rainfed_cropland_arr == 1) & (excess_et_arr == 1)) |
-                                               ((rainfed_cropland_arr == 1) & (irrigated_cropland_arr == -9999) &
+                                               ((rainfed_cropland_arr == 1) &
+                                                # (irrigated_cropland_arr == -9999) &
                                                 (excess_et_arr == 1)), cropET_arr, -9999)
+                filtered_cropET_arr = np.where(slope_arr <= 1, filtered_cropET_arr, -9999)
 
                 # applying the zone raster on the filtered cropET so that everything outside the box becomes nodata
                 final_cropET_arr = filtered_cropET_arr * zone_arr
@@ -1134,7 +1139,7 @@ def accumulate_monthly_datasets_to_water_year(skip_processing=False):
         'Irrigated_cropET': 'sum',
         'PRISM_Tmax': 'mean',
         'PRISM_Tmin': 'mean',
-        'GRIDMET_Precip': 'sum',
+        'GRIDMET_Precip': ['sum', 'mean'],
         'GRIDMET_RET': 'sum',
         'GRIDMET_vap_pres_def': 'mean',
         'GRIDMET_max_RH': 'mean',
@@ -1179,7 +1184,7 @@ def accumulate_monthly_datasets_to_water_year(skip_processing=False):
                 data_name = '_'.join(data_name_extraction) + f'_{yr}' + '.tif'
 
                 # sum() or mean() accumulation
-                if var == 'TERRACLIMATE_SR':  # we perform both mean and sum
+                if var in ['GRIDMET_Precip', 'TERRACLIMATE_SR']:  # we perform both mean and sum
                     sum_rasters(raster_dir=None, raster_list=total_data_list,
                                 output_raster=os.path.join(output_dir, 'sum', data_name),
                                 ref_raster=total_data_list[0], nodata=no_data_value)
@@ -1240,8 +1245,7 @@ def fraction_SR_precip_water_yr(years_list, input_dir_runoff, input_dir_precip, 
 
 
 def estimate_precip_intensity_water_yr(years_list, input_dir_precip, input_dir_rainy_day, output_dir,
-                                       nodata=no_data_value,
-                                       skip_processing=False):
+                                       nodata=no_data_value, skip_processing=False):
     """
     Estimate precipitation intensity (water year precipitation / num of rainy days).
 
@@ -1317,16 +1321,46 @@ def estimate_PET_by_P_water_yr(years_list, input_dir_PET, input_dir_precip, outp
         pass
 
 
-def estimate_indices_for_Budyko(years_list, input_dir_PET, input_dir_precip, output_dir, nodata=no_data_value,
-                                skip_processing=False):
+def process_Ksat_data_for_WestUS(ksat_data, output_dir, skip_processing=False):
     """
-    Estimate PET/P (dryness index) for water year.
+    Process saturated hydraulic conductivity data for the Western US. Source data comes from
+    Gupta et al. 2021 (https://agupubs.onlinelibrary.wiley.com/doi/full/10.1029/2020MS002242).
+    Output dataset's unit is in cm/day (the same as the input dataset).
+
+    :param ksat_data: Filepath of Ksat data.
+    :param westUS_shapefile: Filepath of Western US shapefile
+    :param output_dir: Filepath of output dir.
+    :param skip_processing: Set to True if want to skip this process.
+
+    :return: None.
+    """
+    if not skip_processing:
+        print('clipping and resampling saturated hydraulic conductivity data for the Western US')
+
+        clip_resample_reproject_raster(input_raster=ksat_data, input_shape=WestUS_shape,
+                                       raster_name='Ksat_0cm.tif', keyword=' ',
+                                       output_raster_dir=output_dir,
+                                       clip=False, resample=False, clip_and_resample=True,
+                                       targetaligned=True, resample_algorithm='near',
+                                       use_ref_width_height=False,
+                                       ref_raster=WestUS_raster,
+                                       resolution=model_res)
+    else:
+        pass
+
+
+def create_rel_infiltration_capacity_dataset(years_list, ksat_data, precip_intensity_dir, output_dir, skip_processing):
+    """
+    Create a water year relative infiltration capacity (saturated hydraulic conductivity/precipitation intensity)
+    dataset for the western US.
+
+    *** Higher values would indicate that the soil is capable of infiltrating water more effectively than
+    the rate of precipitation.
 
     :param years_list: List of years to process data for.
-    :param input_dir_PET: ilepath of water year summed PET data directory.
-    :param input_dir_precip: Filepath of water year summed precipitation data directory.
-    :param output_dir: Filepath of output directory.
-    :param nodata: No data value. Default set to -9999.
+    :param ksat_data: Filepath of Ksat data.
+    :param precip_intensity_dir: Filepath of precipitation intensity dataset directory.
+    :param output_dir: Filepath of output dir.
     :param skip_processing: Set to True if want to skip this process.
 
     :return: None.
@@ -1335,25 +1369,76 @@ def estimate_indices_for_Budyko(years_list, input_dir_PET, input_dir_precip, out
         makedirs([output_dir])
 
         for year in years_list:
-            print(f'estimating water year PET/P for year {year}...')
+            print(f'creating relative infiltration capacity dataset for year {year}...')
 
             # loading and reading datasets
-            pet_data = glob(os.path.join(input_dir_PET, f'*{year}*.tif'))[0]
-            precip_data = glob(os.path.join(input_dir_precip, f'*{year}*.tif'))[0]
+            precip_intensity_data = glob(os.path.join(precip_intensity_dir, f'*{year}*.tif'))[0]
+            precip_intensity_arr = read_raster_arr_object(precip_intensity_data, get_file=False)
 
-            pet_arr = read_raster_arr_object(pet_data, get_file=False)
-            precip_arr, raster_file = read_raster_arr_object(precip_data)
+            ksat_arr, raster_file = read_raster_arr_object(ksat_data)
 
-            # calculating PET/P
-            dry_arr = np.where((precip_arr != -9999) & (pet_arr != -9999), pet_arr / precip_arr, nodata)
+            # estimating relative infiltration capacity
+            rel_infil_arr = np.where(ksat_arr != -9999, ksat_arr / precip_intensity_arr, -9999)
 
-            # saving estimated raster
-            output_raster = os.path.join(output_dir, f'dryness_index_{year}.tif')
-            write_array_to_raster(dry_arr, raster_file, raster_file.transform, output_raster)
+            # saving output raster
+            output_raster = os.path.join(output_dir, f'rel_infiltration_capacity_{year}.tif')
+            write_array_to_raster(rel_infil_arr, raster_file, raster_file.transform, output_raster)
+
+
+def develop_P_PET_correlation_dataset(monthly_precip_dir, monthly_pet_dir, output_dir,skip_processing=False):
+    """
+    Develop PET and P correaltion dataset (static) for the Western US.
+
+    :param monthly_precip_dir: Filepath of monthly precip directory.
+    :param monthly_pet_dir: Filepath of monthly pet directory.
+    :param output_dir: Filepath of output directory.
+    :param skip_processing: Set to True to skip creating this dataset.
+
+    :return: None
+    """
+    if not skip_processing:
+        print('creating P-PET correlation dataset...')
+
+        makedirs([output_dir])
+
+        # accumulating precip and pet data
+        monthly_precip_data_list = glob(os.path.join(monthly_precip_dir, '*.tif'))
+        monthly_pet_data_list = glob(os.path.join(monthly_pet_dir, '*.tif'))
+
+        # reading datasets as arrays
+        monthly_precip_arr_list = [read_raster_arr_object(i, get_file=False) for i in monthly_precip_data_list]
+        monthly_pet_arr_list = [read_raster_arr_object(i, get_file=False) for i in monthly_pet_data_list]
+
+        # stacking monthly datasets into a list
+        precip_stack = np.stack(monthly_precip_arr_list, axis=0)  # shape becomes - n_months, n_lat (height), n_lon(width)
+        pet_stack = np.stack(monthly_pet_arr_list, axis=0)  # shape becomes - n_months, n_lat (height), n_lon(width)
+
+        # Calculating mean along the time axis (i.e., across months) for each pixel
+        precip_mean = np.mean(precip_stack, axis=0)
+        pet_mean = np.mean(pet_stack, axis=0)
+
+        # estimating precip and pet anomalies
+        precip_anomalies = precip_stack - precip_mean
+        pet_anomalies = pet_stack - pet_mean
+
+        # getting numerator (covariance) for each pixel across time
+        numerator = np.sum(precip_anomalies * pet_anomalies, axis=0)
+
+        # getting denominator (sum of squares for both variables (this measures the total variation for each))
+        sum_of_squares_precip = np.sqrt(np.sum(precip_anomalies ** 2, axis=0))
+        sum_of_squares_pet = np.sqrt(np.sum(pet_anomalies ** 2, axis=0))
+        denominator = sum_of_squares_precip * sum_of_squares_pet
+
+        # calculating Pearson correlation for each pixel
+        with np.errstate(divide='ignore', invalid='ignore'):
+            correlation_arr = numerator / denominator
+
+        output_raster = os.path.join(output_dir, 'PET_P_corr.tif')
+        _, ref_file = read_raster_arr_object(monthly_precip_data_list[0])
+        write_array_to_raster(correlation_arr, ref_file, ref_file.transform, output_raster)
 
     else:
         pass
-
 
 
 def run_all_preprocessing(skip_process_GrowSeason_data=False,
@@ -1380,6 +1465,9 @@ def run_all_preprocessing(skip_process_GrowSeason_data=False,
                           skip_estimate_precip_intensity=False,
                           skip_estimate_dryness_index=False,
                           skip_estimate_peff_water_yr_frac=False,
+                          skip_process_ksat_data=False,
+                          skip_process_rel_infiltration_capacity_data=False,
+                          skip_create_P_PET_corr_dataset=False,
                           ref_raster=WestUS_raster):
     """
     Run all preprocessing steps.
@@ -1411,6 +1499,9 @@ def run_all_preprocessing(skip_process_GrowSeason_data=False,
     :param skip_estimate_dryness_index: Set to True to skip processing water year PET/P (dryness Index) data.
     :param skip_estimate_peff_water_yr_frac: Set to True if want to skip water year Peff/water year precip fraction
                                              estimation for annual scale model.
+    :param skip_process_ksat_data: Set to True to skip processing saturated hydraulic conductivity data.
+    :param skip_process_rel_infiltration_capacity_data: Set to True to skip processing relative infiltration capacity data.
+    :param skip_create_P_PET_corr_dataset: Set to True to skip create P-PET correlation dataset.
     :param ref_raster: Filepath of Western US reference raster to use in 2km pixel lat-lon raster creation and to use
                         as reference raster in other processing operations.
 
@@ -1568,7 +1659,7 @@ def run_all_preprocessing(skip_process_GrowSeason_data=False,
     develop_excess_ET_filter(years_list=(2009, 2010, 2011, 2012, 2013, 2014,
                                          2015, 2016, 2017, 2018, 2019, 2020),
                              # starting from water year 2009 as 2008 water year couldn't be considered due to missing rainfed cropland data for 2007
-                             water_yr_precip_dir='../../Data_main/Raster_data/GRIDMET_Precip/WestUS_water_year',
+                             water_yr_precip_dir='../../Data_main/Raster_data/GRIDMET_Precip/WestUS_water_year/sum',
                              water_yr_rainfed_ET_dir='../../Data_main/Raster_data/Rainfed_cropET/WestUS_water_year',
                              output_dir='../../Data_main/Raster_data/Excess_ET_filter',
                              skip_processing=skip_excess_ET_filter_processing)
@@ -1627,7 +1718,7 @@ def run_all_preprocessing(skip_process_GrowSeason_data=False,
                                             2007, 2008, 2009, 2010, 2011, 2012, 2013,
                                             2014, 2015, 2016, 2017, 2018, 2019, 2020),
                                 input_dir_runoff='../../Data_main/Raster_data/TERRACLIMATE_SR/WestUS_water_year/sum',
-                                input_dir_precip='../../Data_main/Raster_data/GRIDMET_Precip/WestUS_water_year',
+                                input_dir_precip='../../Data_main/Raster_data/GRIDMET_Precip/WestUS_water_year/sum',
                                 output_dir='../../Data_main/Raster_data/Runoff_precip_fraction',
                                 skip_processing=skip_estimate_runoff_precip_frac)
 
@@ -1635,7 +1726,7 @@ def run_all_preprocessing(skip_process_GrowSeason_data=False,
     estimate_precip_intensity_water_yr(years_list=(2000, 2001, 2002, 2003, 2004, 2005, 2006,
                                                    2007, 2008, 2009, 2010, 2011, 2012, 2013,
                                                    2014, 2015, 2016, 2017, 2018, 2019, 2020),
-                                       input_dir_precip='../../Data_main/Raster_data/GRIDMET_Precip/WestUS_water_year',
+                                       input_dir_precip='../../Data_main/Raster_data/GRIDMET_Precip/WestUS_water_year/mean',
                                        input_dir_rainy_day='../../Data_main/Raster_data/Rainy_days/WestUS_water_year',
                                        output_dir='../../Data_main/Raster_data/Precipitation_intensity',
                                        skip_processing=skip_estimate_precip_intensity)
@@ -1645,9 +1736,30 @@ def run_all_preprocessing(skip_process_GrowSeason_data=False,
                                            2007, 2008, 2009, 2010, 2011, 2012, 2013,
                                            2014, 2015, 2016, 2017, 2018, 2019, 2020),
                                input_dir_PET='../../Data_main/Raster_data/GRIDMET_RET/WestUS_water_year',
-                               input_dir_precip='../../Data_main/Raster_data/GRIDMET_Precip/WestUS_water_year',
+                               input_dir_precip='../../Data_main/Raster_data/GRIDMET_Precip/WestUS_water_year/sum',
                                output_dir='../../Data_main/Raster_data/Dryness_index',
                                skip_processing=skip_estimate_dryness_index)
+
+    # process saturated hydraulic conductivity (Ksat) data
+    process_Ksat_data_for_WestUS(
+        ksat_data='../../Data_main/Raster_data/Saturated_hydraulic_conductivity/raw/Global_Ksat_1Km_s0....0cm_v1.0.tif',
+        output_dir='../../Data_main/Raster_data/Saturated_hydraulic_conductivity',
+        skip_processing=skip_process_ksat_data)
+
+    # create relative infiltration capacity dataset
+    create_rel_infiltration_capacity_dataset(years_list=(2000, 2001, 2002, 2003, 2004, 2005, 2006,
+                                                         2007, 2008, 2009, 2010, 2011, 2012, 2013,
+                                                         2014, 2015, 2016, 2017, 2018, 2019, 2020),
+                                             ksat_data='../../Data_main/Raster_data/Saturated_hydraulic_conductivity/Ksat_0cm.tif',
+                                             precip_intensity_dir='../../Data_main/Raster_data/Precipitation_intensity',
+                                             output_dir='../../Data_main/Raster_data/Relative_infiltration_capacity',
+                                             skip_processing=skip_process_rel_infiltration_capacity_data)
+
+    # create P-PET correlation dataset
+    develop_P_PET_correlation_dataset(monthly_precip_dir='../../Data_main/Raster_data/GRIDMET_Precip/WestUS_monthly',
+                                      monthly_pet_dir='../../Data_main/Raster_data/GRIDMET_RET/WestUS_monthly',
+                                      output_dir='../../Data_main/Raster_data/P_PET_correlation',
+                                      skip_processing=skip_create_P_PET_corr_dataset)
 
     # processing the training data
     # water year rainfed cropET (effective precip) / water year precip fraction estimation
@@ -1655,6 +1767,6 @@ def run_all_preprocessing(skip_process_GrowSeason_data=False,
         years_list=(2009, 2010, 2011, 2012, 2013, 2014, 2015,
                     2016, 2017, 2018, 2019, 2020),
         peff_dir_water_yr='../../Data_main/Raster_data/Rainfed_cropET_filtered_training/final_filtered_cropET_for_training_water_year',
-        precip_dir_water_yr='../../Data_main/Raster_data/GRIDMET_Precip/WestUS_water_year',
+        precip_dir_water_yr='../../Data_main/Raster_data/GRIDMET_Precip/WestUS_water_year/sum',
         output_dir='../../Data_main/Raster_data/Rainfed_cropET_filtered_training/rainfed_cropET_water_year_fraction',
         skip_processing=skip_estimate_peff_water_yr_frac)

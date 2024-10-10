@@ -26,28 +26,25 @@ yearly_data_path_dict = {
     'Peff_frac': '../../Data_main/Raster_data/Rainfed_cropET_filtered_training/rainfed_cropET_water_year_fraction',
     'PRISM_Precip': '../../Data_main/Raster_data/PRISM_Precip/WestUS_water_year',
     'PRISM_Tmax': '../../Data_main/Raster_data/PRISM_Tmax/WestUS_water_year',
-    'PRISM_Tmin': '../../Data_main/Raster_data/PRISM_Tmin/WestUS_water_year',
-    'GRIDMET_Precip': '../../Data_main/Raster_data/GRIDMET_Precip/WestUS_water_year',
+    'GRIDMET_Precip': '../../Data_main/Raster_data/GRIDMET_Precip/WestUS_water_year/sum',
     'GRIDMET_RET': '../../Data_main/Raster_data/GRIDMET_RET/WestUS_water_year',
-    'GRIDMET_vap_pres_def': '../../Data_main/Raster_data/GRIDMET_vap_pres_def/WestUS_water_year',
     'GRIDMET_max_RH': '../../Data_main/Raster_data/GRIDMET_max_RH/WestUS_water_year',
-    'GRIDMET_min_RH': '../../Data_main/Raster_data/GRIDMET_min_RH/WestUS_water_year',
-    'GRIDMET_wind_vel': '../../Data_main/Raster_data/GRIDMET_wind_vel/WestUS_water_year',
     'GRIDMET_short_rad': '../../Data_main/Raster_data/GRIDMET_short_rad/WestUS_water_year',
     'DAYMET_sun_hr': '../../Data_main/Raster_data/DAYMET_sun_hr/WestUS_water_year',
     'TERRACLIMATE_SR': '../../Data_main/Raster_data/TERRACLIMATE_SR/WestUS_water_year/mean',
     'Runoff_precip_fraction': '../../Data_main/Raster_data/Runoff_precip_fraction',
     'Precipitation_intensity': '../../Data_main/Raster_data/Precipitation_intensity',
-    'Dryness_index': '../../Data_main/Raster_data/Dryness_index'
+    'Dryness_index': '../../Data_main/Raster_data/Dryness_index',
+    'Relative_infiltration_capacity': '../../Data_main/Raster_data/Relative_infiltration_capacity',
 }
 
 
 static_data_path_dict = {
+    'PET_P_corr': '../../Data_main/Raster_data/P_PET_correlation',
     'Bulk_density': '../../Data_main/Raster_data/Bulk_density/WestUS',
     'Clay_content': '../../Data_main/Raster_data/Clay_content/WestUS',
     'Sand_content': '../../Data_main/Raster_data/Sand_content/WestUS',
     'Field_capacity': '../../Data_main/Raster_data/Field_capacity/WestUS',
-    'DEM': '../../Data_main/Raster_data/DEM/WestUS',
     'Slope': '../../Data_main/Raster_data/Slope/WestUS',
     'AWC': '../../Data_main/Raster_data/Available_water_capacity/WestUS',
     'Latitude': '../../Data_main/Raster_data/Latitude/WestUS',
@@ -56,36 +53,53 @@ static_data_path_dict = {
 
 # datasets to include in the dataframe (not all will go into the final model)
 datasets_to_include = ['Peff_frac',
-                       'PRISM_Tmax', 'PRISM_Tmin', 'GRIDMET_Precip', 'GRIDMET_RET',
-                       'GRIDMET_vap_pres_def', 'GRIDMET_max_RH', 'GRIDMET_min_RH',
-                       'GRIDMET_wind_vel', 'GRIDMET_short_rad', 'DAYMET_sun_hr',
+                       'PRISM_Tmax', 'GRIDMET_Precip', 'GRIDMET_RET',
+                       'GRIDMET_max_RH', 'GRIDMET_short_rad', 'DAYMET_sun_hr',
                        'TERRACLIMATE_SR', 'Runoff_precip_fraction',
                        'Precipitation_intensity', 'Dryness_index',
+                       'Relative_infiltration_capacity', 'PET_P_corr',
                        'Bulk_density', 'Clay_content', 'Field_capacity',
-                       'Sand_content', 'AWC', 'DEM', 'Slope',
+                       'Sand_content', 'AWC', 'Slope',
                        'Latitude', 'Longitude']
 
 # exclude columns during training
-exclude_columns_in_training = ['PRISM_Tmin', 'GRIDMET_vap_pres_def',
-                               'Precipitation_intensity',
-                               'GRIDMET_min_RH', 'GRIDMET_wind_vel',
-                               'Runoff_precip_fraction', 'DAYMET_sun_hr',
-                               'Field_capacity', 'Bulk_density', 'Dryness_index',
-                               'AWC', 'DEM', 'Latitude', 'Longitude']
+exclude_columns_in_training = [
+                               # 'GRIDMET_max_RH',
+                               'GRIDMET_short_rad',
+                               # 'DAYMET_sun_hr',
+                               'Runoff_precip_fraction', 'Precipitation_intensity',
+                               'Relative_infiltration_capacity',
+                               'Dryness_index',
+                               # 'TERRACLIMATE_SR',
+                               'PET_P_corr',
+                               'Slope',
+                               'Clay_content',
+                               'Field_capacity',
+                               'Sand_content', 'Bulk_density',
+                               'AWC', 'Latitude', 'Longitude']
 
 # training time periods
 train_test_years_list = [2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019,
                          2020]  # training data starting from 2008 as rainfed cropET dataset starts from 2008
 
 # datasets to include in annual  dataframe for Peff fraction prediction
-datasets_to_include_annual_predictors = ['PRISM_Tmax', 'PRISM_Tmin', 'GRIDMET_Precip', 'GRIDMET_RET',
-                                         'GRIDMET_vap_pres_def', 'GRIDMET_max_RH', 'GRIDMET_min_RH',
-                                         'GRIDMET_wind_vel', 'GRIDMET_short_rad', 'DAYMET_sun_hr',
+datasets_to_include_annual_predictors = ['PRISM_Tmax', 'GRIDMET_Precip', 'GRIDMET_RET',
+                                         'GRIDMET_max_RH', 'GRIDMET_short_rad', 'DAYMET_sun_hr',
                                          'TERRACLIMATE_SR', 'Runoff_precip_fraction',
                                          'Precipitation_intensity', 'Dryness_index',
+                                         'Relative_infiltration_capacity', 'PET_P_corr',
                                          'Bulk_density', 'Clay_content', 'Field_capacity',
-                                         'Sand_content', 'AWC', 'DEM', 'Slope',
+                                         'Sand_content', 'AWC', 'Slope',
                                          'Latitude', 'Longitude']
+# datasets to plot in PDP
+features_in_pdp_plot = ['GRIDMET_Precip', 'GRIDMET_RET',
+                        'GRIDMET_max_RH',
+                        'PRISM_Tmax', 'DAYMET_sun_hr',
+                        # 'PET_P_corr',
+                        'TERRACLIMATE_SR',
+                        #'Slope'
+                        # 'Relative_infiltration_capacity'
+                        ]
 
 # exclude columns during prediction (the prediction dataframes don't have 'year' column)
 exclude_columns_in_prediction = exclude_columns_in_training
@@ -95,7 +109,7 @@ prediction_years = [2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 
                     2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020]
 
 if __name__ == '__main__':
-    model_version = 'v15'                                       ######
+    model_version = 'v17'                                       ######
 
     skip_train_test_df_creation = True                        ######
     skip_train_test_split = False                               ######
@@ -104,7 +118,7 @@ if __name__ == '__main__':
     save_model = True                                          ######
     skip_plot_pdp = False                                       ######
     skip_plot_perm_import = False                               ######
-    skip_processing_annual_predictor_dataframe = True          ######
+    skip_processing_annual_predictor_dataframe = False          ######
     skip_processing_nan_pos_irrig_cropET = True                ######
     skip_estimate_water_year_peff_frac_WestUS = False           ######
     skip_storing_peff_frac_pred_annual_csv = False              ######
@@ -122,7 +136,7 @@ if __name__ == '__main__':
                                                           datasets_to_include=datasets_to_include,
                                                           output_parquet=train_test_parquet_path,
                                                           skip_processing=skip_train_test_df_creation,
-                                                          n_partitions=5, filter_for_slope=False)
+                                                          n_partitions=5)
 
     # # train-test split
     output_dir = '../../Eff_Precip_Model_Run/annual_model/Model_csv'
@@ -251,10 +265,6 @@ if __name__ == '__main__':
                                    bins=100, tick_interval=0.25)
 
     # partial dependence plots (pdp)
-    features_in_pdp_plot = ['PRISM_Tmax', 'GRIDMET_Precip', 'GRIDMET_RET',
-                            'GRIDMET_max_RH', 'GRIDMET_short_rad',
-                            'TERRACLIMATE_SR', 'Slope']
-
     create_pdplots(trained_model=lgbm_reg_trained, x_train=x_train,
                    features_to_include=features_in_pdp_plot, output_dir=plot_dir,
                    plot_name=f'pdp_{model_version}.png', ylabel='Effective precipitation \n fraction',

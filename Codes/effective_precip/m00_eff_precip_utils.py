@@ -250,6 +250,7 @@ def create_annual_dataframes_for_peff_frac_prediction(years_list, yearly_data_pa
 
                 # reading yearly data and storing it in a dictionary
                 for var in yearly_data_path_dict.keys():
+                    print(var)
                     if var in datasets_to_include:
                         yearly_data = glob(os.path.join(yearly_data_path_dict[var], f'*{year}*.tif'))[0]
                         data_arr = read_raster_arr_object(yearly_data, get_file=False).flatten()

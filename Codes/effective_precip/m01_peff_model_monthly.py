@@ -62,7 +62,7 @@ exclude_columns_in_training = ['year', 'Latitude', 'Longitude',
                                'Bulk_density', 'Clay_content', 'Slope',
                                'PRISM_Tmax', 'PRISM_Tmin', 'PRISM_Precip',
                                'GRIDMET_wind_vel', 'GRIDMET_min_RH',
-                               'GRIDMET_vap_pres_def', 'DEM']  # if not included in this list 'GRIDMET_Precip_1_lag' and 'GRIDMET_Precip_2_lag' will be included
+                               'GRIDMET_vap_pres_def', 'DEM']
 # training time periods
 train_test_years_list = [2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020]  # training data starting from 2008 as rainfed cropET dataset starts from 2008
 months = (1, 12)  # the model will itself discard the month is places where growing season is less than 12 months
@@ -84,17 +84,17 @@ prediction_years = [1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 
                     2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020]
 
 if __name__ == '__main__':
-    model_version = 'v15'                                   ######
+    model_version = 'v17'                                   ######
 
-    skip_train_test_df_creation = True                      ######
-    skip_train_test_split = True                            ######
+    skip_train_test_df_creation = False                      ######
+    skip_train_test_split = False                            ######
     skip_tune_hyperparams = True                            ######
     load_model = False                                       ######
     save_model = True                                       ######
     skip_plot_pdp = False                                    ######
     skip_plot_perm_import = False                            ######
-    skip_processing_monthly_predictor_dataframe = False      ######
-    skip_processing_nan_pos_irrig_cropET = False             ######
+    skip_processing_monthly_predictor_dataframe = True      ######
+    skip_processing_nan_pos_irrig_cropET = True             ######
     skip_estimate_monthly_eff_precip_WestUS = False          ######
     skip_storing_peff_pred_monthly_csv = False               ######
     skip_sum_peff_water_year = False                         ######

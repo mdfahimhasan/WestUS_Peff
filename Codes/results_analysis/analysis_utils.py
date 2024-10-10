@@ -937,14 +937,11 @@ def compile_annual_pumping_netGW_all_basins(annual_csv_list, output_csv):
         df['basin'] = [basin_name_dict[basin_name] for i in range(len(df))]
         compiled_annual_df = pd.concat([compiled_annual_df, df])
 
-    # assuming average irrigation efficiency as 0.80, estimating total and mean simulated pumping
-    avg_irrig_efficiency = 0.8
-    compiled_annual_df['sim_pumping_m3'] = compiled_annual_df['netGW_m3'] / avg_irrig_efficiency
-    compiled_annual_df['sim_mean_pumping_mm'] = compiled_annual_df['mean netGW_mm'] / avg_irrig_efficiency
-
-    # dynamic irrigation efficiency for each basin
+    # creating dynamic irrigation efficiency dictionary for the basins
     basin_irr_eff_dict = {'gmd4': 0.88, 'gmd3': 0.88, 'rpb': 0.80,
                           'hqr': 0.75, 'doug': 0.85, 'dv': 0.87, 'pv': 0.78}
+
+    # estimating volumetric and mean pumping based on basin-specific efficiency
     compiled_annual_df['dyn_irr_eff'] = compiled_annual_df.apply(lambda x: basin_irr_eff_dict[x['basin_code']], axis=1)
     compiled_annual_df['sim_pumping_m3_dy'] = compiled_annual_df['netGW_m3'] / compiled_annual_df['dyn_irr_eff']
     compiled_annual_df['sim_mean_pumping_mm_dy'] = compiled_annual_df['mean netGW_mm'] / compiled_annual_df['dyn_irr_eff']

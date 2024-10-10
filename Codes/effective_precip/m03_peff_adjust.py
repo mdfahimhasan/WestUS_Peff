@@ -17,7 +17,7 @@ from Codes.effective_precip.m00_eff_precip_utils import estimate_peff_precip_wat
 # Step 5: sum scaled monthly peff to growing season (with added 3 months' peff before growing season to consider carried over soil moisture storage)
 
 if __name__ == '__main__':
-    model_version = 'v15'                           #####
+    model_version = 'v17'                           #####
     skip_estimating_peff_water_yr_total = False      #####
     skip_peff_monthly_scaling = False                #####
     skip_sum_scaled_peff_water_year = False          #####
@@ -28,7 +28,7 @@ if __name__ == '__main__':
     years = (2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007,
              2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015,
              2016, 2017, 2018, 2019, 2020)
-    water_year_precip_dir = '../../Data_main/Raster_data/GRIDMET_Precip/WestUS_water_year'
+    water_year_precip_dir = '../../Data_main/Raster_data/GRIDMET_Precip/WestUS_water_year/sum'
     water_year_peff_frac_dir = f'../../Data_main/Raster_data/Effective_precip_fraction_WestUS/{model_version}_water_year_frac'
     output_updated_peff_water_yr_dir = f'../../Data_main/Raster_data/Effective_precip_fraction_WestUS/{model_version}_water_year_total_from_fraction'
 

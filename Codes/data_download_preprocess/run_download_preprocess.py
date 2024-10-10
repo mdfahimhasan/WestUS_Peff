@@ -58,7 +58,10 @@ skip_accum_to_water_year_datasets = True                ######
 skip_summing_irrigated_cropET_water_yr = True           ######
 skip_estimate_runoff_precip_frac = True                 ######
 skip_estimate_precip_intensity = True                   ######
-skip_estimate_dryness_index = False                      ######
+skip_estimate_dryness_index = True                      ######
+skip_process_ksat_data = True                           ######
+skip_process_rel_infil_cap_data = True                  ######
+skip_create_P_PET_corr_dataset = True                   ######
 skip_estimate_peff_water_yr_frac = True                 ######
 
 # # # #  runs # # # #
@@ -105,5 +108,8 @@ if __name__ == '__main__':
                           skip_estimate_runoff_precip_frac=skip_estimate_runoff_precip_frac,
                           skip_estimate_precip_intensity=skip_estimate_precip_intensity,
                           skip_estimate_dryness_index=skip_estimate_dryness_index,
+                          skip_process_ksat_data=skip_process_ksat_data,
+                          skip_process_rel_infiltration_capacity_data=skip_process_rel_infil_cap_data,
+                          skip_create_P_PET_corr_dataset=skip_create_P_PET_corr_dataset,
                           ref_raster=WestUS_raster)
 

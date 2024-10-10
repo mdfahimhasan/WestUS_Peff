@@ -213,7 +213,7 @@ def create_train_test_monthly_dataframe(years_list, monthly_data_path_dict, year
 
 def create_train_test_annual_dataframe(years_list, yearly_data_path_dict,
                                        static_data_path_dict, datasets_to_include, output_parquet,
-                                       skip_processing=False, n_partitions=20, filter_for_slope=False):
+                                       skip_processing=False, n_partitions=20):
     """
     Compile monthly/yearly/static datasets into a dataframe. This function-generated dataframe will be used as
     train-test data for ML model at annual scale.
@@ -230,6 +230,7 @@ def create_train_test_annual_dataframe(years_list, yearly_data_path_dict,
                             Can also save smaller dataframe as csv file if name has '.csv' extension.
     :param skip_processing: Set to True to skip this dataframe creation process.
     :param n_partitions: Number of partitions to save the parquet file in using dask dataframe.
+    :param filter_for_slope: Se to True to filter for slope. Default set to False to skip the filtering.
 
     :return: The filepath of the output parquet file.
     """
@@ -271,9 +272,6 @@ def create_train_test_annual_dataframe(years_list, yearly_data_path_dict,
 
         train_test_ddf = ddf.from_dict(variable_dict, npartitions=n_partitions)
         train_test_ddf = train_test_ddf.dropna()
-
-        if filter_for_slope:
-            train_test_ddf = train_test_ddf[train_test_ddf['Slope'] < 1.5]
 
         if '.parquet' in output_parquet:
             train_test_ddf.to_parquet(output_parquet, write_index=False)
@@ -758,7 +756,8 @@ def create_pdplots(trained_model, x_train, features_to_include, output_dir, plot
             'AWC': 'Available water capacity (mm)', 'DEM': 'Elevation', 'month': 'Month', 'Slope': 'Slope (%)',
             'Latitude': f'Latitude ({deg_unit})', 'Longitude': f'Longitude ({deg_unit})', 'TERRACLIMATE_SR': 'Surface runoff (mm)',
             'Runoff_precip_fraction': 'Runoff-Precipitation fraction', 'Precipitation_intensity': 'Precipitation intensity (mm/day)',
-            'Dryness_index': 'PET/P'
+            'Dryness_index': 'PET/P', 'Relative_infiltration_capacity': 'Relative infiltration capacity',
+            'PET_P_corr': 'PET-P seasonal correlation'
         }
 
         # Subplot labels
@@ -855,7 +854,9 @@ def plot_permutation_importance(trained_model, x_test, y_test, output_dir, plot_
                        'PRISM_Tmax': f'Max. temperature', 'TERRACLIMATE_SR': 'Surface runoff',
                        'Runoff_precip_fraction': 'Runoff-Precipitation fraction',
                        'Precipitation_intensity': 'Precipitation intensity',
-                       'Dryness_index': 'PET/P'}
+                       'Relative_infiltration_capacity': 'Relative infiltration capacity',
+                       'Dryness_index': 'PET/P', 'PET_P_corr': 'PET-P seasonal correlation',
+                       'Clay_content': 'Clay content'}
 
         importances = importances.rename(columns=rename_dict)
 

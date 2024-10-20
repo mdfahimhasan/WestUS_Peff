@@ -1,6 +1,6 @@
 #!/bin/bash
 
-## running the eff_precip_model.py script on CPU nodes
+## running the m02_peff_frac_model_water_yr.py script on CPU nodes
 
 #SBATCH --partition=smi_all
 #SBATCH --ntasks=64

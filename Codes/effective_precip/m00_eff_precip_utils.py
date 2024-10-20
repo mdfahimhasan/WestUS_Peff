@@ -250,7 +250,6 @@ def create_annual_dataframes_for_peff_frac_prediction(years_list, yearly_data_pa
 
                 # reading yearly data and storing it in a dictionary
                 for var in yearly_data_path_dict.keys():
-                    print(var)
                     if var in datasets_to_include:
                         yearly_data = glob(os.path.join(yearly_data_path_dict[var], f'*{year}*.tif'))[0]
                         data_arr = read_raster_arr_object(yearly_data, get_file=False).flatten()
@@ -347,7 +346,7 @@ def create_annual_peff_fraction_rasters(trained_model, input_csv_dir, exclude_co
             df = pd.read_csv(csv)
             df = df.drop(columns=exclude_columns)
             df = reindex_df(df)
-            print(df.columns)
+
             # generating prediction with trained model
             pred_arr = trained_model.predict(df)
             pred_arr = np.array(pred_arr)

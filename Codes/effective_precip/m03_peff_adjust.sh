@@ -1,6 +1,6 @@
 #!/bin/bash
 
-## running the eff_precip_model.py script on CPU nodes
+## running the m03_peff_adjust.py script on CPU nodes
 
 #SBATCH --partition=smi_all
 #SBATCH --ntasks=64

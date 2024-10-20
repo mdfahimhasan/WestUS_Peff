@@ -809,7 +809,7 @@ def plot_permutation_importance(trained_model, x_test, y_test, output_dir, plot_
     :param plot_name: Plot name. Must contain 'png', 'jpeg'.
     :param skip_processing: Set to True to skip this process.
 
-    :return: None
+    :return: List of sorted (most important to less important) important variable names.
     """
     if not skip_processing:
         makedirs([output_dir])
@@ -844,6 +844,10 @@ def plot_permutation_importance(trained_model, x_test, y_test, output_dir, plot_
         importances = pd.DataFrame(result_test.importances[sorted_importances_idx].T,
                                    columns=predictor_cols[sorted_importances_idx])
 
+        # sorted important variables
+        sorted_imp_vars = importances.columns.tolist()[::-1]
+        print('\n', 'Sorted Important Variables:', sorted_imp_vars, '\n')
+
         # renaming predictor names
         rename_dict = {'GRIDMET_Precip': 'Precipitation', 'GRIDMET_Precip_1_lag': 'Precipitation lagged - 1 month',
                        'GRIDMET_Precip_2_lag': 'Precipitation lagged - 2 month', 'GRIDMET_RET': 'Reference ET',
@@ -870,5 +874,7 @@ def plot_permutation_importance(trained_model, x_test, y_test, output_dir, plot_
         ax.figure.tight_layout()
 
         plt.savefig(os.path.join(output_dir, plot_name), dpi=200)
+
+        return sorted_imp_vars
     else:
         pass

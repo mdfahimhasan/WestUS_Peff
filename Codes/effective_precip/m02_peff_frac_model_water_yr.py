@@ -64,19 +64,27 @@ datasets_to_include = ['Peff_frac',
 
 # exclude columns during training
 exclude_columns_in_training = [
-                               # 'GRIDMET_max_RH',
-                               'GRIDMET_short_rad',
-                               # 'DAYMET_sun_hr',
-                               'Runoff_precip_fraction', 'Precipitation_intensity',
-                               'Relative_infiltration_capacity',
-                               'Dryness_index',
-                               # 'TERRACLIMATE_SR',
-                               'PET_P_corr',
-                               'Slope',
-                               'Clay_content',
-                               'Field_capacity',
-                               'Sand_content', 'Bulk_density',
-                               'AWC', 'Latitude', 'Longitude']
+    #'PRISM_Tmax',
+    #'GRIDMET_Precip',
+    'GRIDMET_RET',
+    'GRIDMET_max_RH',
+    #'GRIDMET_short_rad',
+    'DAYMET_sun_hr',
+    'TERRACLIMATE_SR',
+    #'Slope',
+    'Runoff_precip_fraction',
+    #'Precipitation_intensity',
+    #'Dryness_index',
+    #'Relative_infiltration_capacity',
+    #'PET_P_corr',
+    'Bulk_density',
+    'Clay_content',
+    'Field_capacity',
+    'Sand_content',
+    'AWC',
+    'Latitude',
+    'Longitude'
+]
 
 # training time periods
 train_test_years_list = [2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019,
@@ -91,15 +99,6 @@ datasets_to_include_annual_predictors = ['PRISM_Tmax', 'GRIDMET_Precip', 'GRIDME
                                          'Bulk_density', 'Clay_content', 'Field_capacity',
                                          'Sand_content', 'AWC', 'Slope',
                                          'Latitude', 'Longitude']
-# datasets to plot in PDP
-features_in_pdp_plot = ['GRIDMET_Precip', 'GRIDMET_RET',
-                        'GRIDMET_max_RH',
-                        'PRISM_Tmax', 'DAYMET_sun_hr',
-                        # 'PET_P_corr',
-                        'TERRACLIMATE_SR',
-                        #'Slope'
-                        # 'Relative_infiltration_capacity'
-                        ]
 
 # exclude columns during prediction (the prediction dataframes don't have 'year' column)
 exclude_columns_in_prediction = exclude_columns_in_training
@@ -109,7 +108,7 @@ prediction_years = [2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 
                     2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020]
 
 if __name__ == '__main__':
-    model_version = 'v17'                                       ######
+    model_version = 'v18'                                       ######
 
     skip_train_test_df_creation = True                        ######
     skip_train_test_split = False                               ######
@@ -264,16 +263,17 @@ if __name__ == '__main__':
                                    plot_name=density_plot_name, savedir=plot_dir,
                                    bins=100, tick_interval=0.25)
 
+    # permutation importance plot
+    sorted_imp_vars = plot_permutation_importance(trained_model=lgbm_reg_trained, x_test=x_test, y_test=y_test,
+                                                  exclude_columns=None, output_dir=plot_dir,
+                                                  plot_name=f'perm_import_{model_version}',
+                                                  skip_processing=skip_plot_perm_import)
+
     # partial dependence plots (pdp)
     create_pdplots(trained_model=lgbm_reg_trained, x_train=x_train,
-                   features_to_include=features_in_pdp_plot, output_dir=plot_dir,
+                   features_to_include=sorted_imp_vars, output_dir=plot_dir,
                    plot_name=f'pdp_{model_version}.png', ylabel='Effective precipitation \n fraction',
                    skip_processing=skip_plot_pdp)
-
-    # permutation importance plot
-    plot_permutation_importance(trained_model=lgbm_reg_trained, x_test=x_test, y_test=y_test,
-                                exclude_columns=None, output_dir=plot_dir, plot_name=f'perm_import_{model_version}',
-                                skip_processing=skip_plot_perm_import)
 
     print('##################################')
 

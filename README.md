@@ -28,8 +28,7 @@ __1. utils -__ consists of scripts that helps in basic raster, vector, and stati
 
 __2. data_download_preprocess -__ consists of scripts that have functions to download datasets from GEE, including OpenET, and to further pre-process the datasets. The `run_download_preprocess.py` is the main driver script that has to be used to download and pre-process all required datasets.
 
-__3. effective_precip -__ consists of functions that are required specifically for the effective precipitation model. The `eff_precip_model.py` is the main driver script of the 
-effective precipitation model.
+__3. effective_precip -__ consists of functions that are required specifically for the effective precipitation model. The effective precipitation is estimated by a 3-step model. First, the `m01_peff_model_monthly.py` script estmates effective precipitation at monthly scale. The monthly estimates do not follow water balance (water year precipitation > water year effective precipitation) in some regions. So, at the second step,  the 'm02_peff_frac_model_water_yr.py' script simulates a water year-scale effective precipitation fraction model. This water year-scale model is used to impose water balance over the monthly estimates using the 'm03_peff_adjust.py' script. These three files have to be run in sequence to generate the monthly effective precipitation estimates.
 
 __4. sw_irrig -__ consists of functions that are required for dictributing USGS HUC12 level surface water irrigation data to 2 km pixel scale. The `SW_Irr.py` is the main driver file.
 
@@ -38,11 +37,13 @@ __5. netGW -__ consists of the `netGW_Irr.py` script that has the functions to e
 The __utils__ module do not need any execution. The latter modules are required to be executed using the respective driver files to unvail the full funtionality of the model. The repository has other auxiliary folders with scripts that are some data processing, result analysis,and plotting purposes.
 
 ### Dependencies
-__operating system:__ All scripts are fully functional in windows and linux environments. In linux environment, gdal needs to be installed separately and the appropriate 'gdal_path' needs to be set in necessary scripts. For some functions, e.g. the `shapefile_to_raster()` in `utils > raster_ops.py` and associated scripts (`results_analysis > netGW_pumping_compile.py`), gdal system call has to enabled/installed specifically to run them in linux environment. Note that all modules, except `results_analysis`, have been implemented/checked using both windows and linux environment (using conda environment). However, the authors recommend exercising discretion when setting up the environment and run the scripts.
+__operating system:__ Most scripts are fully functional in windows and linux environments except some. In linux environment, gdal needs to be installed separately and the appropriate 'gdal_path' needs to be set in necessary scripts. For some functions, e.g. the `shapefile_to_raster()` in `utils > raster_ops.py` and associated scripts (`results_analysis > netGW_pumping_compile.py`), gdal system call has to enabled/installed specifically to run them in linux environment. Note that all scripts, except the scripts in `results_analysis` module, have been implemented/checked using both windows and linux environment (using conda environment). In addition, the ALE plot generation in `m01_peff_model_monthly.py` and 'm02_peff_frac_model_water_yr.py' scripts do not respond (keep running indifinitely) in linux environment (probably due to scikit-explain versioning issue); therefore, set `skip_plot_ale = True` when running the monthly and water year models in linux environment.
 
-__conda environment:__ A _conda environment_, set up using [Anaconda](https://www.anaconda.com/products/individual) with python 3.9, has been used to implement this repositories. Required libraries needed to be installed to run this repository are - dask, dask-geopandas, earthengine-api, fastparquet, gdal, matplotlib, numpy, pandas, rasterio, scikit-learn, shapely, seaborn. 
+The authors recommend exercising discretion when setting up the environment and run the scripts.
 
-Note that the `.ipynb` scripts will require installaion of jupyter lab within the conda environment.
+__conda environment:__ A _conda environment_, set up using [Anaconda](https://www.anaconda.com/products/individual) with python 3.9, has been used to implement this repositories. Required libraries needed to be installed to run this repository are - dask, dask-geopandas, earthengine-api, fastparquet, rasterio, gdal, shapely, geopandas, numpy, pandas, scikit-learn, lightgbm, scikit-explain, matplotlib, seaborn. 
+
+Note that running the `.ipynb` scripts will require installaion of jupyter lab within the conda environment.
 
 ### Google Earth Engine authentication
 This project relies on the Google Earth Engine (GEE) Python API for downloading (and reducing) some of the predictor datasets from the GEE

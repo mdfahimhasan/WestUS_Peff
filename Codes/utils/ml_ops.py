@@ -10,17 +10,19 @@ import dask.dataframe as ddf
 import matplotlib.pyplot as plt
 from datetime import datetime, timedelta
 from timeit import default_timer as timer
-
 import lightgbm as lgb
 from lightgbm import LGBMRegressor
 
 from hyperopt import hp, tpe, Trials, fmin, STATUS_OK
 
+import skexplain
 from sklearn.preprocessing import OneHotEncoder
 from sklearn.model_selection import train_test_split
 from sklearn.inspection import permutation_importance
 from sklearn.inspection import PartialDependenceDisplay as PDisp
+
 from os.path import dirname, abspath
+
 sys.path.insert(0, dirname(dirname(dirname(abspath(__file__)))))
 
 from Codes.utils.system_ops import makedirs
@@ -102,7 +104,8 @@ def create_train_test_monthly_dataframe(years_list, monthly_data_path_dict, year
 
                     if var == 'GRIDMET_Precip':  # for including monthly and lagged monthly GRIDMET_precip in the dataframe
                         for month_count, month in enumerate(month_list):
-                            current_precip_data = glob(os.path.join(monthly_data_path_dict[var], f'*{year}_{month}.tif*'))[0]
+                            current_precip_data = \
+                            glob(os.path.join(monthly_data_path_dict[var], f'*{year}_{month}.tif*'))[0]
 
                             current_month_date = datetime(year, month, 1)
 
@@ -110,8 +113,12 @@ def create_train_test_monthly_dataframe(years_list, monthly_data_path_dict, year
                             prev_month_date = current_month_date - timedelta(30)
                             prev_2_month_date = current_month_date - timedelta(60)
 
-                            prev_month_precip_data = glob(os.path.join(monthly_data_path_dict[var], f'*{prev_month_date.year}_{prev_month_date.month}.tif*'))[0]
-                            prev_2_month_precip_data = glob(os.path.join(monthly_data_path_dict[var], f'*{prev_2_month_date.year}_{prev_2_month_date.month}.tif*'))[0]
+                            prev_month_precip_data = glob(os.path.join(monthly_data_path_dict[var],
+                                                                       f'*{prev_month_date.year}_{prev_month_date.month}.tif*'))[
+                                0]
+                            prev_2_month_precip_data = glob(os.path.join(monthly_data_path_dict[var],
+                                                                         f'*{prev_2_month_date.year}_{prev_2_month_date.month}.tif*'))[
+                                0]
 
                             # reading datasets
                             current_precip_arr = read_raster_arr_object(current_precip_data, get_file=False).flatten()
@@ -119,10 +126,13 @@ def create_train_test_monthly_dataframe(years_list, monthly_data_path_dict, year
                             year_data = [int(year)] * len_arr
                             month_data = [int(month)] * len_arr
 
-                            prev_month_precip_arr = read_raster_arr_object(prev_month_precip_data, get_file=False).flatten()
-                            prev_2_month_precip_arr = read_raster_arr_object(prev_2_month_precip_data, get_file=False).flatten()
+                            prev_month_precip_arr = read_raster_arr_object(prev_month_precip_data,
+                                                                           get_file=False).flatten()
+                            prev_2_month_precip_arr = read_raster_arr_object(prev_2_month_precip_data,
+                                                                             get_file=False).flatten()
 
-                            if (month_count == 0) & (var not in variable_dict.keys()):  # initiating the key and adding first series of data
+                            if (month_count == 0) & (
+                                    var not in variable_dict.keys()):  # initiating the key and adding first series of data
                                 variable_dict[var] = list(current_precip_arr)
                                 variable_dict['year'] = year_data
                                 variable_dict['month'] = month_data
@@ -149,7 +159,8 @@ def create_train_test_monthly_dataframe(years_list, monthly_data_path_dict, year
                             year_data = [int(year)] * len_arr
                             month_data = [int(month)] * len_arr
 
-                            if (month_count == 0) & (var not in variable_dict.keys()):  # initiating the key and adding first series of data
+                            if (month_count == 0) & (
+                                    var not in variable_dict.keys()):  # initiating the key and adding first series of data
                                 variable_dict[var] = list(data_arr)
                                 variable_dict['year'] = year_data
                                 variable_dict['month'] = month_data
@@ -287,7 +298,7 @@ def create_train_test_annual_dataframe(years_list, yearly_data_path_dict,
 
 def split_train_val_test_set(input_csv, pred_attr, exclude_columns, output_dir, model_version,
                              month_range=None, test_perc=0.3, validation_perc=0,
-                             random_state=0, verbose=True,  remove_outlier=False,
+                             random_state=0, verbose=True, remove_outlier=False,
                              outlier_upper_val=None, skip_processing=False):
     """
     Split dataset into train, validation, and test data based on a train/test/validation ratio.
@@ -488,9 +499,9 @@ def objective_func_bayes(params, train_set, iteration_csv, n_fold):
 
     # callbacks
     callbacks = [
-                 # lgb.early_stopping(stopping_rounds=50),
-                 lgb.log_evaluation(period=0)
-                ]
+        # lgb.early_stopping(stopping_rounds=50),
+        lgb.log_evaluation(period=0)
+    ]
 
     # perform n_fold cross validation
     # ** not using num_boost_round and early stopping as we are providing n_estimators in the param_space **
@@ -506,7 +517,8 @@ def objective_func_bayes(params, train_set, iteration_csv, n_fold):
     # the try-except block was inserted because of two versions of LIGHTGBM is desktop and server. The server
     # version used keyword 'valid rmse-mean' while the desktop version was using 'rmse-mean'
     try:
-        best_rmse = np.min(cv_results['valid rmse-mean'])  # valid rmse-mean stands for mean RMSE value across all the folds for each boosting round
+        best_rmse = np.min(cv_results[
+                               'valid rmse-mean'])  # valid rmse-mean stands for mean RMSE value across all the folds for each boosting round
     except:
         best_rmse = np.min(cv_results['rmse-mean'])
 
@@ -517,7 +529,7 @@ def objective_func_bayes(params, train_set, iteration_csv, n_fold):
         write_to = open(iteration_csv, 'w')
         writer = csv.writer(write_to)
         writer.writerows([['loss', 'params', 'iteration', 'run_time'],
-                         [best_rmse, params, ITERATION, run_time]])
+                          [best_rmse, params, ITERATION, run_time]])
         write_to.close()
 
     else:  # when ITERATION > 0, will append result on the existing csv/file
@@ -530,7 +542,7 @@ def objective_func_bayes(params, train_set, iteration_csv, n_fold):
             'iteration': ITERATION, 'train_time': run_time, 'status': STATUS_OK}
 
 
-def bayes_hyperparam_opt(x_train, y_train, iteration_csv,  n_fold=10, max_evals=1000, skip_processing=False):
+def bayes_hyperparam_opt(x_train, y_train, iteration_csv, n_fold=10, max_evals=1000, skip_processing=False):
     """
     Hyperparameter optimization using Bayesian optimization method.
 
@@ -564,8 +576,10 @@ def bayes_hyperparam_opt(x_train, y_train, iteration_csv,  n_fold=10, max_evals=
 
         # creating hyperparameter space for LGBM models
         param_space = {'boosting_type': hp.choice('boosting_type',
-                                                  [{'boosting_type': 'gbdt', 'subsample': hp.uniform('gbdt_subsample', 0.5, 0.8)},
-                                                   {'boosting_type': 'dart', 'subsample': hp.uniform('dart_subsample', 0.5, 0.8)},
+                                                  [{'boosting_type': 'gbdt',
+                                                    'subsample': hp.uniform('gbdt_subsample', 0.5, 0.8)},
+                                                   {'boosting_type': 'dart',
+                                                    'subsample': hp.uniform('dart_subsample', 0.5, 0.8)},
                                                    {'boosting_type': 'goss', 'subsample': 1.0}]),
                        'n_estimators': hp.quniform('n_estimators', 100, 400, 25),
                        'max_depth': hp.uniform('max_depth', 5, 15),
@@ -578,13 +592,14 @@ def bayes_hyperparam_opt(x_train, y_train, iteration_csv,  n_fold=10, max_evals=
 
         # optimization algorithm
         tpe_algorithm = tpe.suggest  # stand for Tree-structured Parzen Estimator. A surrogate of the objective function.
-                                     # the hyperparameter tuning approach, Sequential model-based optimization (SMBO), will
-                                     # try to try to closely match the surrogate function to the objective function
+        # the hyperparameter tuning approach, Sequential model-based optimization (SMBO), will
+        # try to try to closely match the surrogate function to the objective function
 
         # keeping track of results
         bayes_trials = Trials()  # The Trials object will hold everything returned from the objective function in the
-                                 # .results attribute. It also holds other information from the search, but we return
-                                 # everything we need from the objective.
+
+        # .results attribute. It also holds other information from the search, but we return
+        # everything we need from the objective.
 
         # creating a wrapper function to bring all arguments of objective_func_bayes() under a single argument
         def objective_wrapper(params):
@@ -694,6 +709,7 @@ def train_model(x_train, y_train, params_dict, n_jobs=-1,
             runtime_save = os.path.join(save_folder, model_save_name + '_tuning_training_runtime.txt')
             with open(runtime_save, 'w') as file:
                 file.write(run_str)
+
         else:  # saving model training time with given parameters
             runtime_save = os.path.join(save_folder, model_save_name + '_training_runtime.txt')
             with open(runtime_save, 'w') as file:
@@ -711,7 +727,8 @@ def train_model(x_train, y_train, params_dict, n_jobs=-1,
     return trained_model
 
 
-def create_pdplots(trained_model, x_train, features_to_include, output_dir, plot_name, ylabel='Effective Precipitation \n (mm)',
+def create_pdplots(trained_model, x_train, features_to_include, output_dir, plot_name,
+                   ylabel='Effective Precipitation \n (mm)',
                    skip_processing=False):
     """
     Plot partial dependence plot.
@@ -747,15 +764,19 @@ def create_pdplots(trained_model, x_train, features_to_include, output_dir, plot
         # creating a dictionary to rename PDP plot labels
         feature_dict = {
             'GRIDMET_Precip': 'Precipitation (mm)', 'GRIDMET_Precip_1_lag': 'Precipitation lagged - 1 month (mm)',
-            'GRIDMET_Precip_2_lag': 'Precipitation lagged - 2 month (mm)', 'PRISM_Tmax': f'Max. Temperature ({deg_cel_unit})',
+            'GRIDMET_Precip_2_lag': 'Precipitation lagged - 2 month (mm)',
+            'PRISM_Tmax': f'Max. Temperature ({deg_cel_unit})',
             'GRIDMET_RET': 'Reference ET (mm)', 'GRIDMET_vap_pres_def': 'Vapour pressure deficit (kpa)',
             'GRIDMET_max_RH': 'Max. relative humidity (%)', 'GRIDMET_min_RH': 'Min relative humidity (%)',
             'GRIDMET_wind_vel': 'Wind velocity (m/s)', 'GRIDMET_short_rad': 'Downward shortwave radiation (W/$m^2$)',
             'DAYMET_sun_hr': 'Daylight duration (hr)', 'Bulk_density': 'Bulk Density (kg/$m^3$)',
-            'Clay_content': 'Clay content (%)', 'Field_capacity': 'Field Capacity (%)', 'Sand_content': 'Sand Content (%)',
+            'Clay_content': 'Clay content (%)', 'Field_capacity': 'Field Capacity (%)',
+            'Sand_content': 'Sand Content (%)',
             'AWC': 'Available water capacity (mm)', 'DEM': 'Elevation', 'month': 'Month', 'Slope': 'Slope (%)',
-            'Latitude': f'Latitude ({deg_unit})', 'Longitude': f'Longitude ({deg_unit})', 'TERRACLIMATE_SR': 'Surface runoff (mm)',
-            'Runoff_precip_fraction': 'Runoff-Precipitation fraction', 'Precipitation_intensity': 'Precipitation intensity (mm/day)',
+            'Latitude': f'Latitude ({deg_unit})', 'Longitude': f'Longitude ({deg_unit})',
+            'TERRACLIMATE_SR': 'Surface runoff (mm)',
+            'Runoff_precip_fraction': 'Runoff-Precipitation fraction',
+            'Precipitation_intensity': 'Precipitation intensity (mm/day)',
             'Dryness_index': 'PET/P', 'Relative_infiltration_capacity': 'Relative infiltration capacity',
             'PET_P_corr': 'PET-P seasonal correlation'
         }
@@ -776,7 +797,7 @@ def create_pdplots(trained_model, x_train, features_to_include, output_dir, plot
 
                     # subplot num
                     pdisp.axes_[r][c].text(0.1, 0.9, subplot_labels[feature_idx], transform=pdisp.axes_[r][c].transAxes,
-                                            fontsize=35, va='top', ha='left')
+                                           fontsize=35, va='top', ha='left')
 
                     feature_idx += 1
                 else:
@@ -789,93 +810,93 @@ def create_pdplots(trained_model, x_train, features_to_include, output_dir, plot
         fig.set_size_inches(30, 30)
         fig.tight_layout(rect=[0, 0.05, 1, 0.95])
         fig.savefig(os.path.join(output_dir, plot_name), dpi=300, bbox_inches='tight')
+
+        print('PDP plots generated...')
+
     else:
         pass
 
-# def create_aleplots(trained_model, x_train, features_to_include, output_dir, plot_name, ylabel='Effect on Peff prediction',
-#                     skip_processing=False):
-#     """
-#     Plot Accumulated Local Effects (ALE) plot.
-#
-#     :param trained_model: Trained model object.
-#     :param x_train: x_train dataframe (if the model was trained with a x_train as dataframe) or array.
-#     :param features_to_include: List of features for which PDP plots will be made. If set to 'All', then PDP plot for
-#                                 all input variables will be created.
-#     :param output_dir: Filepath of output directory to save the PDP plot.
-#     :param plot_name: str of plot name. Must include '.jpeg' or 'png'.
-#     :param ylabel: Ylabel for partial dependence plot. Default set to Effective Precipitation \n (mm)' for monthly model.
-#     :param skip_processing: Set to True to skip this process.
-#
-#     :return: None.
-#     """
-#     if not skip_processing:
-#         makedirs([output_dir])
-#
-#         # creating variables for unit degree and degree celcius
-#         deg_unit = r'$^\circ$'
-#         deg_cel_unit = r'$^\circ$C'
-#
-#         # plotting
-#         if features_to_include == 'All':  # to plot PDP for all attributes
-#             features_to_include = list(x_train.columns)
-#
-#         plt.rcParams['font.size'] = 30
-#
-#         # creating a dictionary to rename PDP plot labels
-#         feature_dict = {
-#             'GRIDMET_Precip': 'Precipitation (mm)', 'GRIDMET_Precip_1_lag': 'Precipitation lagged - 1 month (mm)',
-#             'GRIDMET_Precip_2_lag': 'Precipitation lagged - 2 month (mm)', 'PRISM_Tmax': f'Max. Temperature ({deg_cel_unit})',
-#             'GRIDMET_RET': 'Reference ET (mm)', 'GRIDMET_vap_pres_def': 'Vapour pressure deficit (kpa)',
-#             'GRIDMET_max_RH': 'Max. relative humidity (%)', 'GRIDMET_min_RH': 'Min relative humidity (%)',
-#             'GRIDMET_wind_vel': 'Wind velocity (m/s)', 'GRIDMET_short_rad': 'Downward shortwave radiation (W/$m^2$)',
-#             'DAYMET_sun_hr': 'Daylight duration (hr)', 'Bulk_density': 'Bulk Density (kg/$m^3$)',
-#             'Clay_content': 'Clay content (%)', 'Field_capacity': 'Field Capacity (%)', 'Sand_content': 'Sand Content (%)',
-#             'AWC': 'Available water capacity (mm)', 'DEM': 'Elevation', 'month': 'Month', 'Slope': 'Slope (%)',
-#             'Latitude': f'Latitude ({deg_unit})', 'Longitude': f'Longitude ({deg_unit})', 'TERRACLIMATE_SR': 'Surface runoff (mm)',
-#             'Runoff_precip_fraction': 'Runoff-Precipitation fraction', 'Precipitation_intensity': 'Precipitation intensity (mm/day)',
-#             'Dryness_index': 'PET/P', 'Relative_infiltration_capacity': 'Relative infiltration capacity',
-#             'PET_P_corr': 'PET-P seasonal correlation'
-#         }
-#
-#         # Subplot labels
-#         subplot_labels = ['(a)', '(b)', '(c)', '(d)', '(e)', '(f)', '(g)', '(h)', '(i)', '(j)', '(k)',
-#                           '(l)', '(m)', '(n)', '(o)', '(p)']
-#
-#         # Create ALE plots for each feature
-#         feature_idx = 0
-#         for feature in features_to_include:
-#             print(feature)
-#             ale_eff = ale(X=x_train, model=trained_model,
-#                           feature=[feature],
-#                           grid_size=5,
-#                           include_CI=False)
-#
-#             # Plotting ALE
-#             fig, ax = plt.subplots()
-#             ax.plot(ale_eff[0], ale_eff[1], label=f'{feature_dict.get(feature, feature)}')
-#
-#             ax.set_xlabel(feature_dict.get(feature, feature), fontsize=20)
-#             ax.set_ylabel(ylabel, fontsize=20)
-#
-#             ax.text(0.1, 0.9, subplot_labels[feature_idx], transform=ax.transAxes,
-#                     fontsize=25, va='top', ha='left')
-#             feature_idx += 1
-#
-#             plt.tight_layout()
-#
-#             # Save the plot
-#             fig = plt.gcf()
-#             fig.set_size_inches(30, 30)
-#             fig.tight_layout(rect=[0, 0.05, 1, 0.95])
-#             fig.savefig(os.path.join(output_dir, plot_name), dpi=300, bbox_inches='tight')
-#
-#         print('ALE plots generated...')
-#
-#     else:
-#         pass
+
+def create_aleplots(trained_model, x_train, y_train, features_to_include,
+                    output_dir, plot_name, make_CI=True, skip_processing=False):
+    """
+    Plot Accumulated Local Effects (ALE) plot.
+
+    :param trained_model: Trained model object.
+    :param x_train: x_train dataframe (if the model was trained with a x_train as dataframe) or array.
+    :param y_train: y_train dataframe (if the model was trained with a x_train as dataframe) or array.
+    :param features_to_include: List of features for which ALE plots will be made.
+                                If set to 'All', then PDP plot for all input variables will be created.
+    :param output_dir: Filepath of output directory to save the PDP plot.
+    :param plot_name: str of plot name. Must include '.jpeg' or 'png'.
+    :param make_CI: Set to True if want to include CI in the ALE plot. The confidence intervals are simply the uncertainty
+               in the mean value. This function uses 100 bootstraping to estimate the CIs.
+    :param skip_processing: Set to True to skip this process.
+
+    :return: None.
+    """
+    if not skip_processing:
+        makedirs([output_dir])
+
+        # creating variables for unit degree and degree celcius
+        deg_unit = r'$^\circ$'
+        deg_cel_unit = r'$^\circ$C'
+
+        # plotting
+        if features_to_include == 'All':  # to plot PDP for all attributes
+            features_to_include = list(x_train.columns)
+
+        # creating a dictionary to rename PDP plot labels
+        feature_dict = {
+            'GRIDMET_Precip': 'Precipitation (mm)', 'GRIDMET_Precip_1_lag': 'Precipitation lagged -\n 1 month (mm)',
+            'GRIDMET_Precip_2_lag': 'Precipitation lagged -\n 2 month (mm)',
+            'PRISM_Tmax': f'Max. Temperature ({deg_cel_unit})',
+            'GRIDMET_RET': 'Reference ET (mm)', 'GRIDMET_vap_pres_def': 'Vapour pressure deficit (kpa)',
+            'GRIDMET_max_RH': 'Max. relative humidity (%)', 'GRIDMET_min_RH': 'Min relative humidity (%)',
+            'GRIDMET_wind_vel': 'Wind velocity (m/s)', 'GRIDMET_short_rad': 'Downward shortwave \n radiation (W/$m^2$)',
+            'DAYMET_sun_hr': 'Daylight duration (hr)', 'Bulk_density': 'Bulk Density (kg/$m^3$)',
+            'Clay_content': 'Clay content (%)', 'Field_capacity': 'Field Capacity (%)',
+            'Sand_content': 'Sand Content (%)',
+            'AWC': 'Available water \n capacity (mm)', 'DEM': 'Elevation', 'month': 'Month', 'Slope': 'Slope (%)',
+            'Latitude': f'Latitude ({deg_unit})', 'Longitude': f'Longitude ({deg_unit})',
+            'TERRACLIMATE_SR': 'Surface runoff (mm)',
+            'Runoff_precip_fraction': 'Runoff-Precipitation fraction',
+            'Precipitation_intensity': 'Precipitation intensity \n (mm/day)',
+            'Dryness_index': 'PET/P', 'Relative_infiltration_capacity': 'Relative infiltration capacity',
+            'PET_P_corr': 'PET-P seasonal \n correlation'
+        }
+
+        plt.rcParams['font.size'] = 8
+
+        # creating explainer object and calculating 1d ale
+        if make_CI:
+            bootstrap = 100
+        else:
+            bootstrap = 1
+
+        explainer = skexplain.ExplainToolkit(('LGBMRegressor', trained_model), X=x_train, y=y_train)
+        ale_1d_ds = explainer.ale(features=features_to_include, n_bootstrap=bootstrap,
+                                  subsample=10000, n_jobs=10, n_bins=20)
+
+        # Create ALE plots
+        fig, axes = explainer.plot_ale(
+            ale=ale_1d_ds,
+            features=features_to_include,  # Important features you want to plot
+            display_feature_names=feature_dict,  # Feature names
+            figsize=(10, 8)
+        )
+
+        fig.tight_layout(rect=[0, 0.05, 1, 0.95])
+        fig.savefig(os.path.join(output_dir, plot_name))
+
+        print('ALE plots generated...')
+
+    else:
+        pass
 
 
 def plot_permutation_importance(trained_model, x_test, y_test, output_dir, plot_name,
+                                saved_var_list_name,
                                 exclude_columns=None, skip_processing=False):
     """
     Plot permutation importance for model predictors.
@@ -889,6 +910,7 @@ def plot_permutation_importance(trained_model, x_test, y_test, output_dir, plot_
                             dataframe from the split_train_val_test_set() function, set exclude_columns to None.
     :param output_dir: Output directory filepath to save the plot.
     :param plot_name: Plot name. Must contain 'png', 'jpeg'.
+    :param saved_var_list_name: The name of to use to save the sorted important vars list. Must contain 'pkl'.
     :param skip_processing: Set to True to skip this process.
 
     :return: List of sorted (most important to less important) important variable names.
@@ -948,15 +970,22 @@ def plot_permutation_importance(trained_model, x_test, y_test, output_dir, plot_
 
         # plotting
         plt.figure(figsize=(6, 4))
-        plt.rcParams.update({'font.size': 8})
 
         ax = importances.plot.box(vert=False, whis=10)
         ax.axvline(x=0, color='k', linestyle='--')
-        ax.set_xlabel('Relative change in accuracy')
-        ax.figure.tight_layout()
+        ax.set_xlabel('Relative change in accuracy', fontsize=8)
+        ax.tick_params(axis='x', labelsize=8)
+        ax.tick_params(axis='y', labelsize=8)
 
+        plt.tight_layout()
         plt.savefig(os.path.join(output_dir, plot_name), dpi=200)
 
-        return sorted_imp_vars
+        # saving the list to avoid running the permutation importance plot if not required (saves model running time)
+        joblib.dump(sorted_imp_vars, os.path.join(output_dir, saved_var_list_name))
+
+        print('Permutation importance plot generated...')
+
     else:
-        pass
+        sorted_imp_vars = joblib.load(os.path.join(output_dir, saved_var_list_name))
+
+    return sorted_imp_vars

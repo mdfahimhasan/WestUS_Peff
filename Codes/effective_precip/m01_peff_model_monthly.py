@@ -10,7 +10,7 @@ from Codes.utils.system_ops import makedirs
 from Codes.utils.stats_ops import calculate_r2, calculate_rmse, calculate_mae
 from Codes.utils.plots import scatter_plot_of_same_vars, density_grid_plot_of_same_vars
 from Codes.utils.ml_ops import create_train_test_monthly_dataframe, split_train_val_test_set, train_model, \
-    create_pdplots, plot_permutation_importance
+    create_aleplots, create_pdplots, plot_permutation_importance
 from Codes.effective_precip.m00_eff_precip_utils import create_monthly_dataframes_for_eff_precip_prediction, \
     create_nan_pos_dict_for_monthly_irrigated_cropET, create_monthly_effective_precip_rasters, \
     collect_Peff_predictions_in_dataframe, sum_peff_water_year, estimate_peff_precip_water_year_fraction
@@ -91,7 +91,9 @@ if __name__ == '__main__':
     skip_tune_hyperparams = True                            ######
     load_model = False                                       ######
     save_model = True                                       ######
-    skip_plot_pdp = False                                    ######
+    skip_plot_perm_imp = True                               ######
+    skip_plot_ale = True                                    ######
+    skip_plot_pdp = True                                    ######
     skip_processing_monthly_predictor_dataframe = True      ######
     skip_processing_nan_pos_irrig_cropET = True             ######
     skip_estimate_monthly_eff_precip_WestUS = False          ######
@@ -229,8 +231,15 @@ if __name__ == '__main__':
     sorted_imp_vars = plot_permutation_importance(trained_model=lgbm_reg_trained,
                                                   x_test=x_test, y_test=y_test,
                                                   exclude_columns=None, output_dir=plot_dir,
-                                                  plot_name=f'perm_import_{model_version}',
-                                                  skip_processing=False)
+                                                  plot_name=f'perm_import_{model_version}.png',
+                                                  saved_var_list_name=f'sorted_imp_vars_{model_version}.pkl',
+                                                  skip_processing=skip_plot_perm_imp)
+
+    # accumulated local effect (ALE) plots
+    create_aleplots(trained_model=lgbm_reg_trained, x_train=x_train, y_train=y_train,
+                    features_to_include=sorted_imp_vars,
+                    output_dir=plot_dir, plot_name=f'ale_{model_version}.png',
+                    make_CI=True, skip_processing=skip_plot_ale)
 
     # partial dependence plots (pdp)
     create_pdplots(trained_model=lgbm_reg_trained, x_train=x_train,

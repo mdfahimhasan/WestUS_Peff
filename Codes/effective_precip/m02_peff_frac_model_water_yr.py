@@ -64,19 +64,19 @@ datasets_to_include = ['Peff_frac',
 
 # exclude columns during training
 exclude_columns_in_training = [
-    #'PRISM_Tmax',
-    #'GRIDMET_Precip',
+    # 'PRISM_Tmax',
+    # 'GRIDMET_Precip',
     'GRIDMET_RET',
     'GRIDMET_max_RH',
-    #'GRIDMET_short_rad',
+    # 'GRIDMET_short_rad',
     'DAYMET_sun_hr',
     'TERRACLIMATE_SR',
-    #'Slope',
+    # 'Slope',
     'Runoff_precip_fraction',
     #'Precipitation_intensity',
-    #'Dryness_index',
-    #'Relative_infiltration_capacity',
-    #'PET_P_corr',
+    # 'Dryness_index',
+    'Relative_infiltration_capacity',
+    # 'PET_P_corr',
     'Bulk_density',
     'Clay_content',
     'Field_capacity',
@@ -108,7 +108,7 @@ prediction_years = [2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 
                     2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020]
 
 if __name__ == '__main__':
-    model_version = 'v18'                                       ######
+    model_version = 'v19'                                       ######
 
     skip_train_test_df_creation = True                        ######
     skip_train_test_split = False                               ######
@@ -116,9 +116,8 @@ if __name__ == '__main__':
     load_model = False                                          ######
     save_model = True                                          ######
     skip_plot_pdp = False                                       ######
-    skip_plot_perm_import = False                               ######
-    skip_processing_annual_predictor_dataframe = False          ######
-    skip_processing_nan_pos_irrig_cropET = True                ######
+    skip_processing_annual_predictor_dataframe = True          ######
+    skip_processing_nan_pos_irrig_cropET = False                ######
     skip_estimate_water_year_peff_frac_WestUS = False           ######
     skip_storing_peff_frac_pred_annual_csv = False              ######
 
@@ -253,7 +252,7 @@ if __name__ == '__main__':
                                    x_label='Reference effective precipitation \n fraction',
                                    y_label='Predicted effective precipitation \n fraction',
                                    plot_name=density_plot_name, savedir=plot_dir,
-                                   bins=100, tick_interval=0.25)
+                                   bins=200, tick_interval=0.25)
 
     density_plot_name = f'test_performance_density_{model_version}.png'
     density_grid_plot_of_same_vars(Y_pred=test_obsv_predict_df_copy['test_predicted'],
@@ -261,13 +260,13 @@ if __name__ == '__main__':
                                    x_label='Reference effective precipitation \n fraction',
                                    y_label='Predicted effective precipitation \n fraction',
                                    plot_name=density_plot_name, savedir=plot_dir,
-                                   bins=100, tick_interval=0.25)
+                                   bins=200, tick_interval=0.25)
 
     # permutation importance plot
     sorted_imp_vars = plot_permutation_importance(trained_model=lgbm_reg_trained, x_test=x_test, y_test=y_test,
                                                   exclude_columns=None, output_dir=plot_dir,
                                                   plot_name=f'perm_import_{model_version}',
-                                                  skip_processing=skip_plot_perm_import)
+                                                  skip_processing=False)
 
     # partial dependence plots (pdp)
     create_pdplots(trained_model=lgbm_reg_trained, x_train=x_train,

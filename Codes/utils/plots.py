@@ -1,6 +1,7 @@
 import os
 import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib.colors import ListedColormap
 
 from Codes.utils.system_ops import makedirs
 from Codes.utils.stats_ops import calculate_r2
@@ -55,7 +56,7 @@ def scatter_plot_of_same_vars(Y_pred, Y_obsv, x_label, y_label, plot_name, saved
         ax.set_title(title)
 
     r2_val = round(calculate_r2(Y_pred, Y_obsv), 4)
-    ax.text(0.1, 0.9, s=f'R2={r2_val}', transform=ax.transAxes)
+    ax.text(0.1, 0.9, s=f'R2={r2_val:.3f}', transform=ax.transAxes)
 
     makedirs([savedir])
 
@@ -64,7 +65,7 @@ def scatter_plot_of_same_vars(Y_pred, Y_obsv, x_label, y_label, plot_name, saved
 
 
 def density_grid_plot_of_same_vars(Y_pred, Y_obsv, x_label, y_label, plot_name, savedir,
-                                   bins=80, title=None,
+                                   bins=300, title=None,
                                    axis_lim=None, tick_interval=50):
     """
     Makes density grid plot for model prediction vs observed data. In the density grid plot, each grid represents a bin
@@ -76,7 +77,7 @@ def density_grid_plot_of_same_vars(Y_pred, Y_obsv, x_label, y_label, plot_name, 
     :param y_label: Str of y label.
     :param plot_name: Str of plot name.
     :param savedir: filepath to save the plot.
-    :param bins: Numbers of bins to consider while binning for density grid. Default set to 80.
+    :param bins: Numbers of bins to consider while binning for density grid. Default set to 300.
     :param title: Str of title. Default set to None.
     :param axis_lim: A list of minimum and maximum values of x and y axis.
                      Default set to None (will calculate and set xlim, ylim itself)
@@ -97,14 +98,20 @@ def density_grid_plot_of_same_vars(Y_pred, Y_obsv, x_label, y_label, plot_name, 
     fig, ax = plt.subplots(figsize=(8, 6))
     fig.set_facecolor('none')
 
+    # Creating a custom colormap: white for low values, transitioning to colors for higher densities
+    plasma_cmap = plt.get_cmap('viridis')
+    white = np.array([1, 1, 1, 1])  # # Modify the white color to include an alpha channel (RGBA format)
+    custom_cmap = ListedColormap(
+        np.vstack((white, plasma_cmap(np.linspace(0, 1, 256)))))  # Stack the white color with the plasma colormap
+
     # Plot the density grid as a heatmap
     # plt.imshow() expects data in the format where the rows of the matrix correspond to the y-axis and
     # the columns correspond to the x-axis
     # However, np.histogram2d() returns the 2D array (heatmap) such that the first dimension corresponds to the x-axis
     # (observed values) and the second dimension corresponds to the y-axis (predicted values).
     # So, we use heatmap.T
-    density_plot = ax.imshow(heatmap.T, origin='lower', cmap='RdYlBu_r', aspect='auto',
-                             extent=[min_value, max_value, min_value, max_value])
+    extent = [xedges[0], xedges[-1], yedges[0], yedges[-1]]
+    density_plot = ax.imshow(heatmap.T, origin='lower', cmap=custom_cmap, aspect='auto', extent=extent)
 
     ax.set_xlabel(x_label, fontsize=18)  # 'Observed'
     ax.set_ylabel(y_label, fontsize=18)  # 'Predicted'
@@ -132,7 +139,7 @@ def density_grid_plot_of_same_vars(Y_pred, Y_obsv, x_label, y_label, plot_name, 
         ax.set_title(title)
 
     r2_val = round(calculate_r2(Y_pred, Y_obsv), 3)
-    ax.text(0.1, 0.9, s=f'R2={r2_val}', transform=ax.transAxes, color='white')
+    ax.text(0.1, 0.9, s=f'R2={r2_val:.3f}', transform=ax.transAxes, color='black')
 
     makedirs([savedir])
 

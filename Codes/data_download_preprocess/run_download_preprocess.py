@@ -33,7 +33,7 @@ data_download_dir = '../../Data_main/Raster_data'
 use_cpu_while_multidownloading = 15
 
 skip_download_gee_data = True                           ######
-skip_download_OpenET_data = True                        ######
+skip_download_OpenET_data = True                       ######
 
 # # # #  data preprocess args # # # #
 skip_process_GrowSeason_data = True                     ######
@@ -43,10 +43,10 @@ skip_gridmet_RET_precessing = True                      ######
 skip_merging_rainfed_frac = True                        ######
 skip_merging_rainfed_cropET = True                      ######
 skip_merging_irrigated_frac = True                      ######
-skip_merging_irrigated_cropET = True                    ######
-skip_classifying_irrigated_rainfed_cropland = True      ######
-skip_filtering_irrigated_rainfed_cropET = True          ######
-skip_summing_irrigated_cropET_gs = True                 ######
+skip_merging_irrigated_cropET = False                    ######
+skip_classifying_irrigated_rainfed_cropland = False      ######
+skip_filtering_irrigated_rainfed_cropET = False          ######
+skip_summing_irrigated_cropET_gs = False                 ######
 skip_summing_rainfed_cropET_gs = True                   ######
 skip_summing_rainfed_cropET_water_yr = True             ######
 skip_openET_sum = True                                  ######
@@ -55,7 +55,7 @@ skip_processing_slope_data = True                       ######
 skip_process_AWC_data = True                            ######
 skip_peff_training_data_filtering = True                ######
 skip_accum_to_water_year_datasets = True                ######
-skip_summing_irrigated_cropET_water_yr = True           ######
+skip_summing_irrigated_cropET_water_yr = False           ######
 skip_estimate_runoff_precip_frac = True                 ######
 skip_estimate_precip_intensity = True                   ######
 skip_estimate_dryness_index = True                      ######

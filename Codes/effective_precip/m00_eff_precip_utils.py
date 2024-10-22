@@ -351,6 +351,10 @@ def create_annual_peff_fraction_rasters(trained_model, input_csv_dir, exclude_co
             pred_arr = trained_model.predict(df)
             pred_arr = np.array(pred_arr)
 
+            # replacing >1 fraction values with 1. From our observation, the number of values replaced with this
+            # filtering approach isn't much
+            pred_arr = np.where(pred_arr > 1, 1, pred_arr)
+
             # replacing values with -9999 where irrigated cropET is nan
             irrig_cropET_nan = glob(os.path.join(irrig_cropET_nan_pos_dir, f'*{year}.pkl*'))[0]
             nan_pos_dict = pickle.load(open(irrig_cropET_nan, mode='rb'))

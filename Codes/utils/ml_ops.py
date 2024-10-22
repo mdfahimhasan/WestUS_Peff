@@ -792,6 +792,88 @@ def create_pdplots(trained_model, x_train, features_to_include, output_dir, plot
     else:
         pass
 
+# def create_aleplots(trained_model, x_train, features_to_include, output_dir, plot_name, ylabel='Effect on Peff prediction',
+#                     skip_processing=False):
+#     """
+#     Plot Accumulated Local Effects (ALE) plot.
+#
+#     :param trained_model: Trained model object.
+#     :param x_train: x_train dataframe (if the model was trained with a x_train as dataframe) or array.
+#     :param features_to_include: List of features for which PDP plots will be made. If set to 'All', then PDP plot for
+#                                 all input variables will be created.
+#     :param output_dir: Filepath of output directory to save the PDP plot.
+#     :param plot_name: str of plot name. Must include '.jpeg' or 'png'.
+#     :param ylabel: Ylabel for partial dependence plot. Default set to Effective Precipitation \n (mm)' for monthly model.
+#     :param skip_processing: Set to True to skip this process.
+#
+#     :return: None.
+#     """
+#     if not skip_processing:
+#         makedirs([output_dir])
+#
+#         # creating variables for unit degree and degree celcius
+#         deg_unit = r'$^\circ$'
+#         deg_cel_unit = r'$^\circ$C'
+#
+#         # plotting
+#         if features_to_include == 'All':  # to plot PDP for all attributes
+#             features_to_include = list(x_train.columns)
+#
+#         plt.rcParams['font.size'] = 30
+#
+#         # creating a dictionary to rename PDP plot labels
+#         feature_dict = {
+#             'GRIDMET_Precip': 'Precipitation (mm)', 'GRIDMET_Precip_1_lag': 'Precipitation lagged - 1 month (mm)',
+#             'GRIDMET_Precip_2_lag': 'Precipitation lagged - 2 month (mm)', 'PRISM_Tmax': f'Max. Temperature ({deg_cel_unit})',
+#             'GRIDMET_RET': 'Reference ET (mm)', 'GRIDMET_vap_pres_def': 'Vapour pressure deficit (kpa)',
+#             'GRIDMET_max_RH': 'Max. relative humidity (%)', 'GRIDMET_min_RH': 'Min relative humidity (%)',
+#             'GRIDMET_wind_vel': 'Wind velocity (m/s)', 'GRIDMET_short_rad': 'Downward shortwave radiation (W/$m^2$)',
+#             'DAYMET_sun_hr': 'Daylight duration (hr)', 'Bulk_density': 'Bulk Density (kg/$m^3$)',
+#             'Clay_content': 'Clay content (%)', 'Field_capacity': 'Field Capacity (%)', 'Sand_content': 'Sand Content (%)',
+#             'AWC': 'Available water capacity (mm)', 'DEM': 'Elevation', 'month': 'Month', 'Slope': 'Slope (%)',
+#             'Latitude': f'Latitude ({deg_unit})', 'Longitude': f'Longitude ({deg_unit})', 'TERRACLIMATE_SR': 'Surface runoff (mm)',
+#             'Runoff_precip_fraction': 'Runoff-Precipitation fraction', 'Precipitation_intensity': 'Precipitation intensity (mm/day)',
+#             'Dryness_index': 'PET/P', 'Relative_infiltration_capacity': 'Relative infiltration capacity',
+#             'PET_P_corr': 'PET-P seasonal correlation'
+#         }
+#
+#         # Subplot labels
+#         subplot_labels = ['(a)', '(b)', '(c)', '(d)', '(e)', '(f)', '(g)', '(h)', '(i)', '(j)', '(k)',
+#                           '(l)', '(m)', '(n)', '(o)', '(p)']
+#
+#         # Create ALE plots for each feature
+#         feature_idx = 0
+#         for feature in features_to_include:
+#             print(feature)
+#             ale_eff = ale(X=x_train, model=trained_model,
+#                           feature=[feature],
+#                           grid_size=5,
+#                           include_CI=False)
+#
+#             # Plotting ALE
+#             fig, ax = plt.subplots()
+#             ax.plot(ale_eff[0], ale_eff[1], label=f'{feature_dict.get(feature, feature)}')
+#
+#             ax.set_xlabel(feature_dict.get(feature, feature), fontsize=20)
+#             ax.set_ylabel(ylabel, fontsize=20)
+#
+#             ax.text(0.1, 0.9, subplot_labels[feature_idx], transform=ax.transAxes,
+#                     fontsize=25, va='top', ha='left')
+#             feature_idx += 1
+#
+#             plt.tight_layout()
+#
+#             # Save the plot
+#             fig = plt.gcf()
+#             fig.set_size_inches(30, 30)
+#             fig.tight_layout(rect=[0, 0.05, 1, 0.95])
+#             fig.savefig(os.path.join(output_dir, plot_name), dpi=300, bbox_inches='tight')
+#
+#         print('ALE plots generated...')
+#
+#     else:
+#         pass
+
 
 def plot_permutation_importance(trained_model, x_test, y_test, output_dir, plot_name,
                                 exclude_columns=None, skip_processing=False):

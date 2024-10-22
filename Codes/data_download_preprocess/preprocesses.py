@@ -182,17 +182,14 @@ def classify_irrigated_rainfed_cropland(rainfed_fraction_dir, irrigated_fraction
         ############################
         # # Rainfed
         # Criteria of irrigated and rainfed cropland classification
-        # More than 30% (fraction 0.3) rainfed and less than 2% irrigated 30m pixels in a 2km pixel will be classified
+        # More than 10% (fraction 0.1) rainfed 30m pixels in a 2km pixel will be classified
         # as "Rainfed cropland". Also, it should have <6% tree cover.
         rainfed_frac_threshold = 0.10
-        # irrigated_frac_threshold_for_rainfed_class = 0.02
         tree_threshold = 6  # unit in %
 
         # # Irrigated
-        # A 2km pixel with any fraction of irrigation will be classified as irrigated.
-        # Previously, >2% irr fraction was used to classify as irrigated, which was later removed to cover the
-        # boundary pixels in irrigated-agricultural zones. May need post filtering.
-        irrigated_frac_threshold_for_irrigated_class = 0
+        # A 2km pixel with >2% irr fraction was used to classify as irrigated
+        irrigated_frac_threshold_for_irrigated_class = 0.02
 
         # list of years_list when there are both irrigated and rainfed fraction datasets derived from
         # IrrMapper/LANID and USDA CDL. Classifying those data with defined threshold
@@ -213,8 +210,6 @@ def classify_irrigated_rainfed_cropland(rainfed_fraction_dir, irrigated_fraction
 
             # classification using defined rainfed, irrigated fraction, and tree fraction threshold. -9999 is no data
             rainfed_cropland = np.where((rain_arr >= rainfed_frac_threshold) &
-                                        # ((irrig_arr == irrigated_frac_threshold_for_rainfed_class) | (
-                                        #     np.isnan(irrig_arr))) &
                                         (tree_arr <= tree_threshold), 1, -9999)
 
             irrigated_cropland = np.where((irrig_arr > irrigated_frac_threshold_for_irrigated_class), 1, -9999)
@@ -282,6 +277,7 @@ def filter_rainfed_irrigated_cropET_with_rainfed_irrigated_cropland(rainfed_crop
     """
     if not skip_processing:
         makedirs([rainfed_cropET_output_dir, irrigated_cropET_output_dir])
+
         # cropET datasets have been extracted from openET for the following years_list and months only
         years_to_filter_irrig_cropET = [1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007,
                                         2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015,
@@ -293,7 +289,7 @@ def filter_rainfed_irrigated_cropET_with_rainfed_irrigated_cropland(rainfed_crop
         for year in years_to_filter_irrig_cropET:
             print(f'Filtering irrigated cropET data for year {year}...')
 
-            # pure irrigated cropland filtered previously by using irrigated fraction threshold (irrig frac > 0.20)
+            # pure irrigated cropland filtered by using irrigated fraction threshold (irrig frac > 0.02)
             irrigated_cropland_data = glob(os.path.join(irrigated_cropland_dir, f'*{year}*.tif'))[0]
             irrigated_cropland_arr = read_raster_arr_object(irrigated_cropland_data, get_file=False)
 
@@ -313,8 +309,8 @@ def filter_rainfed_irrigated_cropET_with_rainfed_irrigated_cropland(rainfed_crop
         for year in years_to_filter_rainfed_cropET:
             print(f'Filtering rainfed cropET data for year {year}...')
 
-            # pure rainfed cropland filtered previously by using rainfed and irrigated fraction threshold
-            # (rainfed frac > 0.20 and irrig frac < 0.02). In both cases, tree cover was less than 6%
+            # pure rainfed cropland filtered using rainfed fraction threshold
+            # (rainfed frac > 0.10). Tree cover is less than 6%
             rainfed_cropland_data = glob(os.path.join(rainfed_cropland_dir, f'*{year}*.tif'))[0]
             rainfed_cropland_arr = read_raster_arr_object(rainfed_cropland_data, get_file=False)
 
@@ -583,7 +579,7 @@ def sum_cropET_water_yr(years_list, input_cropET_monthly_dir, output_dir_water_y
             et_data_prev_years = glob(os.path.join(input_cropET_monthly_dir, f'*{yr - 1}_1[0-2].*tif'))
             et_data_current_years = glob(os.path.join(input_cropET_monthly_dir, f'*{yr}_[1-9].*tif'))
             et_water_yr_list = et_data_prev_years + et_data_current_years
-
+            print(et_water_yr_list)
             sum_rasters(raster_list=et_water_yr_list, raster_dir=None,
                         output_raster=os.path.join(output_dir_water_yr, f'{save_keyword}_{yr}.tif'),
                         ref_raster=et_water_yr_list[0])

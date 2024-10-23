@@ -19,7 +19,7 @@ if __name__ == '__main__':
                   2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015,
                   2016, 2017, 2018, 2019, 2020]
     HUC12_shapefile_with_tot_SW_irrigation = '../../Data_main/USGS_water_use_data/USGS_new_wateruse_data_HUC12/HUC12_WestUS_with_Annual_SW.shp'
-    irrig_cropET_dir = '../../Data_main/Raster_data/Irrigated_cropET/WestUS_grow_season_v2'
+    irrig_cropET_dir = '../../Data_main/Raster_data/Irrigated_cropET/WestUS_grow_season'
     HUC12_output_shapefile = '../../Data_main/USGS_water_use_data/USGS_new_wateruse_data_HUC12/HUC12_WestUS_Annual_SW_irrig_cropET.shp'
 
     estimate_sw_mm_HUC12(years_list=years_list, HUC12_input_shapefile=HUC12_shapefile_with_tot_SW_irrigation,
@@ -33,7 +33,7 @@ if __name__ == '__main__':
 
     HUC12_shapefile_with_tot_SW_irrigation = '../../Data_main/USGS_water_use_data/USGS_new_wateruse_data_HUC12/HUC12_WestUS_Annual_SW_irrig_cropET.shp'
     HUC12_Irr_eff_shapefile = '../../Data_main/USGS_water_use_data/USGS_new_wateruse_data_HUC12/HUC12_WestUS_with_Irr_Eff.shp'
-    original_irrig_cropET_grow_season_dir = '../../Data_main/Raster_data/Irrigated_cropET/WestUS_grow_season_v2'
+    original_irrig_cropET_grow_season_dir = '../../Data_main/Raster_data/Irrigated_cropET/WestUS_grow_season'
     sw_dist_outdir = '../../Data_main/Raster_data/SW_irrigation'
 
     distribute_SW_consmp_use_to_pixels(years_list=years_list, HUC12_shapefile=HUC12_shapefile_with_tot_SW_irrigation,

@@ -876,7 +876,7 @@ def create_aleplots(trained_model, x_train, y_train, features_to_include,
 
         explainer = skexplain.ExplainToolkit(('LGBMRegressor', trained_model), X=x_train, y=y_train)
         ale_1d_ds = explainer.ale(features=features_to_include, n_bootstrap=bootstrap,
-                                  subsample=10000, n_jobs=10, n_bins=20)
+                                  subsample=50000, n_jobs=10, n_bins=20)
 
         # Create ALE plots
         fig, axes = explainer.plot_ale(

@@ -1028,6 +1028,8 @@ def process_and_aggregate_irrigated_acres(years, irr_cropland_input_dir, irr_fra
                                           in_situ_areacsv, main_output_dir, output_csv, resolution=model_res,
                                           in_situ_shp_list_CO=None):
     # creating output dirs
+    global insitu_df
+
     basin_irr_frac_output_dir = os.path.join(main_output_dir, 'irr_frac')
     basin_irr_cropland_output_dir = os.path.join(main_output_dir, 'irr_cropland')
 

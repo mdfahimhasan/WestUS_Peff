@@ -833,22 +833,20 @@ def dynamic_gs_sum_ET(year_list, growing_season_dir, monthly_input_dir, gs_outpu
                 dst.write(summed_arr, 1)
 
 
-def dynamic_gs_sum_peff(year_list, growing_season_dir, monthly_input_dir, gs_output_dir,
-                        sum_keyword, skip_processing=False):
+def dynamic_gs_sum_peff_with_3m_SM_storage(year_list, growing_season_dir, monthly_input_dir,
+                                           gs_output_dir, skip_processing=False):
     """
     Dynamically (spatio-temporally) sums effective precipitation (peff) monthly rasters for
-    the growing seasons (with 3 month's lag peff included before the gorwing season starts).
+    the growing seasons with 3 month's lag peff included before the gorwing season starts.
 
     :param year_list: List of years_list to process the data for.
     :param growing_season_dir: Directory path for growing season datasets.
     :param monthly_input_dir:  Directory path for monthly effective precipitation/irrigated crop ET datasets.
     :param gs_output_dir:  Directory path (output) for summed growing season effective precipitation/irrigated crop ET
                            datasets.
-   :param sum_keyword: Keyword str to add before the summed raster.
-                       Should be 'effective_precip' or 'Irrigated_cropET' or 'OpenET_ensemble'
     :param skip_processing: Set to True if want to skip processing this step.
 
-    :return:
+    :return: None.
     """
     if not skip_processing:
         makedirs([gs_output_dir])
@@ -861,7 +859,7 @@ def dynamic_gs_sum_peff(year_list, growing_season_dir, monthly_input_dir, gs_out
         month_pattern_prev_yr = re.compile(r'_([0-9]{1,2})\.tif')
 
         for year in year_list:
-            print(f'Dynamically summing {sum_keyword} monthly datasets for growing season {year}...')
+            print(f'Dynamically summing effective precipitation monthly datasets for growing season {year}...')
 
             # current year: gathering and sorting the peff datasets by month for current year (from 1 to 12)
             datasets_current_yr = glob(os.path.join(monthly_input_dir, f'*{year}*.tif'))
@@ -927,7 +925,7 @@ def dynamic_gs_sum_peff(year_list, growing_season_dir, monthly_input_dir, gs_out
             summed_total_arr = np.sum([summed_arr_current_yr, summed_arr_prev_yr], axis=0)
 
             # saving the summed peff array
-            output_name = f'{sum_keyword}_{year}.tif'
+            output_name = f'effective_precip_{year}.tif'
             output_path = os.path.join(gs_output_dir, output_name)
             with rio.open(
                     output_path,

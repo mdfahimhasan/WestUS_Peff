@@ -108,16 +108,16 @@ prediction_years = [2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 
                     2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020]
 
 if __name__ == '__main__':
-    model_version = 'v19'                                       ######
+    model_version = 'v20'                                       ######
 
     skip_train_test_df_creation = True                        ######
     skip_train_test_split = False                               ######
-    skip_tune_hyperparams = True                               ######
+    skip_tune_hyperparams = False                               ######
     load_model = False                                          ######
     save_model = True                                          ######
-    skip_plot_perm_imp = True                               ######
-    skip_plot_ale = True                                    ######
-    skip_plot_pdp = True                                       ######
+    skip_plot_perm_imp = False                               ######
+    skip_plot_ale = False                                    ######
+    skip_plot_pdp = False                                       ######
     skip_processing_annual_predictor_dataframe = True          ######
     skip_processing_nan_pos_irrig_cropET = False                ######
     skip_estimate_water_year_peff_frac_WestUS = False           ######
@@ -171,7 +171,7 @@ if __name__ == '__main__':
     makedirs([save_model_to_dir])
 
     model_name = f'effective_precip_frac_{model_version}.joblib'
-    max_evals = 500  ######
+    max_evals = 200  ######
     param_iteration_csv = '../../Eff_Precip_Model_Run/annual_model/hyperparam_tune/hyperparam_iteration.csv'
 
     lgbm_reg_trained = train_model(x_train=x_train, y_train=y_train, params_dict=lgbm_param_dict, n_jobs=-1,
@@ -307,12 +307,14 @@ if __name__ == '__main__':
 
     # # Generating monthly Peff predictions for 17 states
     peff_fraction_water_year_output_dir = f'../../Data_main/Raster_data/Effective_precip_fraction_WestUS/{model_version}_water_year_frac'
+    lake_raster = '../../Data_main/Raster_data/HydroLakes/Lakes.tif'
 
     create_annual_peff_fraction_rasters(trained_model=lgbm_reg_trained, input_csv_dir=annual_predictor_csv_dir,
                                         exclude_columns=exclude_columns_in_prediction,
                                         irrig_cropET_nan_pos_dir=output_dir_nan_pos, ref_raster=WestUS_raster,
                                         prediction_name_keyword='peff_frac',
                                         output_dir=peff_fraction_water_year_output_dir,
+                                        lake_raster=lake_raster,
                                         skip_processing=skip_estimate_water_year_peff_frac_WestUS)
 
     # # # Storing annual predictions of Peff for all years_list in a dataframe

@@ -15,7 +15,7 @@ sys.path.insert(0, dirname(dirname(dirname(abspath(__file__)))))
 
 from Codes.utils.system_ops import makedirs
 from Codes.utils.raster_ops import read_raster_arr_object, write_array_to_raster, mosaic_rasters_list, \
-    clip_resample_reproject_raster, sum_rasters, mean_rasters, make_lat_lon_array_from_raster
+    clip_resample_reproject_raster,sum_rasters, mean_rasters, make_lat_lon_array_from_raster, shapefile_to_raster
 from Codes.effective_precip.m00_eff_precip_utils import estimate_peff_precip_water_year_fraction
 
 no_data_value = -9999
@@ -1437,6 +1437,26 @@ def develop_P_PET_correlation_dataset(monthly_precip_dir, monthly_pet_dir, outpu
         pass
 
 
+def create_lake_raster(lake_shapefile, output_dir, skip_processing):
+    """
+    Create lake raster from shapefile.
+
+    :param lake_shapefile: Filepatth of lake shapefile.
+    :param output_dir: Output directory to save the output raster.
+    :param skip_processing: Set to True if want to skip processing.
+
+    :return: None.
+    """
+    if not skip_processing:
+        makedirs([output_dir])
+
+        shapefile_to_raster(input_shape=lake_shapefile, output_dir=output_dir,
+                            raster_name='Lakes.tif', burnvalue=1, use_attr=False, attribute="", add=None,
+                            ref_raster=WestUS_raster, resolution=model_res, alltouched=False)
+    else:
+        pass
+
+
 def run_all_preprocessing(skip_process_GrowSeason_data=False,
                           skip_prism_processing=False,
                           skip_gridmet_precip_processing=False,
@@ -1464,6 +1484,7 @@ def run_all_preprocessing(skip_process_GrowSeason_data=False,
                           skip_process_ksat_data=False,
                           skip_process_rel_infiltration_capacity_data=False,
                           skip_create_P_PET_corr_dataset=False,
+                          skip_create_lake_raster=False,
                           ref_raster=WestUS_raster):
     """
     Run all preprocessing steps.
@@ -1500,6 +1521,7 @@ def run_all_preprocessing(skip_process_GrowSeason_data=False,
     :param skip_create_P_PET_corr_dataset: Set to True to skip create P-PET correlation dataset.
     :param ref_raster: Filepath of Western US reference raster to use in 2km pixel lat-lon raster creation and to use
                         as reference raster in other processing operations.
+    :param skip_create_lake_raster: Set to True to skip create lake raster.
 
     :return: None.
     """
@@ -1766,3 +1788,8 @@ def run_all_preprocessing(skip_process_GrowSeason_data=False,
         precip_dir_water_yr='../../Data_main/Raster_data/GRIDMET_Precip/WestUS_water_year/sum',
         output_dir='../../Data_main/Raster_data/Rainfed_cropET_filtered_training/rainfed_cropET_water_year_fraction',
         skip_processing=skip_estimate_peff_water_yr_frac)
+
+    # creating 2km resolution lake raster (value 1 where lake present) to use in post-processing (water body masking)
+    create_lake_raster(lake_shapefile='../../Data_main/shapefiles/HydroLakes/Lake_WestUS.shp',
+                       output_dir='../../Data_main/Raster_data/HydroLakes',
+                       skip_processing=skip_create_lake_raster)

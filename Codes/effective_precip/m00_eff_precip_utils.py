@@ -310,8 +310,10 @@ def create_nan_pos_dict_for_annual_irrigated_cropET(irrigated_cropET_dir, output
 
 
 def create_annual_peff_fraction_rasters(trained_model, input_csv_dir, exclude_columns,
-                                        irrig_cropET_nan_pos_dir, ref_raster,
-                                        prediction_name_keyword, output_dir, skip_processing=False):
+                                        irrig_cropET_nan_pos_dir,
+                                        lake_raster, ref_raster,
+                                        prediction_name_keyword, output_dir,
+                                        skip_processing=False):
     """
     Create annual/water year effective precipitation fraction prediction raster.
 
@@ -322,6 +324,7 @@ def create_annual_peff_fraction_rasters(trained_model, input_csv_dir, exclude_co
                                      (irrigated cropET) pkl files.
     :param prediction_name_keyword: A str that will be added before prediction file name.
     :param output_dir: Filepath of output directory to store predicted rasters.
+    :param lake_raster: Filepath of lake raster.
     :param ref_raster: Filepath of ref raster. Default set to WestUS reference raster.
     :param skip_processing: Set to true to skip this processing step.
 
@@ -333,6 +336,9 @@ def create_annual_peff_fraction_rasters(trained_model, input_csv_dir, exclude_co
         # ref raster shape
         ref_arr, ref_file = read_raster_arr_object(ref_raster)
         ref_shape = ref_arr.shape
+
+        # loading lake raster data
+        lake_arr = read_raster_arr_object(lake_raster, get_file=False)
 
         # creating prediction raster for each month
         input_csvs = glob(os.path.join(input_csv_dir, '*.csv'))
@@ -354,6 +360,9 @@ def create_annual_peff_fraction_rasters(trained_model, input_csv_dir, exclude_co
             # replacing >1 fraction values with 1. From our observation, the number of values replaced with this
             # filtering approach isn't much
             pred_arr = np.where(pred_arr > 1, 1, pred_arr)
+
+            # applying water body masking with lake raster
+            pred_arr = np.where(lake_arr == 1, -9999, pred_arr)
 
             # replacing values with -9999 where irrigated cropET is nan
             irrig_cropET_nan = glob(os.path.join(irrig_cropET_nan_pos_dir, f'*{year}.pkl*'))[0]

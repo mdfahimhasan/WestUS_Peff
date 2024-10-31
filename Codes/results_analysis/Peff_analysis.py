@@ -11,7 +11,7 @@ model_res = 0.01976293625031605786  # in deg, ~2 km
 WestUS_shape = '../../Data_main/shapefiles/Western_US_ref_shapes/WestUS_states.shp'
 WestUS_raster = '../../Data_main/reference_rasters/Western_US_refraster_2km.tif'
 
-model_version = 'v11'  # # # #
+model_version = 'v19'  # # # #
 
 # # # # # for growing season # # # # #
 if __name__ == '__main__':
@@ -32,11 +32,11 @@ if __name__ == '__main__':
         print('Processing growing season effective precipitation and water year precipitation for GMD4, KS...')
 
         years = [2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010,
-                 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020]
+                 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019]
         basin_code = 'gmd4'
         basin_shp = '../../Data_main/shapefiles/Basins_of_interest/GMD4.shp'
-        growS_peff_dir = f'../../Data_main/Raster_data/Effective_precip_prediction_WestUS/{model_version}_grow_season'
-        water_yr_precip_dir = '../../Data_main/Raster_data/PRISM_Precip/WestUS_water_year'
+        growS_peff_dir = f'../../Data_main/Raster_data/Effective_precip_prediction_WestUS/{model_version}_grow_season_scaled'
+        water_yr_precip_dir = '../../Data_main/Raster_data/GRIDMET_Precip/WestUS_water_year/sum'
         basin_Peff_output_dir = f'../../Data_main/results_eval/peff/grow_season/{basin_code}'
         basin_precip_output_dir = f'../../Data_main/results_eval/precip/water_yr/{basin_code}'
         output_csv = f'../../Data_main/results_eval/peff/grow_season/{basin_code}.csv'
@@ -55,11 +55,11 @@ if __name__ == '__main__':
         print('Processing growing season effective precipitation and water year precipitation for GMD3, KS...')
 
         years = [2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010,
-                 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020]
+                 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019]
         basin_code = 'gmd3'
         basin_shp = '../../Data_main/shapefiles/Basins_of_interest/GMD3.shp'
-        growS_peff_dir = f'../../Data_main/Raster_data/Effective_precip_prediction_WestUS/{model_version}_grow_season'
-        water_yr_precip_dir = '../../Data_main/Raster_data/PRISM_Precip/WestUS_water_year'
+        growS_peff_dir = f'../../Data_main/Raster_data/Effective_precip_prediction_WestUS/{model_version}_grow_season_scaled'
+        water_yr_precip_dir = '../../Data_main/Raster_data/GRIDMET_Precip/WestUS_water_year/sum'
         basin_Peff_output_dir = f'../../Data_main/results_eval/peff/grow_season/{basin_code}'
         basin_precip_output_dir = f'../../Data_main/results_eval/precip/water_yr/{basin_code}'
         output_csv = f'../../Data_main/results_eval/peff/grow_season/{basin_code}.csv'
@@ -79,11 +79,11 @@ if __name__ == '__main__':
             'Processing growing season effective precipitation and water year precipitation for Republican Basin, CO...')
 
         years = [2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010,
-                 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020]
+                 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019]
         basin_code = 'rpb'
         basin_shp = '../../Data_main/shapefiles/Basins_of_interest/Republican_Basin.shp'
-        growS_peff_dir = f'../../Data_main/Raster_data/Effective_precip_prediction_WestUS/{model_version}_grow_season'
-        water_yr_precip_dir = '../../Data_main/Raster_data/PRISM_Precip/WestUS_water_year'
+        growS_peff_dir = f'../../Data_main/Raster_data/Effective_precip_prediction_WestUS/{model_version}_grow_season_scaled'
+        water_yr_precip_dir = '../../Data_main/Raster_data/GRIDMET_Precip/WestUS_water_year/sum'
         basin_Peff_output_dir = f'../../Data_main/results_eval/peff/grow_season/{basin_code}'
         basin_precip_output_dir = f'../../Data_main/results_eval/precip/water_yr/{basin_code}'
         output_csv = f'../../Data_main/results_eval/peff/grow_season/{basin_code}.csv'
@@ -103,11 +103,11 @@ if __name__ == '__main__':
             'Processing growing season effective precipitation and water year precipitation for Harquahala INA, AZ...')
 
         years = [2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010,
-                 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020]
+                 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019]
         basin_code = 'hqr'
         basin_shp = '../../Data_main/shapefiles/Basins_of_interest/Harquahala_INA.shp'
-        growS_peff_dir = f'../../Data_main/Raster_data/Effective_precip_prediction_WestUS/{model_version}_grow_season'
-        water_yr_precip_dir = '../../Data_main/Raster_data/PRISM_Precip/WestUS_water_year'
+        growS_peff_dir = f'../../Data_main/Raster_data/Effective_precip_prediction_WestUS/{model_version}_grow_season_scaled'
+        water_yr_precip_dir = '../../Data_main/Raster_data/GRIDMET_Precip/WestUS_water_year/sum'
         basin_Peff_output_dir = f'../../Data_main/results_eval/peff/grow_season/{basin_code}'
         basin_precip_output_dir = f'../../Data_main/results_eval/precip/water_yr/{basin_code}'
         output_csv = f'../../Data_main/results_eval/peff/grow_season/{basin_code}.csv'
@@ -126,11 +126,11 @@ if __name__ == '__main__':
         print('Processing growing season effective precipitation and water year precipitation for Douglas AMA, AZ...')
 
         years = [2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010,
-                 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020]
+                 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019]
         basin_code = 'doug'
         basin_shp = '../../Data_main/shapefiles/Basins_of_interest/Douglas_AMA.shp'
-        growS_peff_dir = f'../../Data_main/Raster_data/Effective_precip_prediction_WestUS/{model_version}_grow_season'
-        water_yr_precip_dir = '../../Data_main/Raster_data/PRISM_Precip/WestUS_water_year'
+        growS_peff_dir = f'../../Data_main/Raster_data/Effective_precip_prediction_WestUS/{model_version}_grow_season_scaled'
+        water_yr_precip_dir = '../../Data_main/Raster_data/GRIDMET_Precip/WestUS_water_year/sum'
         basin_Peff_output_dir = f'../../Data_main/results_eval/peff/grow_season/{basin_code}'
         basin_precip_output_dir = f'../../Data_main/results_eval/precip/water_yr/{basin_code}'
         output_csv = f'../../Data_main/results_eval/peff/grow_season/{basin_code}.csv'
@@ -150,11 +150,11 @@ if __name__ == '__main__':
             'Processing growing season effective precipitation and water year precipitation for Diamond Valley, NV...')
 
         years = [2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010,
-                 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020]
+                 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019]
         basin_code = 'dv'
         basin_shp = '../../Data_main/shapefiles/Basins_of_interest/Diamond_Valley_Basin.shp'
-        growS_peff_dir = f'../../Data_main/Raster_data/Effective_precip_prediction_WestUS/{model_version}_grow_season'
-        water_yr_precip_dir = '../../Data_main/Raster_data/PRISM_Precip/WestUS_water_year'
+        growS_peff_dir = f'../../Data_main/Raster_data/Effective_precip_prediction_WestUS/{model_version}_grow_season_scaled'
+        water_yr_precip_dir = '../../Data_main/Raster_data/GRIDMET_Precip/WestUS_water_year/sum'
         basin_Peff_output_dir = f'../../Data_main/results_eval/peff/grow_season/{basin_code}'
         basin_precip_output_dir = f'../../Data_main/results_eval/precip/water_yr/{basin_code}'
         output_csv = f'../../Data_main/results_eval/peff/grow_season/{basin_code}.csv'
@@ -174,11 +174,11 @@ if __name__ == '__main__':
             'Processing growing season effective precipitation and water year precipitation for Central Valley, CA...')
 
         years = [2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010,
-                 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020]
+                 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019]
         basin_code = 'cv'
         basin_shp = '../../Data_main/shapefiles/Basins_of_interest/Central_Valley.shp'
-        growS_peff_dir = f'../../Data_main/Raster_data/Effective_precip_prediction_WestUS/{model_version}_grow_season'
-        water_yr_precip_dir = '../../Data_main/Raster_data/PRISM_Precip/WestUS_water_year'
+        growS_peff_dir = f'../../Data_main/Raster_data/Effective_precip_prediction_WestUS/{model_version}_grow_season_scaled'
+        water_yr_precip_dir = '../../Data_main/Raster_data/GRIDMET_Precip/WestUS_water_year/sum'
         basin_Peff_output_dir = f'../../Data_main/results_eval/peff/grow_season/{basin_code}'
         basin_precip_output_dir = f'../../Data_main/results_eval/precip/water_yr/{basin_code}'
         output_csv = f'../../Data_main/results_eval/peff/grow_season/{basin_code}.csv'
@@ -229,11 +229,11 @@ if __name__ == '__main__':
         print('Processing monthly effective precipitation for GMD4, KS...')
 
         years = [2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010,
-                 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020]
+                 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019]
         basin_code = 'gmd4'
         basin_shp = '../../Data_main/shapefiles/Basins_of_interest/GMD4.shp'
         monthly_peff_dir = f'../../Data_main/Raster_data/Effective_precip_prediction_WestUS/{model_version}_monthly'
-        monthly_precip_dir = f'../../Data_main/Raster_data/PRISM_Precip/WestUS_monthly'
+        monthly_precip_dir = f'../../Data_main/Raster_data/GRIDMET_Precip/WestUS_monthly'
         basin_Peff_output_dir = f'../../Data_main/results_eval/peff/monthly/{basin_code}'
         basin_precip_output_dir = f'../../Data_main/results_eval/precip/monthly/{basin_code}'
         peff_output_csv = f'../../Data_main/results_eval/peff/monthly/{basin_code}.csv'
@@ -257,11 +257,11 @@ if __name__ == '__main__':
         print('Processing monthly effective precipitation for GMD3, KS...')
 
         years = [2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010,
-                 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020]
+                 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019]
         basin_code = 'gmd3'
         basin_shp = '../../Data_main/shapefiles/Basins_of_interest/GMD3.shp'
         monthly_peff_dir = f'../../Data_main/Raster_data/Effective_precip_prediction_WestUS/{model_version}_monthly'
-        monthly_precip_dir = f'../../Data_main/Raster_data/PRISM_Precip/WestUS_monthly'
+        monthly_precip_dir = f'../../Data_main/Raster_data/GRIDMET_Precip/WestUS_monthly'
         basin_Peff_output_dir = f'../../Data_main/results_eval/peff/monthly/{basin_code}'
         basin_precip_output_dir = f'../../Data_main/results_eval/precip/monthly/{basin_code}'
         peff_output_csv = f'../../Data_main/results_eval/peff/monthly/{basin_code}.csv'
@@ -286,11 +286,11 @@ if __name__ == '__main__':
             'Processing monthly effective precipitation for Republican Basin, CO...')
 
         years = [2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010,
-                 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020]
+                 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019]
         basin_code = 'rpb'
         basin_shp = '../../Data_main/shapefiles/Basins_of_interest/Republican_Basin.shp'
         monthly_peff_dir = f'../../Data_main/Raster_data/Effective_precip_prediction_WestUS/{model_version}_monthly'
-        monthly_precip_dir = f'../../Data_main/Raster_data/PRISM_Precip/WestUS_monthly'
+        monthly_precip_dir = f'../../Data_main/Raster_data/GRIDMET_Precip/WestUS_monthly'
         basin_Peff_output_dir = f'../../Data_main/results_eval/peff/monthly/{basin_code}'
         basin_precip_output_dir = f'../../Data_main/results_eval/precip/monthly/{basin_code}'
         peff_output_csv = f'../../Data_main/results_eval/peff/monthly/{basin_code}.csv'
@@ -315,11 +315,11 @@ if __name__ == '__main__':
             'Processing monthly effective precipitation for Harquahala INA, AZ...')
 
         years = [2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010,
-                 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020]
+                 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019]
         basin_code = 'hqr'
         basin_shp = '../../Data_main/shapefiles/Basins_of_interest/Harquahala_INA.shp'
         monthly_peff_dir = f'../../Data_main/Raster_data/Effective_precip_prediction_WestUS/{model_version}_monthly'
-        monthly_precip_dir = f'../../Data_main/Raster_data/PRISM_Precip/WestUS_monthly'
+        monthly_precip_dir = f'../../Data_main/Raster_data/GRIDMET_Precip/WestUS_monthly'
         basin_Peff_output_dir = f'../../Data_main/results_eval/peff/monthly/{basin_code}'
         basin_precip_output_dir = f'../../Data_main/results_eval/precip/monthly/{basin_code}'
         peff_output_csv = f'../../Data_main/results_eval/peff/monthly/{basin_code}.csv'
@@ -343,11 +343,11 @@ if __name__ == '__main__':
         print('Processing monthly effective precipitation for Douglas AMA, AZ...')
 
         years = [2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010,
-                 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020]
+                 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019]
         basin_code = 'doug'
         basin_shp = '../../Data_main/shapefiles/Basins_of_interest/Douglas_AMA.shp'
         monthly_peff_dir = f'../../Data_main/Raster_data/Effective_precip_prediction_WestUS/{model_version}_monthly'
-        monthly_precip_dir = f'../../Data_main/Raster_data/PRISM_Precip/WestUS_monthly'
+        monthly_precip_dir = f'../../Data_main/Raster_data/GRIDMET_Precip/WestUS_monthly'
         basin_Peff_output_dir = f'../../Data_main/results_eval/peff/monthly/{basin_code}'
         basin_precip_output_dir = f'../../Data_main/results_eval/precip/monthly/{basin_code}'
         peff_output_csv = f'../../Data_main/results_eval/peff/monthly/{basin_code}.csv'
@@ -372,11 +372,11 @@ if __name__ == '__main__':
             'Processing monthly effective precipitation for Diamond Valley, NV...')
 
         years = [2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010,
-                 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020]
+                 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019]
         basin_code = 'dv'
         basin_shp = '../../Data_main/shapefiles/Basins_of_interest/Diamond_Valley_Basin.shp'
         monthly_peff_dir = f'../../Data_main/Raster_data/Effective_precip_prediction_WestUS/{model_version}_monthly'
-        monthly_precip_dir = f'../../Data_main/Raster_data/PRISM_Precip/WestUS_monthly'
+        monthly_precip_dir = f'../../Data_main/Raster_data/GRIDMET_Precip/WestUS_monthly'
         basin_Peff_output_dir = f'../../Data_main/results_eval/peff/monthly/{basin_code}'
         basin_precip_output_dir = f'../../Data_main/results_eval/precip/monthly/{basin_code}'
         peff_output_csv = f'../../Data_main/results_eval/peff/monthly/{basin_code}.csv'
@@ -401,11 +401,11 @@ if __name__ == '__main__':
             'Processing monthly effective precipitation for Central Valley, CA...')
 
         years = [2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010,
-                 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020]
+                 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019]
         basin_code = 'cv'
         basin_shp = '../../Data_main/shapefiles/Basins_of_interest/Central_Valley.shp'
         monthly_peff_dir = f'../../Data_main/Raster_data/Effective_precip_prediction_WestUS/{model_version}_monthly'
-        monthly_precip_dir = f'../../Data_main/Raster_data/PRISM_Precip/WestUS_monthly'
+        monthly_precip_dir = f'../../Data_main/Raster_data/GRIDMET_Precip/WestUS_monthly'
         basin_Peff_output_dir = f'../../Data_main/results_eval/peff/monthly/{basin_code}'
         basin_precip_output_dir = f'../../Data_main/results_eval/precip/monthly/{basin_code}'
         peff_output_csv = f'../../Data_main/results_eval/peff/monthly/{basin_code}.csv'

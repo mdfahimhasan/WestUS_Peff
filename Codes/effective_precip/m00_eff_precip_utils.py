@@ -361,9 +361,6 @@ def create_annual_peff_fraction_rasters(trained_model, input_csv_dir, exclude_co
             # filtering approach isn't much
             pred_arr = np.where(pred_arr > 1, 1, pred_arr)
 
-            # applying water body masking with lake raster
-            pred_arr = np.where(lake_arr == 1, -9999, pred_arr)
-
             # replacing values with -9999 where irrigated cropET is nan
             irrig_cropET_nan = glob(os.path.join(irrig_cropET_nan_pos_dir, f'*{year}.pkl*'))[0]
             nan_pos_dict = pickle.load(open(irrig_cropET_nan, mode='rb'))
@@ -373,6 +370,9 @@ def create_annual_peff_fraction_rasters(trained_model, input_csv_dir, exclude_co
 
             # reshaping the prediction raster for Western US and saving
             pred_arr = pred_arr.reshape(ref_shape)
+
+            # applying water body masking with lake raster
+            pred_arr = np.where(lake_arr == 1, -9999, pred_arr)
 
             output_prediction_raster = os.path.join(output_dir, f'{prediction_name_keyword}_{year}.tif')
             write_array_to_raster(raster_arr=pred_arr, raster_file=ref_file, transform=ref_file.transform,

@@ -19,14 +19,14 @@ from Codes.effective_precip.m00_eff_precip_utils import estimate_peff_precip_wat
 # Step 6: sum scaled monthly peff to growing season (without considering carried over soil moisture)
 
 if __name__ == '__main__':
-    monthly_model_version = 'v17'                    #####
-    water_yr_model_version = 'v19'                   #####
-    skip_estimating_peff_water_yr_total = True      #####
-    skip_peff_monthly_scaling = True                #####
+    monthly_model_version = 'v19'                    #####
+    water_yr_model_version = 'v20'                   #####
+    skip_estimating_peff_water_yr_total = False      #####
+    skip_peff_monthly_scaling = False                #####
     skip_sum_scaled_peff_water_year = False          #####
-    skip_peff_frac_estimate_water_yr = True         #####
-    skip_sum_scale_peff_to_gs_with_SM = True        #####
-    skip_sum_scale_peff_to_gs = True                #####
+    skip_peff_frac_estimate_water_yr = False         #####
+    skip_sum_scale_peff_to_gs_with_SM = False        #####
+    skip_sum_scale_peff_to_gs = False                #####
 
     # # # # # Step 1: water year peff raster creation using water year peff fraction # # # # #
     years = (2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007,

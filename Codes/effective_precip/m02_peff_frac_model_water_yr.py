@@ -108,18 +108,18 @@ prediction_years = [2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 
                     2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020]
 
 if __name__ == '__main__':
-    model_version = 'v20'                                       ######
+    model_version = 'v20'                                      ######
 
-    skip_train_test_df_creation = True                        ######
+    skip_train_test_df_creation = True                         ######
     skip_train_test_split = False                               ######
-    skip_tune_hyperparams = False                               ######
+    skip_tune_hyperparams = True                               ######
     load_model = False                                          ######
     save_model = True                                          ######
-    skip_plot_perm_imp = False                               ######
-    skip_plot_ale = False                                    ######
+    skip_plot_perm_imp = True                                  ######
+    skip_plot_ale = True                                       ######  Always set to True when running in Linux
     skip_plot_pdp = False                                       ######
     skip_processing_annual_predictor_dataframe = True          ######
-    skip_processing_nan_pos_irrig_cropET = False                ######
+    skip_processing_nan_pos_irrig_cropET = True                ######
     skip_estimate_water_year_peff_frac_WestUS = False           ######
     skip_storing_peff_frac_pred_annual_csv = False              ######
 
@@ -156,15 +156,15 @@ if __name__ == '__main__':
     # # model training  (if hyperparameter tuning is on, the default parameter dictionary will be disregarded)
     print('########## Model training')
     lgbm_param_dict = {'boosting_type': 'gbdt',
-                       'colsample_bynode': 0.85,
-                       'colsample_bytree': 0.99,
+                       'colsample_bynode': 0.78,
+                       'colsample_bytree': 0.95,
                        'learning_rate': 0.099,
-                       'max_depth': 14,
+                       'max_depth': 13,
                        'min_child_samples': 20,
                        'n_estimators': 400,
                        'num_leaves': 70,
-                       'path_smooth': 0.47,
-                       'subsample': 0.75,
+                       'path_smooth': 0.406,
+                       'subsample': 0.77,
                        'data_sample_strategy': 'goss'}
 
     save_model_to_dir = '../../Eff_Precip_Model_Run/annual_model/Model_trained'

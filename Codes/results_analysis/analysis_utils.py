@@ -1693,17 +1693,17 @@ def run_monthly_peff_precip_compilation(years, basin_shp, Peff_input_dir, precip
         # monthly effective precipitation
         clip_Peff_for_basin(years=years, basin_shp=basin_shp, Peff_input_dir=Peff_input_dir,
                             basin_Peff_output_dir=basin_Peff_output_dir, basin_code=basin_code,
-                            month_range=(4, 10), resolution=model_res)
-        compile_basin_monthly_peff_to_csv(years=years, month_range=(4, 10),
+                            month_range=(1, 12), resolution=model_res)
+        compile_basin_monthly_peff_to_csv(years=years, month_range=(1, 12),
                                           basin_peff_dir=basin_Peff_output_dir,
                                           basin_code=basin_code, output_csv=peff_output_csv)
 
         # monthly precipitation (months 1-10 chosen as it will be used to estimate moving average of precip
         clip_precip_for_basin(years=years, basin_shp=basin_shp, basin_code=basin_code,
                               precip_input_dir=precip_input_dir, basin_precip_output_dir=basin_precip_output_dir,
-                              month_range=(1, 10), resolution=model_res)
+                              month_range=(1, 12), resolution=model_res)
 
-        compile_basin_monthly_precip_mv_avg_to_csv(years=years, month_range=(1, 10),
+        compile_basin_monthly_precip_mv_avg_to_csv(years=years, month_range=(1, 12),
                                                    basin_precip_dir=basin_precip_output_dir,
                                                    basin_code=basin_code, output_csv=precip_output_csv)
 

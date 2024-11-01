@@ -778,8 +778,8 @@ def create_pdplots(trained_model, x_train, features_to_include, output_dir, plot
             'TERRACLIMATE_SR': 'Surface runoff (mm)',
             'Runoff_precip_fraction': 'Runoff-Precipitation fraction',
             'Precipitation_intensity': 'Precipitation intensity (mm/day)',
-            'Dryness_index': 'PET/P', 'Relative_infiltration_capacity': 'Relative infiltration capacity',
-            'PET_P_corr': 'PET-P seasonal correlation'
+            'Dryness_index': 'RET/P', 'Relative_infiltration_capacity': 'Relative infiltration capacity',
+            'PET_P_corr': 'RET-P seasonal correlation'
         }
 
         # Subplot labels
@@ -863,8 +863,8 @@ def create_aleplots(trained_model, x_train, y_train, features_to_include,
             'TERRACLIMATE_SR': 'Surface runoff (mm)',
             'Runoff_precip_fraction': 'Runoff-Precipitation fraction',
             'Precipitation_intensity': 'Precipitation intensity \n (mm/day)',
-            'Dryness_index': 'PET/P', 'Relative_infiltration_capacity': 'Relative infiltration capacity',
-            'PET_P_corr': 'PET-P seasonal \n correlation'
+            'Dryness_index': 'RET/P', 'Relative_infiltration_capacity': 'Relative infiltration capacity',
+            'PET_P_corr': 'RET-P seasonal \n correlation'
         }
 
         plt.rcParams['font.size'] = 8
@@ -964,7 +964,7 @@ def plot_permutation_importance(trained_model, x_test, y_test, output_dir, plot_
                        'Runoff_precip_fraction': 'Runoff-Precipitation fraction',
                        'Precipitation_intensity': 'Precipitation intensity',
                        'Relative_infiltration_capacity': 'Relative infiltration capacity',
-                       'Dryness_index': 'PET/P', 'PET_P_corr': 'PET-P seasonal correlation',
+                       'Dryness_index': 'RET/P', 'PET_P_corr': 'RET-P seasonal correlation',
                        'Clay_content': 'Clay content'}
 
         importances = importances.rename(columns=rename_dict)

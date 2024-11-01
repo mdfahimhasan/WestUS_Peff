@@ -115,13 +115,13 @@ if __name__ == '__main__':
     skip_tune_hyperparams = True                               ######
     load_model = False                                          ######
     save_model = True                                          ######
-    skip_plot_perm_imp = True                                  ######
-    skip_plot_ale = True                                       ######  Always set to True when running in Linux
+    skip_plot_perm_imp = False                                 ######
+    skip_plot_ale = True                                      ######  Always set to True when running in Linux
     skip_plot_pdp = False                                       ######
     skip_processing_annual_predictor_dataframe = True          ######
     skip_processing_nan_pos_irrig_cropET = True                ######
-    skip_estimate_water_year_peff_frac_WestUS = False           ######
-    skip_storing_peff_frac_pred_annual_csv = False              ######
+    skip_estimate_water_year_peff_frac_WestUS = True           ######
+    skip_storing_peff_frac_pred_annual_csv = True              ######
 
     # ******************************* Dataframe creation and train-test split (westUS) *********************************
     # # create dataframe

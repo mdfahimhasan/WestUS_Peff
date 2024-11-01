@@ -63,7 +63,7 @@ skip_process_ksat_data = True                           ######
 skip_process_rel_infil_cap_data = True                  ######
 skip_create_P_PET_corr_dataset = True                   ######
 skip_estimate_peff_water_yr_frac = True                 ######
-skip_lake_raster_creation = False                        #####
+skip_lake_raster_creation = True                        ######
 
 # # # #  runs # # # #
 if __name__ == '__main__':

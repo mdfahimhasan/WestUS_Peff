@@ -15,7 +15,7 @@ sys.path.insert(0, dirname(dirname(dirname(abspath(__file__)))))
 
 from Codes.utils.system_ops import makedirs
 from Codes.utils.raster_ops import read_raster_arr_object, write_array_to_raster, mosaic_rasters_list, \
-    clip_resample_reproject_raster,sum_rasters, mean_rasters, make_lat_lon_array_from_raster, shapefile_to_raster
+    clip_resample_reproject_raster, sum_rasters, mean_rasters, make_lat_lon_array_from_raster, shapefile_to_raster
 from Codes.effective_precip.m00_eff_precip_utils import estimate_peff_precip_water_year_fraction
 
 no_data_value = -9999
@@ -1502,7 +1502,7 @@ def run_all_preprocessing(skip_process_GrowSeason_data=False,
     :param skip_summing_irrigated_cropET_gs: Set to True if want to skip summing irrigated cropET data summing for year/grow season.
     :param skip_summing_rainfed_cropET_gs: Set to True if want to skip summing rainfed cropET for growing season.
     :param skip_summing_rainfed_cropET_water_yr: Set to True if want to skip summing rainfed cropET for water year.
-    :param skip_sum_openET: Set True to skip openET ensemble yearly data processing.
+    :param skip_sum_openET: Set True to skip openET ensemble growing season data processing.
     :param skip_excess_ET_filter_processing: Set to True if want to skip excess ET filter dataset processing.
     :param skip_processing_slope_data: Set to True if want to skip DEM to slope conversion.
     :param skip_process_AWC_data: Set to True ti skip processing AWC data.

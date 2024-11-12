@@ -493,9 +493,13 @@ def process_monthly_peff_rasters_to_multiband_forGEE(years, peff_monthly_dir, ou
         peff_data_list = []
 
         # collecting the monthly Peff estimates serially for a year
-        for month in list(range(4, 11)):  # list of months from 4-10
+        for month in list(range(1, 13)):
             monthly_peff = glob(os.path.join(peff_monthly_dir, f'*{year}_{month}*.tif'))
-            peff_data_list.append(monthly_peff[0])
+
+            if len(monthly_peff) == 0:  # in case of 2020, Peff data is available up to month 0. This blocks controls data ingestion for year 2020
+                pass
+            else:
+                peff_data_list.append(monthly_peff[0])
 
         # creating the multi-band image for monthly datasets within an year
         output_raster = os.path.join(output_dir, f'effective_precip_{year}_monthly.tif')

@@ -775,7 +775,7 @@ def dynamic_gs_sum_ET(year_list, growing_season_dir, monthly_input_dir, gs_outpu
     :param monthly_input_dir:  Directory path for monthly effective precipitation/irrigated crop ET datasets.
     :param gs_output_dir:  Directory path (output) for summed growing season effective precipitation/irrigated crop ET
                            datasets.
-   :param sum_keyword: Keyword str to add before the summed raster.
+    :param sum_keyword: Keyword str to add before the summed raster.
                        Should be 'effective_precip' or 'Irrigated_cropET' or 'OpenET_ensemble'
     :param skip_processing: Set to True if want to skip processing this step.
 

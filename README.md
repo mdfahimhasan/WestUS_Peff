@@ -6,7 +6,7 @@ Effective precipitation, defined as the portion of ET derived from precipitation
 __Keywords:__ Effective precipitation, Groundwater; Irrigation; Water use; Remote sensing; Machine learning.
 
 ## Effective precipitation map
-<img src="readme_figs/Peff_map.png" height="500"/> 
+
 
 Figure: Machine learning model generated monthly and growing season effective precipitation estimates for 2016 at 2 km spatial resolution.
 
@@ -53,5 +53,5 @@ may be required for this GEE authentication step. Refer to the installation docs
 
 
 ## Data availability
-The monthly effective precipitation estimates for the growing season (April - October) of 2000 to 2020 are available to download through this [GEE script](https://code.earthengine.google.com/8a41d8cbfb32e73cb339be98c111c875). Non-GEE users can acccess the dataset from this [HydroShare repo](https://www.hydroshare.org/resource/c33ce80f5ae44fe6ab2e5dd3c128eb0b/).
+The monthly effective precipitation estimates for all months of 2000 to 2020 (up to September in 2020) are available to download through this [GEE script](https://code.earthengine.google.com/8a41d8cbfb32e73cb339be98c111c875). Non-GEE users can acccess the dataset from this [HydroShare repo](https://www.hydroshare.org/resource/c33ce80f5ae44fe6ab2e5dd3c128eb0b/).
 

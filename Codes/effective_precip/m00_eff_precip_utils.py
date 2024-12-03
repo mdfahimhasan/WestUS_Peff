@@ -496,7 +496,7 @@ def process_monthly_peff_rasters_to_multiband_forGEE(years, peff_monthly_dir, ou
         for month in list(range(1, 13)):
             monthly_peff = glob(os.path.join(peff_monthly_dir, f'*{year}_{month}*.tif'))
 
-            if len(monthly_peff) == 0:  # in case of 2020, Peff data is available up to month 0. This blocks controls data ingestion for year 2020
+            if len(monthly_peff) == 0:  # in case of 2020, Peff data is available up to month 9. This blocks controls data ingestion for year 2020
                 pass
             else:
                 peff_data_list.append(monthly_peff[0])

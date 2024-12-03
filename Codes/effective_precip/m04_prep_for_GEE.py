@@ -1,7 +1,7 @@
 from m00_eff_precip_utils import process_monthly_peff_rasters_to_multiband_forGEE
 
 """
-This scrips converts the effective precipitation monthly datasets into multi-band raster for each model years_list 
+This script converts the effective precipitation monthly datasets into multi-band raster for each model years_list 
 from 2000 to 2020. The multi-band rasters are uploaded to GEE as assets and later converted into 
 a single multi-band image for all years_list. For 2020, data is available up to September as the monthly datasets
 were scaled using a water year fraction model which ends in water year 2020 (doesn't simulate water year 2021).

@@ -66,7 +66,7 @@ def clip_netGW_Irr_frac_for_basin(years, basin_shp, netGW_input_dir, basin_netGW
                                            use_ref_width_height=False)
 
 
-def pumping_AF_pts_to_mm_raster(years, irrigated_fraction_dir, pumping_pts_shp, pumping_attr_AF,
+def pumping_AF_pts_to_mm_raster(years, pumping_pts_shp, pumping_attr_AF,
                                 year_attr, output_dir, basin_shp, ref_raster=WestUS_raster,
                                 resolution=model_res):
     """
@@ -75,7 +75,6 @@ def pumping_AF_pts_to_mm_raster(years, irrigated_fraction_dir, pumping_pts_shp, 
     Also, generates intermediate pumping in AF rasters.
 
     :param years: List of years_list to process data.
-    :param irrigated_fraction_dir: Directory path of Western US annual irrigation fraction datasets.
     :param pumping_pts_shp: Filepath of point shapefile with annual pumping estimates.
     :param pumping_attr_AF: Attribute in the point shapefile with pumping in AF values.
     :param year_attr: Attribute in the point shapefile with year.
@@ -119,14 +118,9 @@ def pumping_AF_pts_to_mm_raster(years, irrigated_fraction_dir, pumping_pts_shp, 
                                                 attribute=pumping_attr_AF, add=True,
                                                 ref_raster=ref_raster, resolution=resolution)
 
-        # irrigated fraction data processing
-        irrig_frac_data = glob(os.path.join(irrigated_fraction_dir, f'*{year}*.tif'))[0]
-        irrig_frac_arr, file = read_raster_arr_object(irrig_frac_data)
-
         # converting pumping unit from AF to mm
-
-        # pixels with no pumping or zero pumping is assigned to 0 (need the no pumping info for GW models..)
-        pumping_AF_arr = read_raster_arr_object(pumping_AF_raster, get_file=None)
+        # pixels with no pumping or zero pumping is assigned to 0 (need the 'no pumping' info for GW models..)
+        pumping_AF_arr, file = read_raster_arr_object(pumping_AF_raster)
 
         # area of a 2 km pixel
         area_mm2_single_pixel = (2193 * 1000) * (2193 * 1000)  # unit in mm2
@@ -532,8 +526,8 @@ def aggregate_netGW_usgs_pumping_to_annualCSV_CA_ID(annual_netGW_csv, annual_usg
 
 
 def run_annual_csv_processing_KS_CO(years, basin_code, basin_shp,
-                                    westUS_netGW_dir, westUS_irr_frac_dir,
-                                    pumping_pts_shp, pumping_attr_AF, year_attr,
+                                    westUS_netGW_dir, pumping_pts_shp,
+                                    pumping_attr_AF, year_attr,
                                     main_output_dir, pixelwise_output_csv,
                                     usgs_westUS_GW_shp,
                                     usgs_annual_GW_estimates_csv,
@@ -548,7 +542,6 @@ def run_annual_csv_processing_KS_CO(years, basin_code, basin_shp,
                         ['gmd4', 'gmd3', 'rpb']
     :param basin_shp: Filepath of basin shapefile.
     :param westUS_netGW_dir: WestUS netGW directory.
-    :param westUS_irr_frac_dir: WestUS irrigated fraction directory.
     :param pumping_pts_shp: Filepath of point shapefile with annual pumping estimates.
     :param pumping_attr_AF: Attribute in the point shapefile with pumping in AF values.
     :param year_attr: Attribute in the point shapefile with year.
@@ -592,9 +585,8 @@ def run_annual_csv_processing_KS_CO(years, basin_code, basin_shp,
         print('# # # # #  STEP 2 # # # # #')
 
         basin_pumping_AF_dir, basin_pumping_mm_dir = \
-            pumping_AF_pts_to_mm_raster(years=years, irrigated_fraction_dir=westUS_irr_frac_dir,
-                                        pumping_pts_shp=pumping_pts_shp, pumping_attr_AF=pumping_attr_AF,
-                                        year_attr=year_attr,
+            pumping_AF_pts_to_mm_raster(years=years, pumping_pts_shp=pumping_pts_shp,
+                                        pumping_attr_AF=pumping_attr_AF, year_attr=year_attr,
                                         output_dir=main_output_dir, basin_shp=basin_shp,
                                         ref_raster=WestUS_raster, resolution=model_res)
 
@@ -636,8 +628,8 @@ def run_annual_csv_processing_KS_CO(years, basin_code, basin_shp,
 
 
 def run_annual_csv_processing_AZ(years, basin_code, basin_shp,
-                                 westUS_netGW_dir, westUS_irr_frac_dir,
-                                 pumping_pts_shp, pumping_attr_AF, year_attr,
+                                 westUS_netGW_dir, pumping_pts_shp,
+                                 pumping_attr_AF, year_attr,
                                  annual_pumping_csv,
                                  main_output_dir, pixelwise_output_csv,
                                  usgs_westUS_GW_shp,
@@ -653,7 +645,6 @@ def run_annual_csv_processing_AZ(years, basin_code, basin_shp,
                         ['hqr', 'doug']
     :param basin_shp: Filepath of basin shapefile.
     :param westUS_netGW_dir: WestUS netGW directory.
-    :param westUS_irr_frac_dir: WestUS irrigated fraction directory.
     :param pumping_pts_shp: Filepath of point shapefile with annual pumping estimates.
     :param pumping_attr_AF: Attribute in the point shapefile with pumping in AF values.
     :param year_attr: Attribute in the point shapefile with year.
@@ -699,9 +690,8 @@ def run_annual_csv_processing_AZ(years, basin_code, basin_shp,
         print('# # # # #  STEP 2 # # # # #')
 
         basin_pumping_AF_dir, basin_pumping_mm_dir = \
-            pumping_AF_pts_to_mm_raster(years=years, irrigated_fraction_dir=westUS_irr_frac_dir,
-                                        pumping_pts_shp=pumping_pts_shp, pumping_attr_AF=pumping_attr_AF,
-                                        year_attr=year_attr,
+            pumping_AF_pts_to_mm_raster(years=years, pumping_pts_shp=pumping_pts_shp,
+                                        pumping_attr_AF=pumping_attr_AF, year_attr=year_attr,
                                         output_dir=main_output_dir, basin_shp=basin_shp,
                                         ref_raster=WestUS_raster, resolution=model_res)
 

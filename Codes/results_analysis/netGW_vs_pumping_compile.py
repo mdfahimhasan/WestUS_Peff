@@ -34,7 +34,6 @@ if __name__ == '__main__':
         basin_code = 'gmd4'
         basin_shp = '../../Data_main/shapefiles/Basins_of_interest/GMD4.shp'
         westUS_netGW_dir = '../../Data_main/Raster_data/NetGW_irrigation/WesternUS'
-        westUS_irr_frac_dir = '../../Data_main/Raster_data/Irrigated_cropland/Irrigated_Frac'
         pumping_pts_shp = '../../Data_main/Pumping/Kansas/KS_GW_GMD4.shp'
         pumping_attr_AF = 'AF_pumped'
         year_attr = 'Year'
@@ -45,12 +44,13 @@ if __name__ == '__main__':
         final_annual_csv = f'../../Data_main/results_eval/netGW/{basin_code}/{basin_code}_annual.csv'
 
         run_annual_csv_processing_KS_CO(years, basin_code, basin_shp,
-                                        westUS_netGW_dir, westUS_irr_frac_dir,
-                                        pumping_pts_shp, pumping_attr_AF, year_attr,
+                                        westUS_netGW_dir, pumping_pts_shp,
+                                        pumping_attr_AF, year_attr,
                                         main_output_dir, pixelwise_output_csv,
                                         usgs_westUS_GW_shp,
                                         usgs_annual_GW_estimates_csv,
-                                        final_annual_csv, skip_processing=skip_process_gmd4_data)
+                                        final_annual_csv,
+                                        skip_processing=skip_process_gmd4_data)
 
     # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
     # # # For Groundwater Management District 3 (GMD3), Kansas
@@ -62,7 +62,6 @@ if __name__ == '__main__':
         basin_code = 'gmd3'
         basin_shp = '../../Data_main/shapefiles/Basins_of_interest/GMD3.shp'
         westUS_netGW_dir = '../../Data_main/Raster_data/NetGW_irrigation/WesternUS'
-        westUS_irr_frac_dir = '../../Data_main/Raster_data/Irrigated_cropland/Irrigated_Frac'
         pumping_pts_shp = '../../Data_main/Pumping/Kansas/KS_GW_GMD3.shp'
         pumping_attr_AF = 'AF_pumped'
         year_attr = 'Year'
@@ -73,12 +72,13 @@ if __name__ == '__main__':
         final_annual_csv = f'../../Data_main/results_eval/netGW/{basin_code}/{basin_code}_annual.csv'
 
         run_annual_csv_processing_KS_CO(years, basin_code, basin_shp,
-                                        westUS_netGW_dir, westUS_irr_frac_dir,
-                                        pumping_pts_shp, pumping_attr_AF, year_attr,
+                                        westUS_netGW_dir, pumping_pts_shp,
+                                        pumping_attr_AF, year_attr,
                                         main_output_dir, pixelwise_output_csv,
                                         usgs_westUS_GW_shp,
                                         usgs_annual_GW_estimates_csv,
-                                        final_annual_csv, skip_processing=skip_process_gmd3_data)
+                                        final_annual_csv,
+                                        skip_processing=skip_process_gmd3_data)
 
     # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
     # # # For Republican River Basin (RPB), Colorado
@@ -90,7 +90,6 @@ if __name__ == '__main__':
         basin_code = 'rpb'
         basin_shp = '../../Data_main/shapefiles/Basins_of_interest/Republican_Basin.shp'
         westUS_netGW_dir = '../../Data_main/Raster_data/NetGW_irrigation/WesternUS'
-        westUS_irr_frac_dir = '../../Data_main/Raster_data/Irrigated_cropland/Irrigated_Frac'
         pumping_pts_shp = '../../Data_main/Pumping/Colorado/CO_GW_RPB.shp'
         pumping_attr_AF = 'ann_amt'
         year_attr = 'irr_year'
@@ -101,12 +100,13 @@ if __name__ == '__main__':
         final_annual_csv = f'../../Data_main/results_eval/netGW/{basin_code}/{basin_code}_annual.csv'
 
         run_annual_csv_processing_KS_CO(years, basin_code, basin_shp,
-                                        westUS_netGW_dir, westUS_irr_frac_dir,
-                                        pumping_pts_shp, pumping_attr_AF, year_attr,
+                                        westUS_netGW_dir, pumping_pts_shp,
+                                        pumping_attr_AF, year_attr,
                                         main_output_dir, pixelwise_output_csv,
                                         usgs_westUS_GW_shp,
                                         usgs_annual_GW_estimates_csv,
-                                        final_annual_csv, skip_processing=skip_process_rpb_data)
+                                        final_annual_csv,
+                                        skip_processing=skip_process_rpb_data)
 
     # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
     # # # For Harquahala INA, Arizona
@@ -118,7 +118,6 @@ if __name__ == '__main__':
         basin_code = 'hqr'
         basin_shp = '../../Data_main/shapefiles/Basins_of_interest/Harquahala_INA.shp'
         westUS_netGW_dir = '../../Data_main/Raster_data/NetGW_irrigation/WesternUS'
-        westUS_irr_frac_dir = '../../Data_main/Raster_data/Irrigated_cropland/Irrigated_Frac'
         pumping_pts_shp = '../../Data_main/Pumping/Arizona/AZ_GW_Harquahala.shp'
         pumping_attr_AF = 'AF_pumped'
         year_attr = 'Year'
@@ -129,13 +128,14 @@ if __name__ == '__main__':
         usgs_annual_GW_estimates_csv = f'../../Data_main/results_eval/netGW/{basin_code}/{basin_code}_USGS.csv'
         final_annual_csv = f'../../Data_main/results_eval/netGW/{basin_code}/{basin_code}_annual.csv'
         run_annual_csv_processing_AZ(years, basin_code, basin_shp,
-                                     westUS_netGW_dir, westUS_irr_frac_dir,
-                                     pumping_pts_shp, pumping_attr_AF, year_attr,
+                                     westUS_netGW_dir,pumping_pts_shp,
+                                     pumping_attr_AF, year_attr,
                                      annual_pumping_csv,
                                      main_output_dir, pixelwise_output_csv,
                                      usgs_westUS_GW_shp,
                                      usgs_annual_GW_estimates_csv,
-                                     final_annual_csv, skip_processing=skip_process_hqr_data)
+                                     final_annual_csv,
+                                     skip_processing=skip_process_hqr_data)
 
     # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
     # # # For Douglas AMA, Arizona
@@ -147,7 +147,6 @@ if __name__ == '__main__':
         basin_code = 'doug'
         basin_shp = '../../Data_main/shapefiles/Basins_of_interest/Douglas_AMA.shp'
         westUS_netGW_dir = '../../Data_main/Raster_data/NetGW_irrigation/WesternUS'
-        westUS_irr_frac_dir = '../../Data_main/Raster_data/Irrigated_cropland/Irrigated_Frac'
         pumping_pts_shp = '../../Data_main/Pumping/Arizona/AZ_GW_Douglas.shp'
         pumping_attr_AF = 'AF_pumped'
         year_attr = 'Year'
@@ -159,13 +158,14 @@ if __name__ == '__main__':
         final_annual_csv = f'../../Data_main/results_eval/netGW/{basin_code}/{basin_code}_annual.csv'
 
         run_annual_csv_processing_AZ(years, basin_code, basin_shp,
-                                     westUS_netGW_dir, westUS_irr_frac_dir,
-                                     pumping_pts_shp, pumping_attr_AF, year_attr,
+                                     westUS_netGW_dir, pumping_pts_shp,
+                                     pumping_attr_AF, year_attr,
                                      annual_pumping_csv,
                                      main_output_dir, pixelwise_output_csv,
                                      usgs_westUS_GW_shp,
                                      usgs_annual_GW_estimates_csv,
-                                     final_annual_csv, skip_processing=skip_process_doug_data)
+                                     final_annual_csv,
+                                     skip_processing=skip_process_doug_data)
 
     # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
     # # # For Diamond Valley, Nevada

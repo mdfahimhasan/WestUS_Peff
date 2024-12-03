@@ -13,9 +13,9 @@ WestUS_raster = '../../Data_main/reference_rasters/Western_US_refraster_2km.tif'
 if __name__ == '__main__':
     # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
     # boolean switches to process data for each region
-    skip_process_gmd4_data = True          # Groundwater Management District 4, KS
-    skip_process_gmd3_data = True          # Groundwater Management District 3, KS
-    skip_process_rpb_data = True           # Republican River Basin, Co
+    skip_process_gmd4_data = False          # Groundwater Management District 4, KS
+    skip_process_gmd3_data = False          # Groundwater Management District 3, KS
+    skip_process_rpb_data = False           # Republican River Basin, Co
     skip_process_hqr_data = False           # Harquahala INA, AZ
     skip_process_doug_data = False          # Douglas AMA, AZ
     skip_process_dv_data = False            # Diamond Valley, NV

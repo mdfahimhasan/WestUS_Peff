@@ -155,20 +155,24 @@ def pumping_AF_pts_to_mm_raster(years, pumping_pts_shp, pumping_attr_AF,
     return pumping_AF_dir, pumping_mm_dir
 
 
-def compile_pixelwise_basin_df_for_netGW_pumping(years, basin_netGW_dir, basin_pumping_mm_dir,
-                                                 basin_pumping_AF_dir, output_csv):
+def compile_pixelwise_basin_df_for_netGW_pumping(years, basin_netGW_dir, output_csv,
+                                                 basin_pumping_mm_dir=None,
+                                                 basin_pumping_AF_dir=None):
     """
     Compiling pixel-wise annual netGW and pumping data for a basin.
 
     :param years: List of years_list to process data.
     :param basin_netGW_dir: Basin netGW directory.
-    :param basin_pumping_mm_dir: Basin pumping (in mm) directory.
-    :param basin_pumping_AF_dir: Basin pumping (in AF) directory.
     :param output_csv: Filepath of output csv.
+    :param basin_pumping_mm_dir: Basin pumping (in mm) directory.
+                                 Default set to None to not incorporate pumping data (e.g., for Arizona)
+    :param basin_pumping_AF_dir: Basin pumping (in AF) directory.
+                                 Default set to None to not incorporate pumping data (e.g., for Arizona)
 
     :return:  Filepath of output csv.
     """
-    makedirs([basin_pumping_mm_dir])
+    if basin_pumping_mm_dir:
+        makedirs([basin_pumping_mm_dir])
 
     print(f'Compiling growing season netGW vs pumping dataframe...')
 
@@ -179,27 +183,40 @@ def compile_pixelwise_basin_df_for_netGW_pumping(years, basin_netGW_dir, basin_p
     # lopping through each year and storing data in a list
     for year in years:
         netGW_data = glob(os.path.join(basin_netGW_dir, f'*{year}*.tif'))[0]
-        pumping_mm_data = glob(os.path.join(basin_pumping_mm_dir, f'*{year}*.tif'))[0]
-        pumping_AF_data = glob(os.path.join(basin_pumping_AF_dir, f'*{year}*.tif'))[0]
-
         netGW_arr = read_raster_arr_object(netGW_data, get_file=False).flatten()
-        pump_mm_arr = read_raster_arr_object(pumping_mm_data, get_file=False).flatten()
-        pump_AF_arr = read_raster_arr_object(pumping_AF_data, get_file=False).flatten()
+
         lon_arr, lat_arr = make_lat_lon_array_from_raster(netGW_data)
         lon_arr = lon_arr.flatten()
         lat_arr = lat_arr.flatten()
 
-        year_list = [year] * len(pump_mm_arr)
+        year_list = [year] * len(netGW_arr)
 
         extract_dict['year'].extend(year_list)
         extract_dict['netGW_mm'].extend(list(netGW_arr))
-        extract_dict['pumping_mm'].extend(list(pump_mm_arr))
-        extract_dict['pumping_AF'].extend(list(pump_AF_arr))
         extract_dict['lon'].extend(list(lon_arr))
         extract_dict['lat'].extend(list(lat_arr))
 
+        if basin_pumping_AF_dir and basin_pumping_mm_dir:     # reading pumping data if directories are provided
+            pumping_mm_data = glob(os.path.join(basin_pumping_mm_dir, f'*{year}*.tif'))[0]
+            pumping_AF_data = glob(os.path.join(basin_pumping_AF_dir, f'*{year}*.tif'))[0]
+
+            pump_mm_arr = read_raster_arr_object(pumping_mm_data, get_file=False).flatten()
+            pump_AF_arr = read_raster_arr_object(pumping_AF_data, get_file=False).flatten()
+
+            extract_dict['pumping_mm'].extend(list(pump_mm_arr))
+            extract_dict['pumping_AF'].extend(list(pump_AF_arr))
+
+        else:
+            extract_dict['pumping_mm'].extend([None] * len(netGW_arr))
+            extract_dict['pumping_AF'].extend([None] * len(netGW_arr))
+
+
     # converting dictionary to dataframe and saving to csv
     df = pd.DataFrame(extract_dict)
+
+    # dropping columns with pumping attribute if the directories were not provided and column contains None
+    if not basin_pumping_AF_dir and not basin_pumping_mm_dir:
+        df = df[['year', 'netGW_mm', 'lat', 'lon']]
 
     # converting netGW mm to AF
     area_mm2_single_pixel = (2193 * 1000) * (2193 * 1000)  # unit in mm2
@@ -628,9 +645,7 @@ def run_annual_csv_processing_KS_CO(years, basin_code, basin_shp,
 
 
 def run_annual_csv_processing_AZ(years, basin_code, basin_shp,
-                                 westUS_netGW_dir, pumping_pts_shp,
-                                 pumping_attr_AF, year_attr,
-                                 annual_pumping_csv,
+                                 westUS_netGW_dir, annual_pumping_csv,
                                  main_output_dir, pixelwise_output_csv,
                                  usgs_westUS_GW_shp,
                                  usgs_annual_GW_estimates_csv,
@@ -645,9 +660,6 @@ def run_annual_csv_processing_AZ(years, basin_code, basin_shp,
                         ['hqr', 'doug']
     :param basin_shp: Filepath of basin shapefile.
     :param westUS_netGW_dir: WestUS netGW directory.
-    :param pumping_pts_shp: Filepath of point shapefile with annual pumping estimates.
-    :param pumping_attr_AF: Attribute in the point shapefile with pumping in AF values.
-    :param year_attr: Attribute in the point shapefile with year.
     :param annual_pumping_csv: Filepath of annual basin aggregated pumping database (csv).
     :param main_output_dir: Filepath of main output directory to store processed data for a basin.
     :param pixelwise_output_csv: Filepath of csv holding pixel-wise annual netGW and pumping data for a basin.
@@ -684,45 +696,33 @@ def run_annual_csv_processing_AZ(years, basin_code, basin_shp,
                                       basin_irr_frac_output_dir=None)
 
         # # # # #  STEP 2 # # # # #
-        # # Converting annual pumping shapefile (unit AF) to mm raster
-        # # these are only the wells that have location (lat/lon) info. There are significant num of wells with missing
-        # # location info which will not come into the pumping rasters
+        # # Compile pixel-wise growing season netGW and annual pumping in dataframes
         print('# # # # #  STEP 2 # # # # #')
 
-        basin_pumping_AF_dir, basin_pumping_mm_dir = \
-            pumping_AF_pts_to_mm_raster(years=years, pumping_pts_shp=pumping_pts_shp,
-                                        pumping_attr_AF=pumping_attr_AF, year_attr=year_attr,
-                                        output_dir=main_output_dir, basin_shp=basin_shp,
-                                        ref_raster=WestUS_raster, resolution=model_res)
-
-        # # # # #  STEP 3 # # # # #
-        # # Compile pixelwise growing season netGW and annual pumping in dataframes
-        print('# # # # #  STEP 3 # # # # #')
-
         compile_pixelwise_basin_df_for_netGW_pumping(years=years, basin_netGW_dir=basin_netGW_dir,
-                                                     basin_pumping_mm_dir=basin_pumping_mm_dir,
-                                                     basin_pumping_AF_dir=basin_pumping_AF_dir,
+                                                     basin_pumping_mm_dir=None,
+                                                     basin_pumping_AF_dir=None,
                                                      output_csv=pixelwise_output_csv)
 
-        # # # # #  STEP 4 # # # # #
+        # # # # #  STEP 3 # # # # #
         # # Clip USGS HUC12-scale basins with NHM predicted GW pumping estimates
-        print('# # # # #  STEP 4 # # # # #', '\n', 'Clipping HUC12-scale basins with USGS GW pumping data...')
+        print('# # # # #  STEP 3 # # # # #', '\n', 'Clipping HUC12-scale basins with USGS GW pumping data...')
 
         clip_vector(input_shapefile=usgs_westUS_GW_shp, mask_shapefile=basin_shp,
                     output_shapefile=usgs_basin_GW_shp, create_zero_buffer=False,
                     change_crs='EPSG:4269')  # the conversion to EPSG 4269 is needed as all basin shapefiles are in this crs
 
-        # # # # #  STEP 5 # # # # #
+        # # # # #  STEP 4 # # # # #
         # # Aggregate USGS HUC12-scale GW pumping estimates to a annual scale for the basin of interest
-        print('# # # # #  STEP 5 # # # # #')
+        print('# # # # #  STEP 4 # # # # #')
 
         aggregate_USGS_pumping_annual_csv(years=years, usgs_GW_shp_for_basin=usgs_basin_GW_shp,
                                           convert_to_crs='EPSG:3857',
                                           output_csv=usgs_annual_GW_estimates_csv)
 
-        # # # # #  STEP 6 # # # # #
+        # # # # #  STEP 5 # # # # #
         # # Compile the basin's pixelwise netGW and in-situ pumping to a common csv
-        print('# # # # #  STEP 6 # # # # #')
+        print('# # # # #  STEP 5 # # # # #')
 
         aggregate_netGW_insitu_usgs_pumping_to_annualCSV_AZ(pixel_netGW_csv=pixelwise_output_csv,
                                                             annual_pumping_csv=annual_pumping_csv,
@@ -730,7 +730,6 @@ def run_annual_csv_processing_AZ(years, basin_code, basin_shp,
                                                             annual_usgs_GW_csv=usgs_annual_GW_estimates_csv,
                                                             area_basin_mm2=basin_area_dict[basin_code],
                                                             output_annual_csv=final_annual_csv)
-
     else:
         pass
 
@@ -766,7 +765,6 @@ def run_annual_csv_processing_NV_UT(years, basin_code, basin_shp,
         basin_area_dict = {'dv': 1933578136.225 * (1000 * 1000), 'pv': 1339578824.848 * (1000 * 1000)}  # in mm2
 
         # creating output directories for different processes
-        # pumping AF and mm raster directories will be created inside the pumping_AF_pts_to_mm_raster() function
         basin_netGW_dir = os.path.join(main_output_dir, 'netGW_basin_mm')
         usgs_basin_GW_dir = os.path.join(main_output_dir, 'USGS_GW_irr')
         usgs_basin_GW_shp = os.path.join(main_output_dir, 'USGS_GW_irr', 'USGS_GW_irr.shp')
@@ -846,7 +844,6 @@ def run_annual_csv_processing_CA_ID(years, basin_code, basin_shp, westUS_netGW_d
         }
 
         # creating output directories for different processes
-        # pumping AF and mm raster directories will be created inside the pumping_AF_pts_to_mm_raster() function
         basin_netGW_dir = os.path.join(main_output_dir, 'netGW_basin_mm')
         usgs_basin_GW_dir = os.path.join(main_output_dir, 'USGS_GW_irr')
         usgs_basin_GW_shp = os.path.join(main_output_dir, 'USGS_GW_irr', 'USGS_GW_irr.shp')

@@ -13,9 +13,9 @@ WestUS_raster = '../../Data_main/reference_rasters/Western_US_refraster_2km.tif'
 if __name__ == '__main__':
     # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
     # boolean switches to process data for each region
-    skip_process_gmd4_data = False          # Groundwater Management District 4, KS
-    skip_process_gmd3_data = False          # Groundwater Management District 3, KS
-    skip_process_rpb_data = False           # Republican River Basin, Co
+    skip_process_gmd4_data = True          # Groundwater Management District 4, KS
+    skip_process_gmd3_data = True          # Groundwater Management District 3, KS
+    skip_process_rpb_data = True           # Republican River Basin, Co
     skip_process_hqr_data = False           # Harquahala INA, AZ
     skip_process_doug_data = False          # Douglas AMA, AZ
     skip_process_dv_data = False            # Diamond Valley, NV
@@ -128,8 +128,7 @@ if __name__ == '__main__':
         usgs_annual_GW_estimates_csv = f'../../Data_main/results_eval/netGW/{basin_code}/{basin_code}_USGS.csv'
         final_annual_csv = f'../../Data_main/results_eval/netGW/{basin_code}/{basin_code}_annual.csv'
         run_annual_csv_processing_AZ(years, basin_code, basin_shp,
-                                     westUS_netGW_dir,pumping_pts_shp,
-                                     pumping_attr_AF, year_attr,
+                                     westUS_netGW_dir,
                                      annual_pumping_csv,
                                      main_output_dir, pixelwise_output_csv,
                                      usgs_westUS_GW_shp,
@@ -158,8 +157,7 @@ if __name__ == '__main__':
         final_annual_csv = f'../../Data_main/results_eval/netGW/{basin_code}/{basin_code}_annual.csv'
 
         run_annual_csv_processing_AZ(years, basin_code, basin_shp,
-                                     westUS_netGW_dir, pumping_pts_shp,
-                                     pumping_attr_AF, year_attr,
+                                     westUS_netGW_dir,
                                      annual_pumping_csv,
                                      main_output_dir, pixelwise_output_csv,
                                      usgs_westUS_GW_shp,

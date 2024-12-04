@@ -66,13 +66,12 @@ def clip_netGW_Irr_frac_for_basin(years, basin_shp, netGW_input_dir, basin_netGW
                                            use_ref_width_height=False)
 
 
-def pumping_AF_pts_to_mm_raster(years, pumping_pts_shp, pumping_attr_AF,
-                                year_attr, output_dir, basin_shp, ref_raster=WestUS_raster,
-                                resolution=model_res):
+def pumping_AF_pts_to_raster(years, pumping_pts_shp, pumping_attr_AF,
+                             year_attr, output_dir, basin_shp, ref_raster=WestUS_raster,
+                             resolution=model_res):
     """
-    Convert point scale (shapefile) groundwater pumping estimates to rasters in mm.
+    Convert point scale (shapefile) groundwater pumping estimates to rasters in AF.
     For individual pixels (2km) sums up all the pumping values inside it.
-    Also, generates intermediate pumping in AF rasters.
 
     :param years: List of years_list to process data.
     :param pumping_pts_shp: Filepath of point shapefile with annual pumping estimates.
@@ -360,9 +359,8 @@ def aggregate_netGW_insitu_usgs_pumping_to_annualCSV_KS_CO(pixel_netGW_pumping_c
     yearly_df['USGS_m3'] = yearly_df['USGS_AF'] * 1233.48
 
     # calculating mean netGW + mean pumping + mean USGS pumping (in mm)
-    area_mm2_single_pixel = (2193 * 1000) * (2193 * 1000)  # unit in mm2
-    yearly_df['mean netGW_mm'] = yearly_df['netGW_mm'] * area_mm2_single_pixel / area_basin_mm2
-    yearly_df['mean pumping_mm'] = yearly_df['pumping_mm'] * area_mm2_single_pixel / area_basin_mm2
+    yearly_df['mean netGW_mm'] = yearly_df['netGW_AF'] * 1233481837547.5 / area_basin_mm2
+    yearly_df['mean pumping_mm'] = yearly_df['pumping_AF'] * 1233481837547.5 / area_basin_mm2  # AF >> mm3 >> mean mm
     yearly_df['mean USGS_mm'] = (yearly_df['USGS_AF'] * 1233481837547.5 / area_basin_mm2)  # AF >> mm3 >> mean mm
 
     # saving final csv
@@ -417,8 +415,7 @@ def aggregate_netGW_insitu_usgs_pumping_to_annualCSV_AZ(pixel_netGW_csv, annual_
     yearly_df['USGS_m3'] = yearly_df['USGS_AF'] * 1233.48
 
     # calculating mean netGW + mean pumping + mean USGS pumping (in mm)
-    area_mm2_single_pixel = (2193 * 1000) * (2193 * 1000)  # unit in mm2
-    yearly_df['mean netGW_mm'] = yearly_df['netGW_mm'] * area_mm2_single_pixel / area_basin_mm2
+    yearly_df['mean netGW_mm'] = yearly_df['netGW_AF'] * 1233481837547.5 / area_basin_mm2
     yearly_df['mean pumping_mm'] = yearly_df['pumping_AF'] * 1233481837547.5 / area_basin_mm2  # AF >> mm3 >> mean mm
     yearly_df['mean USGS_mm'] = yearly_df['USGS_AF'] * 1233481837547.5 / area_basin_mm2  # AF >> mm3 >> mean mm
 
@@ -490,8 +487,8 @@ def aggregate_netGW_insitu_usgs_pumping_to_annualCSV_NV_UT(years, basin_netGW_di
     yearly_df['USGS_m3'] = yearly_df['USGS_AF'] * 1233.48
 
     # # calculating mean netGW + mean pumping + mean USGS pumping (in mm)
-    yearly_df['mean netGW_mm'] = yearly_df['netGW_AF'] * 1233481837548 / area_basin_mm2
-    yearly_df['mean pumping_mm'] = yearly_df[pump_AF_attr] * 1233481837548 / area_basin_mm2
+    yearly_df['mean netGW_mm'] = yearly_df['netGW_AF'] * 1233481837548.5 / area_basin_mm2
+    yearly_df['mean pumping_mm'] = yearly_df[pump_AF_attr] * 1233481837548.5 / area_basin_mm2
     yearly_df['mean USGS_mm'] = yearly_df['USGS_AF'] * 1233481837547.5 / area_basin_mm2  # AF >> mm3 >> mean mm
 
     yearly_df.to_csv(output_csv, index=False)
@@ -531,7 +528,7 @@ def aggregate_netGW_usgs_pumping_to_annualCSV_CA_ID(annual_netGW_csv, annual_usg
 
     # calculating mean netGW + mean USGS pumping (in mm)
     area_mm2_single_pixel = (2193 * 1000) * (2193 * 1000)  # unit in mm2
-    yearly_df['mean netGW_mm'] = yearly_df['netGW_mm'] * area_mm2_single_pixel / area_basin_mm2
+    yearly_df['mean netGW_mm'] = yearly_df['netGW_AF'] * 1233481837547.5 / area_basin_mm2
     yearly_df['mean USGS_mm'] = yearly_df['USGS_AF'] * 1233481837547.5 / area_basin_mm2  # AF >> mm3 >> mean mm
 
     # estimating pumping from netGW (consumptive use)
@@ -580,7 +577,7 @@ def run_annual_csv_processing_KS_CO(years, basin_code, basin_shp,
         }
 
         # creating output directories for different processes
-        # pumping AF and mm raster directories will be created inside the pumping_AF_pts_to_mm_raster() function
+        # pumping AF and mm raster directories will be created inside the pumping_AF_pts_to_raster() function
         basin_netGW_dir = os.path.join(main_output_dir, 'netGW_basin_mm')
         usgs_basin_GW_dir = os.path.join(main_output_dir, 'USGS_GW_irr')
         usgs_basin_GW_shp = os.path.join(main_output_dir, 'USGS_GW_irr', 'USGS_GW_irr.shp')
@@ -602,10 +599,10 @@ def run_annual_csv_processing_KS_CO(years, basin_code, basin_shp,
         print('# # # # #  STEP 2 # # # # #')
 
         basin_pumping_AF_dir, basin_pumping_mm_dir = \
-            pumping_AF_pts_to_mm_raster(years=years, pumping_pts_shp=pumping_pts_shp,
-                                        pumping_attr_AF=pumping_attr_AF, year_attr=year_attr,
-                                        output_dir=main_output_dir, basin_shp=basin_shp,
-                                        ref_raster=WestUS_raster, resolution=model_res)
+            pumping_AF_pts_to_raster(years=years, pumping_pts_shp=pumping_pts_shp,
+                                     pumping_attr_AF=pumping_attr_AF, year_attr=year_attr,
+                                     output_dir=main_output_dir, basin_shp=basin_shp,
+                                     ref_raster=WestUS_raster, resolution=model_res)
 
         # # # # #  STEP 3 # # # # #
         # # Compile pixelwise growing season netGW and annual pumping in dataframes
@@ -678,7 +675,7 @@ def run_annual_csv_processing_AZ(years, basin_code, basin_shp,
         }
 
         # creating output directories for different processes
-        # pumping AF and mm raster directories will be created inside the pumping_AF_pts_to_mm_raster() function
+        # pumping AF and mm raster directories will be created inside the pumping_AF_pts_to_raster() function
         basin_netGW_dir = os.path.join(main_output_dir, 'netGW_basin_mm')
         usgs_basin_GW_dir = os.path.join(main_output_dir, 'USGS_GW_irr')
         usgs_basin_GW_shp = os.path.join(main_output_dir, 'USGS_GW_irr', 'USGS_GW_irr.shp')

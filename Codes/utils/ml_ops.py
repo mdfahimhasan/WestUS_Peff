@@ -227,7 +227,7 @@ def create_train_test_annual_dataframe(years_list, yearly_data_path_dict,
                                        static_data_path_dict, datasets_to_include, output_parquet,
                                        skip_processing=False, n_partitions=20):
     """
-    Compile monthly/yearly/static datasets into a dataframe. This function-generated dataframe will be used as
+    Compile yearly/static datasets into a dataframe. This function-generated dataframe will be used as
     train-test data for ML model at annual scale.
 
     *** if there is no static data, set static_data_path_dict to None.

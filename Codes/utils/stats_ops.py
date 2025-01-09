@@ -192,3 +192,21 @@ def quantile_mapping(predictions, observed_train):
     corrected_predictions = corrected_predictions.reshape(predictions.shape)
 
     return corrected_predictions
+
+
+def calculate_pbias(observed, simulated):
+    """
+    Calculate the Percent Bias (PBIAS) between observed and simulated data.
+
+    :param observed (array-like): Array of observed data.
+    :param simulated (array-like): Array of simulated data.
+
+    :returns The PBIAS value.
+    """
+    observed = np.array(observed)
+    simulated = np.array(simulated)
+
+    # computing PBIAS
+    pbias = 100 * np.sum(observed - simulated) / np.sum(observed)
+
+    return pbias

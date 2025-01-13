@@ -56,7 +56,7 @@ def scatter_plot_of_same_vars(Y_pred, Y_obsv, x_label, y_label, plot_name, saved
         ax.set_title(title)
 
     r2_val = round(calculate_r2(Y_pred, Y_obsv), 4)
-    ax.text(0.1, 0.9, s=f'R2={r2_val:.3f}', transform=ax.transAxes)
+    ax.text(0.1, 0.9, s=f'$R^2={r2_val:.3f}$', transform=ax.transAxes)
 
     makedirs([savedir])
 
@@ -139,7 +139,7 @@ def density_grid_plot_of_same_vars(Y_pred, Y_obsv, x_label, y_label, plot_name, 
         ax.set_title(title)
 
     r2_val = round(calculate_r2(Y_pred, Y_obsv), 3)
-    ax.text(0.1, 0.9, s=f'R2={r2_val:.3f}', transform=ax.transAxes, color='black')
+    ax.text(0.1, 0.9, s=f'$R^2={r2_val:.3f}$', transform=ax.transAxes, color='black')
 
     makedirs([savedir])
 

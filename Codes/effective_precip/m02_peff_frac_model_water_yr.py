@@ -111,13 +111,13 @@ if __name__ == '__main__':
     model_version = 'v20'                                      ######
 
     skip_train_test_df_creation = True                         ######
-    skip_train_test_split = False                               ######
+    skip_train_test_split = True                               ######
     skip_tune_hyperparams = True                               ######
-    load_model = False                                          ######
-    save_model = True                                          ######
-    skip_plot_perm_imp = False                                 ######
-    skip_plot_ale = True                                      ######  Always set to True when running in Linux
-    skip_plot_pdp = False                                       ######
+    load_model = True                                          ######
+    save_model = False                                          ######
+    skip_plot_perm_imp = True                                  ######
+    skip_plot_ale = True                                       ######  Always set to True when running in Linux
+    skip_plot_pdp = True                                       ######
     skip_processing_annual_predictor_dataframe = True          ######
     skip_processing_nan_pos_irrig_cropET = True                ######
     skip_estimate_water_year_peff_frac_WestUS = True           ######

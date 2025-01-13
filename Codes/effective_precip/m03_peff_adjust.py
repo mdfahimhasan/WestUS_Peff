@@ -12,7 +12,7 @@ from Codes.effective_precip.m00_eff_precip_utils import estimate_peff_precip_wat
 # # # Steps
 
 # Step 1: water year peff raster creation using water year peff fraction (water year precip * water year fraction)
-# Step 2: scaling monthly peff prediction with annual model
+# Step 2: scaling monthly peff prediction with water year model
 # Step 3: sum scaled monthly peff to water year (for model check)
 # Step 4: estimate water year peff/precipitation fraction (for model check)
 # Step 5: sum scaled monthly peff to growing season (with added 3 months' peff before growing season to consider carried over soil moisture storage)

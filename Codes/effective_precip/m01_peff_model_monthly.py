@@ -87,19 +87,19 @@ if __name__ == '__main__':
     model_version = 'v19'                                   ######
 
     skip_train_test_df_creation = True                      ######
-    skip_train_test_split = False                            ######
+    skip_train_test_split = True                            ######
     skip_tune_hyperparams = True                            ######
-    load_model = False                                       ######
-    save_model = True                                       ######
+    load_model = True                                       ######
+    save_model = False                                       ######
     skip_plot_perm_imp = True                               ######
-    skip_plot_ale = True                                    ######
+    skip_plot_ale = True                                    ######  Always set to True when running in Linux
     skip_plot_pdp = True                                    ######
     skip_processing_monthly_predictor_dataframe = True      ######
     skip_processing_nan_pos_irrig_cropET = True             ######
-    skip_estimate_monthly_eff_precip_WestUS = False          ######
-    skip_storing_peff_pred_monthly_csv = False               ######
-    skip_sum_peff_water_year = False                         ######
-    skip_unscaled_peff_frac_estimate_water_yr = False        ######
+    skip_estimate_monthly_eff_precip_WestUS = True          ######
+    skip_storing_peff_pred_monthly_csv = True               ######
+    skip_sum_peff_water_year = True                         ######
+    skip_unscaled_peff_frac_estimate_water_yr = True        ######
 
     # ********************************* Dataframe creation and train-test split (westUS) ***********************************
     # # create dataframe

@@ -38,6 +38,6 @@ if __name__ == '__main__':
 
     distribute_SW_consmp_use_to_pixels(years_list=years_list, HUC12_shapefile=HUC12_shapefile_with_tot_SW_irrigation,
                                        HUC12_Irr_eff_shapefile=HUC12_Irr_eff_shapefile,
-                                       irrigated_CropET_with_canal_coverage_dir=original_irrig_cropET_grow_season_dir,
+                                       irrigated_CropET_growing_season=original_irrig_cropET_grow_season_dir,
                                        sw_dist_outdir=sw_dist_outdir,
                                        ref_raster=WestUS_raster, skip_processing=skip_sw_dist)

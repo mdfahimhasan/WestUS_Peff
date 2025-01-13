@@ -145,7 +145,7 @@ def estimate_sw_mm_HUC12(years_list, HUC12_input_shapefile, irrigated_CropET_wit
 
 
 def distribute_SW_consmp_use_to_pixels(years_list, HUC12_shapefile, HUC12_Irr_eff_shapefile,
-                                       irrigated_CropET_with_canal_coverage_dir,
+                                       irrigated_CropET_growing_season,
                                        sw_dist_outdir, ref_raster=WestUS_raster,
                                        resolution=model_res, skip_processing=False):
     """
@@ -156,8 +156,8 @@ def distribute_SW_consmp_use_to_pixels(years_list, HUC12_shapefile, HUC12_Irr_ef
     :param HUC12_shapefile: Filepath of HUC12 shapefile with total canal covered pixels, total
                              irrigated cropET data, and SW irrigation data in mm.
     :param HUC12_Irr_eff_shapefile: Filepath of HUC12 shapefile with annual irrigation efficiency data for each basin.
-    :param irrigated_CropET_with_canal_coverage_dir: Directory path of irrigated cropET growing season
-                                                    rasters (overlaid with canal coverage raster).
+    :param irrigated_CropET_growing_season: Directory path of irrigated cropET growing season
+                                            rasters.
     :param sw_dist_outdir: Output directory to save sw distributed rasters.
     :param ref_raster: Filepath of Western US reference raster.
     :param resolution: Model resolution.
@@ -182,8 +182,8 @@ def distribute_SW_consmp_use_to_pixels(years_list, HUC12_shapefile, HUC12_Irr_ef
         for year in years_list:
             print(f'distributing surface water irrigation to pixels for {year}...')
 
-            # getting growing season irrigated cropET raster, which has canal coverage overlaid (not HUC12 sum)
-            irrig_cropET_Huc12_tot = glob(os.path.join(irrigated_CropET_with_canal_coverage_dir, f'*{year}*.tif'))[0]
+            # getting growing season irrigated cropET raster
+            irrig_cropET_Huc12_tot = glob(os.path.join(irrigated_CropET_growing_season, f'*{year}*.tif'))[0]
 
             # converting total irrigated cropET of HUC12 to raster (HUC12 sum)
             total_irrig_cropET_ras = f'total_irrig_cropET_{year}.tif'
@@ -213,16 +213,16 @@ def distribute_SW_consmp_use_to_pixels(years_list, HUC12_shapefile, HUC12_Irr_ef
             irr_eff_arr = read_raster_arr_object(irr_eff, get_file=False)
 
             # array operation to distribute total sw irrigation in a HUC12 to
-            # all its irrigated pixels that have canal coverage
-            irrig_cropET_canal_cover_arr = read_raster_arr_object(irrig_cropET_Huc12_tot, get_file=False)
+            # all its irrigated pixels
+            irrig_cropET_arr = read_raster_arr_object(irrig_cropET_Huc12_tot, get_file=False)
             total_irrig_cropET_arr = read_raster_arr_object(total_irrig_cropET, get_file=False)
             sw_irrig_arr = read_raster_arr_object(total_sw_irrig, get_file=False)
 
             # the total sw irrigation will be distributed to a pixel based on its ratio
             # of irrigated cropET in a pixel/total irrigated cropET in the HUC12
             # Also, multiplying with irrigation efficiency to get consumptive SW use
-            sw_cnsmp_use_arr = np.where((sw_irrig_arr != 0) | (irrig_cropET_canal_cover_arr != 0) | (total_irrig_cropET_arr != 0),
-                                    sw_irrig_arr * irr_eff_arr * (irrig_cropET_canal_cover_arr/total_irrig_cropET_arr), -9999)
+            sw_cnsmp_use_arr = np.where((sw_irrig_arr != 0) | (irrig_cropET_arr != 0) | (total_irrig_cropET_arr != 0),
+                                    sw_irrig_arr * irr_eff_arr * (irrig_cropET_arr/total_irrig_cropET_arr), -9999)
 
             sw_initial_output_dir = os.path.join(sw_dist_outdir, 'SW_dist_initial')
             makedirs([sw_initial_output_dir])

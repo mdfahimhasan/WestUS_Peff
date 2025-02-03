@@ -90,11 +90,9 @@ def get_openet_gee_dict(data_name):
     }
 
     aggregation_dict = {
-        'OpenET_ensemble': ee.Reducer.mean(),
-        # monthly data; doesn't matter whether use mean() or sum() as reducer. Change for yearly data download if needed.
+        'OpenET_ensemble': ee.Reducer.mean(),           # monthly data; doesn't matter whether use mean() or sum() as reducer. Change for yearly data download if needed.
         'Irrig_crop_OpenET_IrrMapper': ee.Reducer.sum(),
-        'Irrig_crop_OpenET_LANID': ee.Reducer.sum(),
-        # as the data is downloaded at monthly resolution, setting mean/median/max as reducer won't make any difference. Setting it as sum() as it can be used for yearly aggregation
+        'Irrig_crop_OpenET_LANID': ee.Reducer.sum(),    # as the data is downloaded at monthly resolution, setting mean/median/max as reducer won't make any difference. Setting it as sum() as it can be used for yearly aggregation
         'Rainfed_crop_OpenET_IrrMapper': ee.Reducer.sum(),
         'Rainfed_crop_OpenET_LANID': ee.Reducer.sum(),
         'USDA_CDL': ee.Reducer.first(),

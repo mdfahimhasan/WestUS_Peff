@@ -53,5 +53,5 @@ may be required for this GEE authentication step. Refer to the installation docs
 
 
 ## Data availability
-The monthly effective precipitation estimates for all months of 2000 to 2020 (up to September in 2020) are available to download through this [GEE script](https://code.earthengine.google.com/8a41d8cbfb32e73cb339be98c111c875). Non-GEE users can acccess the dataset from this [HydroShare repo](https://www.hydroshare.org/resource/c33ce80f5ae44fe6ab2e5dd3c128eb0b/).
+The monthly effective precipitation estimates for all months of 2000 to 2020 (up to September in 2020) are available to download through this [GEE script](https://code.earthengine.google.com/6352c6b7b5efb066e738de692df46a72). Non-GEE users can acccess the dataset from this [HydroShare repo](https://www.hydroshare.org/resource/c33ce80f5ae44fe6ab2e5dd3c128eb0b/).
 

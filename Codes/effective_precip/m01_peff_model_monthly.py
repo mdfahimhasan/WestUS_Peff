@@ -13,7 +13,7 @@ from Codes.utils.ml_ops import create_train_test_monthly_dataframe, split_train_
     create_aleplots, create_pdplots, plot_permutation_importance
 from Codes.effective_precip.m00_eff_precip_utils import create_monthly_dataframes_for_eff_precip_prediction, \
     create_nan_pos_dict_for_monthly_irrigated_cropET, create_monthly_effective_precip_rasters, \
-    collect_Peff_predictions_in_dataframe, sum_peff_water_year, estimate_peff_precip_water_year_fraction
+    collect_Peff_predictions_in_dataframe, sum_peff_water_year
 
 # model resolution and reference raster/shapefile
 no_data_value = -9999

@@ -227,7 +227,7 @@ def create_annual_dataframes_for_peff_frac_prediction(years_list, yearly_data_pa
                                                       static_data_path_dict, datasets_to_include, output_dir,
                                                       skip_processing=False):
     """
-    Create monthly dataframes of predictors to generate monthly effective prediction.
+    Create annual dataframes of predictors to generate annual effective prediction fraction prediction.
 
     :param years_list: A list of years_list for which data to include in the dataframe.
     :param yearly_data_path_dict: A dictionary with static variables' names as keys and their paths as values.

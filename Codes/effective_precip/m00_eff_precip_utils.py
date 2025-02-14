@@ -340,7 +340,7 @@ def create_annual_peff_fraction_rasters(trained_model, input_csv_dir, exclude_co
         # loading lake raster data
         lake_arr = read_raster_arr_object(lake_raster, get_file=False)
 
-        # creating prediction raster for each month
+        # creating prediction raster for each year
         input_csvs = glob(os.path.join(input_csv_dir, '*.csv'))
 
         for csv in input_csvs:

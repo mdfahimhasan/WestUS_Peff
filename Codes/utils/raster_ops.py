@@ -567,7 +567,7 @@ def make_lat_lon_array_from_raster(input_raster, nodata=-9999):
 
 def create_ref_raster(input_raster, output_ref_raster):
     """
-    create reference raster (all valid value locatons are zero) from an input raster.
+    create reference raster (all valid value locations are zero) from an input raster.
 
     :param input_raster: Filepath of input raster.
     :param output_ref_raster: Filepath of output reference raster.

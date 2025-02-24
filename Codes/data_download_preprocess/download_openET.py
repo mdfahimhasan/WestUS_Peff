@@ -425,11 +425,11 @@ def download_openet_ensemble(download_dir, year_list, month_range, merge_keyword
                 end_date_dt = datetime(year + 1, 1, 1)
 
             # selecting open vs provisional data asset in GEE
-            # openET 1985-2007 data is provisional and 2008 to upfront data in open in GEE
+            # openET 1985-1999 data is provisional and 2000 to upfront data in open in GEE
             # selecting appropriate OpenET GEE asset based on year
-            if year >= 2008:
+            if year >= 2000:
                 openet_asset = data[0]
-            elif year <= 2007:
+            elif year < 2000:
                 openet_asset = data[1]
 
             # a condition to check whether start and end date falls in the available data range in GEE
@@ -894,12 +894,11 @@ def download_Irr_CropET_from_OpenET_IrrMapper_monthly(data_name, download_dir, y
                 end_date_dt = datetime(year + 1, 1, 1)
 
             # selecting open vs provisional data asset in GEE
-            # openET 1985-2007 data is provisional and 2008 to upfront data in open in GEE
+            # openET 1985-1999 data is provisional and 2000 to upfront data in open in GEE
             # selecting appropriate OpenET GEE asset based on year
-            if year >= 2008:
+            if year >= 2000:
                 openet_asset = et_data[0]
-
-            elif year <= 2007:
+            elif year < 2000:
                 openet_asset = et_data[1]
 
             # a condition to check whether start and end date falls in the available data range in GEE
@@ -1076,12 +1075,11 @@ def download_Irr_CropET_from_OpenET_LANID_monthly(data_name, download_dir, year_
         irr_total = irr_total.gt(0).setDefaultProjection(projection_lanid)
 
         # selecting open vs provisional data asset in GEE
-        # openET 1985-2007 data is provisional and 2008 to upfront data in open in GEE
+        # openET 1985-1999 data is provisional and 2000 to upfront data in open in GEE
         # selecting appropriate OpenET GEE asset based on year
-        if year >= 2008:
+        if year >= 2000:
             openet_asset = et_data[0]
-
-        elif year <= 2007:
+        elif year < 2000:
             openet_asset = et_data[1]
 
         # second loop for months
@@ -1646,9 +1644,8 @@ def download_Rainfed_CropET_from_OpenET_IrrMapper_monthly(data_name, download_di
             # # # # # # # # #
 
             # selecting open vs provisional data asset in GEE
-            # openET 1985-2007 data is provisional and 2008 to upfront data in open in GEE
-            # selecting appropriate OpenET GEE asset based on year
-            # year 2008 and after tht will use the open GEE asset
+            # openET 1985-1999 data is provisional and 2000 to upfront data in open in GEE
+            # selecting appropriate OpenET GEE asset based on year 2008 and after that will use the open GEE asset
             # We don't need the provisional asset as rainfed cropET data will be downloaded >= 2008
             openet_asset = et_data[0]
 
@@ -1866,9 +1863,8 @@ def download_Rainfed_CropET_from_OpenET_LANID_monthly(data_name, download_dir, y
             rainfed_cropland = rainfed_cropland.updateMask(mask).setDefaultProjection(crs=projection_lanid)
 
             # selecting open vs provisional data asset in GEE
-            # openET 1985-2007 data is provisional and 2008 to upfront data in open in GEE
-            # selecting appropriate OpenET GEE asset based on year
-            # year 2008 and after tht will use the open GEE asset
+            # openET 1985-1999 data is provisional and 2000 to upfront data in open in GEE
+            # selecting appropriate OpenET GEE asset based on year 2008 and after that will use the open GEE asset
             # We don't need the provisional asset as rainfed cropET data will be downloaded >= 2008
             openet_asset = et_data[0]
 

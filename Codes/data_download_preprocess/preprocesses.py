@@ -1494,7 +1494,7 @@ def run_all_preprocessing(skip_process_GrowSeason_data=False,
     :param skip_merging_rainfed_frac: Set to True to skip merging rainfed fraction data.
     :param skip_merging_rainfed_cropET: Set to True to skip merging rainfed cropET data.
     :param skip_merging_irrigated_frac: Set to True to skip merging irrigated fraction data.
-    :param skip_merging_irrigated_cropET: Set to True to skip merging irrigated fraction data.
+    :param skip_merging_irrigated_cropET: Set to True to skip merging irrigated cropET data.
     :param skip_classifying_irrigated_rainfed_cropland: Set to True if want to skip classifying irrigated and
                                                         rainfed cropland data.
     :param skip_filtering_irrigated_rainfed_cropET: Set to True if want to skip filtering irrigated and rainfed cropET

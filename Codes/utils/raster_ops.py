@@ -241,7 +241,7 @@ def mosaic_rasters_list(input_raster_list, output_dir, raster_name, ref_raster=W
     # saving output
     makedirs([output_dir])
     out_raster = os.path.join(output_dir, raster_name)
-    write_array_to_raster(raster_arr=merged_arr, raster_file=ref_file, transform=ref_file.transform,
+    write_array_to_raster(raster_arr=merged_arr, raster_file=ref_file, transform=out_transform,
                           output_path=out_raster, nodata=nodata, ref_file=ref_raster, dtype=dtype)
 
     return merged_arr, out_raster

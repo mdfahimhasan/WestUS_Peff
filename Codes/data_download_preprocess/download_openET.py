@@ -429,7 +429,9 @@ def download_openet_ensemble(download_dir, year_list, month_range, merge_keyword
             # selecting appropriate OpenET GEE asset based on year
             if year >= 2000:
                 openet_asset = data[0]
-            elif year < 2000:
+            elif year == 1999 and month in [10, 11, 12]:
+                openet_asset = data[0]
+            else:
                 openet_asset = data[1]
 
             # a condition to check whether start and end date falls in the available data range in GEE
@@ -898,7 +900,9 @@ def download_Irr_CropET_from_OpenET_IrrMapper_monthly(data_name, download_dir, y
             # selecting appropriate OpenET GEE asset based on year
             if year >= 2000:
                 openet_asset = et_data[0]
-            elif year < 2000:
+            elif year == 1999 and month in [10, 11, 12]:
+                openet_asset = et_data[0]
+            else:
                 openet_asset = et_data[1]
 
             # a condition to check whether start and end date falls in the available data range in GEE
@@ -1074,16 +1078,19 @@ def download_Irr_CropET_from_OpenET_LANID_monthly(data_name, download_dir, year_
         irr_total = ee.ImageCollection([irr_lanid, irr_aim_hpa]).mosaic()
         irr_total = irr_total.gt(0).setDefaultProjection(projection_lanid)
 
-        # selecting open vs provisional data asset in GEE
-        # openET 1985-1999 data is provisional and 2000 to upfront data in open in GEE
-        # selecting appropriate OpenET GEE asset based on year
-        if year >= 2000:
-            openet_asset = et_data[0]
-        elif year < 2000:
-            openet_asset = et_data[1]
-
         # second loop for months
         for month in month_list:
+
+            # selecting open vs provisional data asset in GEE
+            # openET 1985-1999 data is provisional and 2000 to upfront data in open in GEE
+            # selecting appropriate OpenET GEE asset based on year
+            if year >= 2000:
+                openet_asset = et_data[0]
+            elif year == 1999 and month in [10, 11, 12]:
+                openet_asset = et_data[0]
+            else:
+                openet_asset = et_data[1]
+
             print('********')
             print(f'Getting data urls for year={year}, month={month}.....')
             start_date = ee.Date.fromYMD(year, month, 1)

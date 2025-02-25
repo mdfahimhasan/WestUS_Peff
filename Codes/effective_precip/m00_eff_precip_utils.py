@@ -146,8 +146,9 @@ def create_nan_pos_dict_for_monthly_irrigated_cropET(irrigated_cropET_dir, outpu
 
         irrigated_cropET_datasets = glob(os.path.join(irrigated_cropET_dir, '*.tif'))
 
-        nan_pos_dict = {}  # an empty dict where nan positions will be saved as boolean data
         for data in irrigated_cropET_datasets:
+            nan_pos_dict = {}  # an empty dict where nan positions will be saved as boolean data
+
             name = os.path.basename(data).split('.')[0]
             year = os.path.basename(data).split('_')[2]
             month = os.path.basename(data).split('_')[3].split('.')[0]
@@ -164,7 +165,7 @@ def create_nan_pos_dict_for_monthly_irrigated_cropET(irrigated_cropET_dir, outpu
 def create_monthly_effective_precip_rasters(trained_model, input_csv_dir, exclude_columns,
                                             irrig_cropET_nan_pos_dir,
                                             prediction_name_keyword, output_dir,
-                                            ref_raster=WestUS_raster,skip_processing=False):
+                                            ref_raster=WestUS_raster, skip_processing=False):
     """
     Create monthly effective precipitation prediction raster.
 
@@ -210,15 +211,19 @@ def create_monthly_effective_precip_rasters(trained_model, input_csv_dir, exclud
             nan_pos_dict = pickle.load(open(irrig_cropET_nan, mode='rb'))
 
             nan_key = f'Irrigated_cropET_{year}_{month}'
-            pred_arr[nan_pos_dict[nan_key]] = ref_file.nodata
-
+            pred_arr[nan_pos_dict[nan_key]] = -9999
+            print(ref_file.nodata)
+            print(nan_pos_dict[nan_key].shape)
             # reshaping the prediction raster for Western US and saving
-            pred_arr = pred_arr.reshape(ref_shape)
+            print(np.min(pred_arr), np.max(pred_arr))
 
+            pred_arr = pred_arr.reshape(ref_shape)
+            print(pred_arr)
             output_prediction_raster = os.path.join(output_dir, f'{prediction_name_keyword}_{year}_{month}.tif')
+
             write_array_to_raster(raster_arr=pred_arr, raster_file=ref_file, transform=ref_file.transform,
                                   output_path=output_prediction_raster)
-
+            break
     else:
         pass
 

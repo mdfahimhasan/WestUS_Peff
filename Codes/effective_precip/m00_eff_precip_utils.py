@@ -212,18 +212,14 @@ def create_monthly_effective_precip_rasters(trained_model, input_csv_dir, exclud
 
             nan_key = f'Irrigated_cropET_{year}_{month}'
             pred_arr[nan_pos_dict[nan_key]] = -9999
-            print(ref_file.nodata)
-            print(nan_pos_dict[nan_key].shape)
-            # reshaping the prediction raster for Western US and saving
-            print(np.min(pred_arr), np.max(pred_arr))
 
+            # reshaping the prediction raster for Western US and saving
             pred_arr = pred_arr.reshape(ref_shape)
-            print(pred_arr)
+
             output_prediction_raster = os.path.join(output_dir, f'{prediction_name_keyword}_{year}_{month}.tif')
 
             write_array_to_raster(raster_arr=pred_arr, raster_file=ref_file, transform=ref_file.transform,
                                   output_path=output_prediction_raster)
-            break
     else:
         pass
 

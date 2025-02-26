@@ -6,9 +6,9 @@ Effective precipitation, defined as the portion of evapotranspiration (ET) deriv
 __Keywords:__ Effective precipitation, Groundwater; Irrigation; Water use; Remote sensing; Machine learning.
 
 ## Effective precipitation map
-<img src="https://raw.githubusercontent.com/mdfahimhasan/WesternUS_NetGW/tree/master/Codes/results_analysis/Peff_animation/Peff_monthly_animation.gif" height="500"/> 
+<img src="https://raw.githubusercontent.com/mdfahimhasan/WesternUS_NetGW/master/Codes/results_analysis/Peff_animation/Peff_monthly_animation.gif" height="500"/>
 
-Figure: Machine learning model generated monthly and growing season effective precipitation estimates for 2016 at 2 km spatial resolution.
+Figure: Machine learning model generated monthly effective precipitation estimates from 2010 to 2014 at 2 km spatial resolution.
 
 ## Publications
 in progress

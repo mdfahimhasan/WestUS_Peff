@@ -10,7 +10,7 @@ __Keywords:__ Effective precipitation, Groundwater; Irrigation; Water use; Remot
 Figure: Machine learning model generated monthly effective precipitation estimates from 2010 to 2014 at 2 km spatial resolution.
 
 ## Publications
-in progress
+Hasan, M.F., Smith, R.G., Majumdar, S., Huntington, J.L., & Neto, A.A.M. (2025). Satellite Data and Physics-Informed Machine Learning for Estimating Effective Precipitation in the Western United States and Application for Monitoring Groundwater Irrigation. Under review in Remote Sensing of Environment.
 
 ## Organizations
 <img src="readme_figs/CSU-Signature-C-357-617.png" height="90"/> <img src="readme_figs/Official-DRI-Logo-for-Web.png" height="80"/>

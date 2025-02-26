@@ -288,7 +288,7 @@ if __name__ == '__main__':
     # ****************** Generating annual effective precip fraction estimates for 17 states (westUS) ******************
     print('**********************************')
 
-    # # Creating monthly predictor dataframe for model prediction
+    # # Creating water year predictor dataframe for model prediction
     annual_predictor_csv_dir = '../../Eff_Precip_Model_Run/annual_model/Model_csv/annual_predictors'
     create_annual_dataframes_for_peff_frac_prediction(years_list=prediction_years,
                                                       yearly_data_path_dict=yearly_data_path_dict,
@@ -305,7 +305,7 @@ if __name__ == '__main__':
                                                     output_dir=output_dir_nan_pos,
                                                     skip_processing=skip_processing_nan_pos_irrig_cropET)
 
-    # # Generating monthly Peff predictions for 17 states
+    # # Generating water year Peff fraction predictions
     peff_fraction_water_year_output_dir = f'../../Data_main/Raster_data/Effective_precip_fraction_WestUS/{model_version}_water_year_frac'
     lake_raster = '../../Data_main/Raster_data/HydroLakes/Lakes.tif'
 

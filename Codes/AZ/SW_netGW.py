@@ -1,13 +1,37 @@
 from Codes.netGW.netGW_Irr import estimate_netGW_Irr
-from Codes.AZ.az_utils import run_annual_csv_processing_AZ
+from Codes.AZ.az_utils import run_annual_csv_processing_AZ, estimate_sw_mm_HUC12, distribute_SW_consmp_use_to_pixels
+
 
 AZ_raster = '../../Data_main/AZ_files/ref_files/AZ_ref_raster.tif'
 
 if __name__ == '__main__':
     # flags
-    skip_AZ_netGW_processing = True         ######
+    skip_estimate_sw_mm_data = True        ######
+    skip_sw_dist = True                    ######
+    skip_AZ_netGW_processing = False         ######
     skip_process_hqr_data = False           ###### Harquahala INA, AZ
     skip_process_doug_data = False          ###### Douglas AMA, AZ
+
+
+    # # SW distribution
+    years_list = list(range(2000, 2021))
+    HUC12_shapefile_with_tot_SW_irrigation = '../../Data_main/AZ_files/ref_files/HUC12_AZ_Annual_SW.shp'
+    irrig_cropET_dir = '../../Data_main/AZ_files/rasters/Irrigated_cropET/WestUS_grow_season'
+    HUC12_output_shapefile = '../../Data_main/AZ_files/ref_files/HUC12_AZ_Annual_SW_irrig_cropET.shp'
+
+    estimate_sw_mm_HUC12(years_list=years_list, HUC12_input_shapefile=HUC12_shapefile_with_tot_SW_irrigation,
+                         irrigated_CropET_with_canal_coverage_dir=irrig_cropET_dir,
+                         HUC12_output_shapefile=HUC12_output_shapefile,
+                         skip_precessing=skip_estimate_sw_mm_data)
+
+    HUC12_Irr_eff_shapefile = '../../Data_main/AZ_files/ref_files/HUC12_AZ_Irr_Eff.shp'
+    sw_dist_outdir = '../../Data_main/AZ_files/rasters/SW_irrigation'
+
+    distribute_SW_consmp_use_to_pixels(years_list=years_list, HUC12_shapefile=HUC12_output_shapefile,
+                                       HUC12_Irr_eff_shapefile=HUC12_Irr_eff_shapefile,
+                                       irrigated_CropET_growing_season=irrig_cropET_dir,
+                                       sw_dist_outdir=sw_dist_outdir,
+                                       ref_raster=AZ_raster, skip_processing=skip_sw_dist)
 
 
     # # # estimating netGW for Arizona

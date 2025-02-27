@@ -5,14 +5,17 @@ import pandas as pd
 import seaborn as sns
 from glob import glob
 from osgeo import gdal
+import geopandas as gpd
 import matplotlib.pyplot as plt
+from rasterstats import zonal_stats
 from datetime import datetime, timedelta
 
 from os.path import dirname, abspath
 sys.path.insert(0, dirname(dirname(dirname(abspath(__file__)))))
 
 from Codes.utils.system_ops import makedirs
-from Codes.utils.raster_ops import read_raster_arr_object, write_array_to_raster, clip_resample_reproject_raster
+from Codes.utils.raster_ops import read_raster_arr_object, write_array_to_raster, clip_resample_reproject_raster,\
+    shapefile_to_raster
 
 no_data_value = -9999
 model_res = 2000  # in m
@@ -443,3 +446,175 @@ def make_line_plot_v1(y1, y2, year, fontsize, xlabel, ylabel, line_label_1, line
 
     if savepath is not None:
         fig.savefig(savepath, dpi=300, transparent=True)
+
+
+
+def estimate_sw_mm_HUC12(years_list, HUC12_input_shapefile, irrigated_CropET_with_canal_coverage_dir,
+                         HUC12_output_shapefile, skip_precessing=False):
+    """
+    Estimate number of pixels that falls in canal coverage and total irrigated cropET in those pixels for each
+    HUC12 watershed. Also, calculates growing season SW irrigation in mm (area averaged, considers canal covered
+    irrigated cropET pixels, growing season) for all HUC12s.
+
+    :param years_list: A list of years_list to process data for.
+    :param HUC12_input_shapefile: Filepath of WestUS HUC12 shapefile.
+    :param irrigated_CropET_with_canal_coverage_dir: Directory path of irrigated cropET growing season
+                                                     rasters (overlaid with canal coverage raster).
+    :param HUC12_output_shapefile: Filepath of HUC12 output shapefile with total canal covered pixel and total
+                                   irrigated cropET data along with SW irrigation data in mm.
+    :param skip_precessing: Set to True to skip this step.
+
+    :return: None.
+    """
+    if not skip_precessing:
+        HUC12_gdf = gpd.read_file(HUC12_input_shapefile)
+
+        # an empty dictionary of lists to store the results
+        results = {'huc12': [], 'ET2000_mm': [], 'ET2001_mm': [], 'ET2002_mm': [], 'ET2003_mm': [],
+                   'ET2004_mm': [], 'ET2005_mm': [], 'ET2006_mm': [], 'ET2007_mm': [], 'ET2008_mm': [],
+                   'ET2009_mm': [], 'ET2010_mm': [], 'ET2011_mm': [], 'ET2012_mm': [], 'ET2013_mm': [],
+                   'ET2014_mm': [], 'ET2015_mm': [], 'ET2016_mm': [], 'ET2017_mm': [], 'ET2018_mm': [],
+                   'ET2019_mm': [], 'ET2020_mm': []}
+
+        for year in years_list:  # looping through growing season irrigated cropET data to extract watershed/HUC12
+            # level information
+            print(f'Extracting total irrigated cropET and number of pixels stats in HUC12s for {year}...')
+
+            # irrigated cropET growing season with canal coverage for that year
+            irrig_cropET_with_canal = glob(os.path.join(irrigated_CropET_with_canal_coverage_dir, f'*{year}*.tif'))[0]
+
+            for idx, row in HUC12_gdf.iterrows():  # looping through each HUC12 watershed and collecting data
+                huc12_geom = row['geometry']
+
+                # performing zonal statistics to collect data
+                ET_stat = zonal_stats(huc12_geom, irrig_cropET_with_canal, stats='sum')
+
+                # appending the result to the empty lists
+                results[f'ET{year}_mm'].append(ET_stat[0]['sum'])   # sum of total irrigated crop ET in the HUC12
+
+                if year == years_list[0]:  # will populate HUC12 no. list only once. Otherwise it will keep appending for each year
+                    results['huc12'].append(row['huc12'])
+                else:
+                    pass
+
+        # converting the results into a dataframe
+        results_df = pd.DataFrame(results)
+
+        # merging results dataframe with the HUC12 geodataframe
+        HUC12_gdf_merged = HUC12_gdf.merge(results_df, on='huc12')
+        print('Columns in HUC12 shapefile:', '\n', HUC12_gdf_merged.columns)
+
+        # # converting MDG to mm
+        # area of a pixel
+        area_mm2_single_pixel = (2000 * 1000) * (2000 * 1000)  # unit in mm2
+
+        for year in years_list:
+            sw_mm3 = HUC12_gdf_merged[f'{year}'] * 3785411784000  # conversion from MG/grow season to mm3/grow season
+            HUC12_gdf_merged[f'sw_{year}_mm'] = sw_mm3 / area_mm2_single_pixel   # unit mm/grow season
+
+        # saving finalized shapefile
+        HUC12_gdf_merged.to_file(HUC12_output_shapefile)
+
+    else:
+        pass
+
+
+def distribute_SW_consmp_use_to_pixels(years_list, HUC12_shapefile, HUC12_Irr_eff_shapefile,
+                                       irrigated_CropET_growing_season,
+                                       sw_dist_outdir, ref_raster=AZ_raster,
+                                       resolution=model_res, skip_processing=False):
+    """
+    Distribute HUC12 level surface water consumptive use (unit mm/growing season) to irrigated pixels that have
+    canal coverage (within 2 km buffer of canal).
+
+    :param years_list:  A list of years_list to process data for.
+    :param HUC12_shapefile: Filepath of HUC12 shapefile with total canal covered pixels, total
+                             irrigated cropET data, and SW irrigation data in mm.
+    :param HUC12_Irr_eff_shapefile: Filepath of HUC12 shapefile with annual irrigation efficiency data for each basin.
+    :param irrigated_CropET_growing_season: Directory path of irrigated cropET growing season
+                                            rasters.
+    :param sw_dist_outdir: Output directory to save sw distributed rasters.
+    :param ref_raster: Filepath of Western US reference raster.
+    :param resolution: Model resolution.
+    :param skip_processing: Set to True to skip this step.
+
+    :return: None.
+    """
+    if not skip_processing:
+        total_cropET_SW_dir = os.path.join(sw_dist_outdir, 'total_cropET_SW')
+        makedirs([sw_dist_outdir, total_cropET_SW_dir])
+
+        # replacing null values with 0 in the HUC12 shapefile and saving it before distributing
+        huc12_gdf = gpd.read_file(HUC12_shapefile)
+        huc12_gdf = huc12_gdf.replace([np.inf, np.nan], 0)
+
+        HUC12_processed = os.path.join(total_cropET_SW_dir, 'HUC12_processed.shp')
+        huc12_gdf.to_file(HUC12_processed)
+
+        # reference raster
+        ref_arr, ref_file = read_raster_arr_object(ref_raster)
+
+        for year in years_list:
+            print(f'distributing surface water irrigation to pixels for {year}...')
+
+            # getting growing season irrigated cropET raster
+            irrig_cropET_Huc12_tot = glob(os.path.join(irrigated_CropET_growing_season, f'*{year}*.tif'))[0]
+
+            # converting total irrigated cropET of HUC12 to raster (HUC12 sum)
+            total_irrig_cropET_ras = f'total_irrig_cropET_{year}.tif'
+            attr_to_use = f'ET{year}_mm'
+
+            total_irrig_cropET = shapefile_to_raster(input_shape=HUC12_processed, output_dir=total_cropET_SW_dir,
+                                                     raster_name=total_irrig_cropET_ras,
+                                                     use_attr=True, attribute=attr_to_use,
+                                                     ref_raster=ref_raster, resolution=resolution)
+
+            # converting total SW irrigation of HUC12 to raster
+            total_sw_irrig_ras = f'total_SW_irrig_{year}.tif'
+            attr_to_use = f'sw_{year}_mm'
+
+            total_sw_irrig = shapefile_to_raster(input_shape=HUC12_processed, output_dir=total_cropET_SW_dir,
+                                                 raster_name=total_sw_irrig_ras,
+                                                 use_attr=True, attribute=attr_to_use,
+                                                 ref_raster=ref_raster, resolution=resolution)
+
+            # converting irrigation efficiency of HUC12 to raster
+            irr_eff_ras = f'irr_eff_{year}.tif'
+            attr_to_use = f'{year}'
+            irr_eff = shapefile_to_raster(input_shape=HUC12_Irr_eff_shapefile, output_dir=total_cropET_SW_dir,
+                                          raster_name=irr_eff_ras,
+                                          use_attr=True, attribute=attr_to_use,
+                                          ref_raster=ref_raster, resolution=resolution)
+            irr_eff_arr = read_raster_arr_object(irr_eff, get_file=False)
+
+            # array operation to distribute total sw irrigation in a HUC12 to
+            # all its irrigated pixels
+            irrig_cropET_arr = read_raster_arr_object(irrig_cropET_Huc12_tot, get_file=False)
+            total_irrig_cropET_arr = read_raster_arr_object(total_irrig_cropET, get_file=False)
+            sw_irrig_arr = read_raster_arr_object(total_sw_irrig, get_file=False)
+
+            # the total sw irrigation will be distributed to a pixel based on its ratio
+            # of irrigated cropET in a pixel/total irrigated cropET in the HUC12
+            # Also, multiplying with irrigation efficiency to get consumptive SW use
+            sw_cnsmp_use_arr = np.where((sw_irrig_arr != 0) | (irrig_cropET_arr != 0) | (total_irrig_cropET_arr != 0),
+                                    sw_irrig_arr * irr_eff_arr * (irrig_cropET_arr/total_irrig_cropET_arr), -9999)
+
+            sw_initial_output_dir = os.path.join(sw_dist_outdir, 'SW_dist_initial')
+            makedirs([sw_initial_output_dir])
+            sw_dist_raster_initial = os.path.join(sw_initial_output_dir, f'sw_cnsmp_use_{year}_initial.tif')
+            write_array_to_raster(raster_arr=sw_cnsmp_use_arr, raster_file=ref_file, transform=ref_file.transform,
+                                  output_path=sw_dist_raster_initial)
+
+            # assigning zero values to pixels with no surface water irrigation.
+            # this is specially an important step for regions with groundwater pumping
+            # but no surface irrigation (during calculation of netGW)
+            # regions out of Western US (sea and others) are assigned no data value
+            sw_cnsmp_use_arr = np.where(~np.isnan(sw_cnsmp_use_arr), sw_cnsmp_use_arr, 0)
+            sw_cnsmp_use_arr = np.where(ref_arr == 0, sw_cnsmp_use_arr, ref_arr)  # assigning no data value
+
+            sw_cnsmp_use_raster = os.path.join(sw_dist_outdir, f'sw_cnsmp_use_{year}.tif')
+            write_array_to_raster(raster_arr=sw_cnsmp_use_arr, raster_file=ref_file, transform=ref_file.transform,
+                                  output_path=sw_cnsmp_use_raster)
+
+    else:
+        pass

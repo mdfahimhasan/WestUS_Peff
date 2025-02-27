@@ -46,7 +46,6 @@ skip_estimate_precip_intensity = False                   ######
 skip_estimate_dryness_index = False                      ######
 skip_create_P_PET_corr_dataset = False                   ######
 skip_process_lake_raster = False                         ######
-skip_process_SW_rasters = False                          ######
 
 # # # #  runs # # # #
 if __name__ == '__main__':
@@ -84,6 +83,5 @@ if __name__ == '__main__':
                           skip_estimate_dryness_index=skip_estimate_dryness_index,
                           skip_create_P_PET_corr_dataset=skip_create_P_PET_corr_dataset,
                           skip_process_lake_raster=skip_process_lake_raster,
-                          skip_process_SW_rasters=skip_process_SW_rasters,
                           ref_raster=AZ_raster)
 

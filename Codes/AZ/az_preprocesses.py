@@ -1004,35 +1004,6 @@ def process_lake_raster(lake_raster, AZ_shape, output_dir, skip_processing=False
         pass
 
 
-def process_SW_rasters(SW_dir, AZ_shape, output_dir, skip_processing=False):
-    """
-    Mask lake raster for Arizona.
-
-    :param SW_dir: Surface water irrigation raster directory.
-    :param AZ_shape: Arizona shapefile.
-    :param output_dir: Output directory to save the output raster.
-    :param skip_processing: Set to True if want to skip processing.
-
-    :return: None.
-    """
-    if not skip_processing:
-        makedirs([output_dir])
-
-        SW_rasters = glob(os.path.join(SW_dir, '*.tif'))
-
-        for ras in SW_rasters:
-
-            clip_resample_reproject_raster(input_raster=ras, input_shape=AZ_shape,
-                                           output_raster_dir=output_dir,
-                                           raster_name=os.path.basename(ras),
-                                           clip_and_resample=True,
-                                           resolution=model_res,
-                                           crs='EPSG:26912',
-                                           ref_raster=AZ_raster)
-    else:
-        pass
-
-
 def run_all_preprocessing(skip_process_GrowSeason_data=False,
                           skip_merging_irrigated_frac=False,
                           skip_merging_irrigated_cropET=False,
@@ -1050,7 +1021,6 @@ def run_all_preprocessing(skip_process_GrowSeason_data=False,
                           skip_estimate_dryness_index=False,
                           skip_create_P_PET_corr_dataset=False,
                           skip_process_lake_raster=False,
-                          skip_process_SW_rasters=False,
                           ref_raster=AZ_raster):
     """
     Run all preprocessing steps.
@@ -1072,7 +1042,6 @@ def run_all_preprocessing(skip_process_GrowSeason_data=False,
     :param skip_estimate_dryness_index: Set to True to skip processing water year PET/P (dryness Index) data.
     :param skip_create_P_PET_corr_dataset: Set to True to skip create P-PET correlation dataset.
     :param skip_process_lake_raster: Set to True to process lake raster.
-    :param skip_process_SW_rasters: Set to True to skip process SW irrigation datasets.
     :param ref_raster: Filepath of Western US reference raster to use in 2km pixel lat-lon raster creation and to use
                        as reference raster in other processing operations.
 
@@ -1192,8 +1161,3 @@ def run_all_preprocessing(skip_process_GrowSeason_data=False,
     process_lake_raster(lake_raster='../../Data_main/AZ_files/rasters/HydroLakes/Lakes.tif',
                         AZ_shape=AZ_shape, output_dir='../../Data_main/AZ_files/rasters/HydroLakes',
                         skip_processing=skip_process_lake_raster)
-
-    # process (mask) SW rasters
-    process_SW_rasters(SW_dir='../../Data_main/Raster_data/SW_irrigation',
-                       AZ_shape=AZ_shape, output_dir='../../Data_main/AZ_files/rasters/SW_irrigation',
-                       skip_processing=skip_process_SW_rasters)

@@ -9,8 +9,9 @@ __Keywords:__ Effective precipitation, Groundwater; Irrigation; Water use; Remot
 <img src="https://raw.githubusercontent.com/mdfahimhasan/WesternUS_NetGW/master/Codes/results_analysis/Peff_animation/Peff_monthly_animation.gif" height="500"/>
 Figure: Machine learning model generated monthly effective precipitation estimates from 2010 to 2014 at 2 km spatial resolution.
 
-## Publications
-Hasan, M.F., Smith, R.G., Majumdar, S., Huntington, J.L., & Neto, A.A.M. (2025). Satellite Data and Physics-Informed Machine Learning for Estimating Effective Precipitation in the Western United States and Application for Monitoring Groundwater Irrigation. Under review in Remote Sensing of Environment.
+## Citations
+- Hasan, M.F., Smith, R.G., Majumdar, S., Huntington, J.L., & Neto, A.A.M. (2025). Satellite Data and Physics-Informed Machine Learning for Estimating Effective Precipitation in the Western United States and Application for Monitoring Groundwater Irrigation. Under review in Remote Sensing of Environment.
+- Majumdar, S., Smith, R.G., Hasan, M.F., Wogenstahl, C., & Conway, B.D. (2025). A long-term database of groundwater pumping, consumptive use, effective precipitation, and irrigation efficiencies in Arizona derived from remote sensing and machine learning. In prep. for Nature Scientific Data.
 
 ## Organizations
 <img src="readme_figs/CSU-Signature-C-357-617.png" height="90"/> <img src="readme_figs/Official-DRI-Logo-for-Web.png" height="80"/>

@@ -79,7 +79,7 @@ def get_openet_gee_dict(data_name):
 
     month_end_date_dict = {
         'OpenET_ensemble': datetime(2022, 12, 1),
-        'Irrig_crop_OpenET_IrrMapper': datetime(2023, 1, 1),
+        'Irrig_crop_OpenET_IrrMapper': datetime(2023, 12, 1),
         'IrrMapper': datetime(2024, 1, 1),
         'Irrigation_Frac_IrrMapper': datetime(2024, 1, 1)
     }
@@ -93,7 +93,7 @@ def get_openet_gee_dict(data_name):
 
     year_end_date_dict = {
         'OpenET_ensemble': datetime(2023, 1, 1),
-        'Irrig_crop_OpenET_IrrMapper': datetime(2023, 1, 1),
+        'Irrig_crop_OpenET_IrrMapper': datetime(2023, 12, 1),
         'IrrMapper': datetime(2024, 1, 1),
         'Irrigation_Frac_IrrMapper': datetime(2024, 1, 1)
     }

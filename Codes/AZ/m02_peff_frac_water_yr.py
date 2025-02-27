@@ -50,7 +50,7 @@ datasets_to_include_annual_predictors = ['PRISM_Tmax', 'GRIDMET_Precip',
 exclude_columns_in_prediction = exclude_columns_in_training
 
 # prediction time periods
-prediction_years = list(range(1986, 2021))       # couldn't do 1985 as ET data (needed for nan-pos) for 1984 not available
+prediction_years = list(range(1986, 2024))       # couldn't do 1985 as ET data (needed for nan-pos) for 1984 not available
 
 if __name__ == '__main__':
     model_version = 'v20'                                      ######

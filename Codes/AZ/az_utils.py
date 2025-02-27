@@ -50,6 +50,8 @@ def create_monthly_dataframes_for_eff_precip_prediction(years_list, month_range,
 
                 if year == 1984 and month in range(1, 10):  # skipping dataframe creation for 1984 January-September
                     continue
+                elif year == 2023 and month == 12:
+                    continue
 
                 else:
                     print(f'creating dataframe for prediction - year={year}, month={month}...')
@@ -157,7 +159,7 @@ def scale_monthy_peff_with_wateryr_peff_model(years_list, unscaled_peff_monthly_
                 if (yr == 1985) and (mn <= 9):
                     continue
 
-                elif (yr == 2020) and (mn >= 10):
+                elif (yr == 2023) and (mn >= 10):
                     continue
 
                 else:

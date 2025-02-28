@@ -53,8 +53,6 @@ def create_monthly_dataframes_for_eff_precip_prediction(years_list, month_range,
 
                 if year == 1984 and month in range(1, 10):  # skipping dataframe creation for 1984 January-September
                     continue
-                elif year == 2023 and month == 12:
-                    continue
 
                 else:
                     print(f'creating dataframe for prediction - year={year}, month={month}...')
@@ -95,6 +93,7 @@ def create_monthly_dataframes_for_eff_precip_prediction(years_list, month_range,
                                 variable_dict['GRIDMET_Precip_2_lag'] = list(prev_2_month_precip_arr)
 
                             else:
+                                print(monthly_data_path_dict[var])
                                 monthly_data = glob(os.path.join(monthly_data_path_dict[var], f'*{year}_{month}.tif*'))[0]
                                 data_arr = read_raster_arr_object(monthly_data, get_file=False).flatten()
 
@@ -162,7 +161,7 @@ def scale_monthy_peff_with_wateryr_peff_model(years_list, unscaled_peff_monthly_
                 if (yr == 1985) and (mn <= 9):
                     continue
 
-                elif (yr == 2023) and (mn >= 10):
+                elif (yr == 2024) and (mn >= 10):
                     continue
 
                 else:

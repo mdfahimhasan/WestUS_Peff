@@ -16,7 +16,7 @@ gee_data_list = ['Field_capacity', 'Sand_content', 'GRIDMET_RET',  'GRIDMET_max_
 
 openET_data_list = ['Irrig_crop_OpenET_IrrMapper', 'Irrigation_Frac_IrrMapper']
 
-years = list(range(1984, 2021))  # 1984 to 2023
+years = list(range(1984, 2025))  # 1984 to 2024
 months = (1, 12)
 
 data_download_dir = '../../Data_main/AZ_files/rasters'
@@ -29,23 +29,24 @@ skip_download_gee_data = True                           ######
 skip_download_OpenET_data = True                        ######
 
 # # # #  data preprocess args # # # #
-skip_process_GrowSeason_data = False                     ######
+skip_process_GrowSeason_data = True                     ######
 skip_merge_irrig_frac = True                            ######
 skip_merge_irrig_ET = True                              ######
 skip_irrig_cropland_classification = True               ######
 skip_filter_irrig_ET = True                             ######
-skip_summing_irrig_cropET_gs = False                     ######
-skip_gridmet_precip_processing = False                   ######
-skip_gridmet_RET_precessing = False                      ######
-skip_prism_processing = False                            ######
-skip_processing_slope_data = False                       ######
-skip_process_AWC_data = False                            ######
+skip_summing_irrig_cropET_gs = True                     ######
+skip_gridmet_precip_processing = True                   ######
+skip_gridmet_RET_precessing = True                      ######
+skip_prism_processing = True                            ######
+skip_processing_slope_data = True                       ######
+skip_process_AWC_data = True                            ######
+skip_daymet_interpolation = True                        ######
 skip_accum_to_water_year_datasets = False                ######
-skip_summing_irrig_cropET_water_yr = False               ######
-skip_estimate_precip_intensity = False                   ######
-skip_estimate_dryness_index = False                      ######
-skip_create_P_PET_corr_dataset = False                   ######
-skip_process_lake_raster = False                         ######
+skip_summing_irrig_cropET_water_yr = True               ######
+skip_estimate_precip_intensity = True                   ######
+skip_estimate_dryness_index = True                      ######
+skip_create_P_PET_corr_dataset = True                   ######
+skip_process_lake_raster = True                         ######
 
 # # # #  runs # # # #
 if __name__ == '__main__':
@@ -77,6 +78,7 @@ if __name__ == '__main__':
                           skip_prism_processing=skip_prism_processing,
                           skip_processing_slope_data=skip_processing_slope_data,
                           skip_process_AWC_data=skip_process_AWC_data,
+                          skip_interpolate_daymet=skip_daymet_interpolation,
                           skip_accum_to_water_year_datasets=skip_accum_to_water_year_datasets,
                           skip_summing_irrigated_cropET_water_yr=skip_summing_irrig_cropET_water_yr,
                           skip_estimate_precip_intensity=skip_estimate_precip_intensity,

@@ -331,7 +331,7 @@ def get_gee_dict(data_name):
         'GRIDMET_wind_vel': datetime(2025, 1, 1),
         'GRIDMET_short_rad': datetime(2025, 1, 1),
         'GRIDMET_vap_pres_def': datetime(2025, 12, 1),
-        'DAYMET_sun_hr': datetime(2024, 1, 1),
+        'DAYMET_sun_hr': datetime(2025, 1, 1),
         'USDA_CDL': datetime(2024, 1, 1),
         'Field_capacity': None,
         'Bulk_density': None,

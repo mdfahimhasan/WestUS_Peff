@@ -28,7 +28,7 @@ if __name__ == '__main__':
     skip_sum_scale_peff_to_gs = False                #####
 
     # # # # # Step 1: water year peff raster creation using water year peff fraction # # # # #
-    years = list(range(1986, 2024))
+    years = list(range(1986, 2025))
     water_year_precip_dir = '../../Data_main/AZ_files/rasters/GRIDMET_Precip/WestUS_water_year/sum'
     water_year_peff_frac_dir = f'../../Data_main/AZ_files/rasters/Effective_precip_fraction_WestUS/{water_yr_model_version}_water_year_frac'
     output_updated_peff_water_yr_dir = f'../../Data_main/AZ_files/rasters/Effective_precip_fraction_WestUS/{water_yr_model_version}_water_year_total_from_fraction'
@@ -38,7 +38,7 @@ if __name__ == '__main__':
                                            skip_processing=skip_estimating_peff_water_yr_total)
 
     # # # # #  Step 2: scaling monthly peff prediction with annual model # # # # #
-    years = list(range(1985, 2024))         # the Peff data will be scaled from month 10 of 1985 to month 9 of 2023
+    years = list(range(1985, 2025))         # the Peff data will be scaled from month 10 of 1985 to month 9 of 2024
 
     unscaled_peff_monthly_dir = f'../../Data_main/AZ_files/rasters/Effective_precip_prediction_WestUS/{monthly_model_version}_monthly'
     unscaled_peff_water_yr_dir = f'../../Data_main/AZ_files/rasters/Effective_precip_prediction_WestUS/{monthly_model_version}_water_year'
@@ -52,7 +52,7 @@ if __name__ == '__main__':
     # # # # #  Step 3: compile scaled monthly Peff to growing season including 3 months lagged Peff as soil moisture storage # # # # #
     output_peff_grow_season_summed_dir = f'../../Data_main/AZ_files/rasters/Effective_precip_prediction_WestUS/{monthly_model_version}_grow_season_scaled_with_SM'
 
-    dynamic_gs_sum_peff_with_3m_SM_storage(year_list=list(range(1986, 2023)),  # can't do 2023 as month 10-12's data wasn't scaled
+    dynamic_gs_sum_peff_with_3m_SM_storage(year_list=list(range(1986, 2024)),  # can't do 2024 as month 10-12's data wasn't scaled
                                            growing_season_dir='../../Data_main/AZ_files/rasters/Growing_season',
                                            monthly_input_dir=peff_monthly_scaled_output_dir,
                                            gs_output_dir=output_peff_grow_season_summed_dir,
@@ -61,7 +61,7 @@ if __name__ == '__main__':
     # # # # #  Step 4: compile scaled monthly Peff to growing season (without considering additional soil mositure storage from previous months) # # # # #
     final_peff_grow_season_summed_dir = f'../../Data_main/AZ_files/rasters/Effective_precip_prediction_WestUS/{monthly_model_version}_grow_season_scaled'
 
-    dynamic_gs_sum_ET(year_list=list(range(1986, 2023)),  # can't do 2023 as month 10-12's data wasn't scaled
+    dynamic_gs_sum_ET(year_list=list(range(1986, 2024)),  # can't do 2024 as month 10-12's data wasn't scaled
                       growing_season_dir='../../Data_main/AZ_files/rasters/Growing_season',
                       monthly_input_dir=peff_monthly_scaled_output_dir,
                       gs_output_dir=final_peff_grow_season_summed_dir,

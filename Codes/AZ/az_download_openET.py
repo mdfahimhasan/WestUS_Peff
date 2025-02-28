@@ -217,11 +217,19 @@ def download_openet_ensemble(download_dir, year_list, month_range, merge_keyword
 
             # selecting open vs provisional data asset in GEE
             # openET 1985-1999 data is provisional and 2000 to upfront data in open in GEE
-            # selecting appropriate OpenET GEE asset based on year
-            if year >= 2000:
+            # selecting appropriate OpenET GEE asset based on year. some data after 2023 month 12 is provisional.
+            if 2000 <= year < 2023:
                 openet_asset = data[0]
+
+            elif year == 2023:
+                if month == 12:
+                    openet_asset = data[1]
+                else:
+                    openet_asset = data[0]
+
             elif year == 1999 and month in [10, 11, 12]:
                 openet_asset = data[0]
+
             else:
                 openet_asset = data[1]
 
@@ -520,11 +528,19 @@ def download_Irr_CropET_from_OpenET_IrrMapper_monthly(data_name, download_dir, y
 
             # selecting open vs provisional data asset in GEE
             # openET 1985-1999 data is provisional and 2000 to upfront data in open in GEE
-            # selecting appropriate OpenET GEE asset based on year
-            if year >= 2000:
+            # selecting appropriate OpenET GEE asset based on year. some data after 2023 month 12 is provisional.
+            if 2000 <= year < 2023:
                 openet_asset = et_data[0]
+
+            elif year == 2023:
+                if month == 12:
+                    openet_asset = et_data[1]
+                else:
+                    openet_asset = et_data[0]
+
             elif year == 1999 and month in [10, 11, 12]:
                 openet_asset = et_data[0]
+
             else:
                 openet_asset = et_data[1]
 

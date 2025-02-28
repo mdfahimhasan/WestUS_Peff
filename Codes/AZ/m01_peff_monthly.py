@@ -51,7 +51,7 @@ exclude_columns_in_prediction = ['Slope']
 
 
 # prediction time periods
-prediction_years = list(range(1985, 2024))  # 1985 to 2023
+prediction_years = list(range(1985, 2025))  # 1985 to 2024
 
 if __name__ == '__main__':
     model_version = 'v19'                                   ######
@@ -59,9 +59,9 @@ if __name__ == '__main__':
     skip_train_test_split = True                            ######
     load_model = True                                       ######
     save_model = False                                       ######
-    skip_processing_monthly_predictor_dataframe = True      ######
-    skip_processing_nan_pos_irrig_cropET = True            ######
-    skip_estimate_monthly_eff_precip_AZ = True          ######
+    skip_processing_monthly_predictor_dataframe = False      ######
+    skip_processing_nan_pos_irrig_cropET = False            ######
+    skip_estimate_monthly_eff_precip_AZ = False          ######
     skip_sum_peff_water_year = False                         ######
 
     # ********************************* Run-Load monthly Peff model ***********************************
@@ -170,7 +170,7 @@ if __name__ == '__main__':
     # # summing monthly effective precipitation for water year
     water_yr_peff_dir = f'../../Data_main/AZ_files/rasters/Effective_precip_prediction_WestUS/{model_version}_water_year'
 
-    sum_peff_water_year(years_list=list(range(1985, 2024)),
+    sum_peff_water_year(years_list=list(range(1985, 2025)),
                         monthly_peff_dir=effective_precip_monthly_output_dir,
                         output_peff_dir=water_yr_peff_dir, skip_processing=skip_sum_peff_water_year)
 

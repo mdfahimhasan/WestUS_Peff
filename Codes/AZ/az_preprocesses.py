@@ -15,7 +15,7 @@ sys.path.insert(0, dirname(dirname(dirname(abspath(__file__)))))
 
 from Codes.utils.system_ops import makedirs
 from Codes.utils.raster_ops import read_raster_arr_object, write_array_to_raster, \
-    clip_resample_reproject_raster, sum_rasters, mean_rasters, shapefile_to_raster
+    clip_resample_reproject_raster, sum_rasters, mean_rasters
 
 
 no_data_value = -9999
@@ -112,9 +112,6 @@ def merge_GEE_data_patches_IrrMapper_extents(year_list, input_dir_irrmapper, mer
                 for month in month_list:
                     search_by = f'*{year}_{month}_*.tif'
 
-                    if year == 2023 and month == 12:  # OpenET data not yet released
-                        continue
-
                     # collecting all raster chunks
                     total_raster_list = glob(os.path.join(input_dir_irrmapper, search_by))
 
@@ -186,7 +183,7 @@ def classify_irrigated_cropland(irrigated_fraction_dir,
         irrigated_frac_threshold_for_irrigated_class = 0.02
 
         # Classifying those data with defined threshold
-        years = list(range(1985, 2024))         # 1985-2023
+        years = list(range(1985, 2025))         # 1985-2024
 
         for year in years:
             print(f'Classifying irrigated cropland data for year {year}')
@@ -231,7 +228,7 @@ def filter_irrigated_cropET_with_irrigated_cropland(irrigated_cropland_dir,
         makedirs([irrigated_cropET_output_dir])
 
         # cropET datasets have been extracted from openET for the following years_list and months only
-        years_to_filter_irrig_cropET = list(range(1985, 2024))          # 1985-2023
+        years_to_filter_irrig_cropET = list(range(1985, 2025))          # 1985-2024
 
         months_to_filter_cropET = list(range(1, 13))
 
@@ -244,8 +241,6 @@ def filter_irrigated_cropET_with_irrigated_cropland(irrigated_cropland_dir,
             irrigated_cropland_arr = read_raster_arr_object(irrigated_cropland_data, get_file=False)
 
             for month in months_to_filter_cropET:
-                if year == 2023 and month == 12:         # OpenET data not available
-                    continue
 
                 # # applying irrigated cropland filter to get cropET at purely irrigated pixels
                 irrigated_cropET_data = glob(os.path.join(irrigated_cropET_input_dir, f'*{year}_{month}*.tif'))[0]
@@ -801,11 +796,11 @@ def accumulate_monthly_datasets_to_water_year(skip_processing=False):
 
             if var == 'Irrigated_cropET':
                 output_dir = os.path.join(os.path.dirname(path), 'WestUS_water_year')
-                years_to_run = range(1986, 2023 + 1)
+                years_to_run = range(1986, 2024 + 1)
 
             else:
                 output_dir = os.path.join(os.path.dirname(path), 'WestUS_water_year')
-                years_to_run = range(1985, 2023 + 1)
+                years_to_run = range(1985, 2024 + 1)
 
             makedirs([output_dir])
 
@@ -1004,6 +999,41 @@ def process_lake_raster(lake_raster, AZ_shape, output_dir, skip_processing=False
         pass
 
 
+def interpolate_missing_Daymet_sunHr_data(years_to_interpolate, daymet_data_dir, skip_processing=False):
+    """
+    interpolate missing monthly data for daymet sun dr.
+
+
+    :param years_to_interpolate: List of year to interpolate for.
+    :param daymet_data_dir: Daymet monthly data directory.
+    :param skip_processing: Set to true to skip this process.
+
+    :return: None.
+    """
+    if not skip_processing:
+        print('interpolating Daymet Sun Hr data...')
+
+        for year in years_to_interpolate:
+            for month in range(1, 13):
+                if year == 2023 and month in range(1, 12):          # 2023 has data available from month 1-11
+                    continue
+                else:
+                    # reading previous two years' data
+                    data_two_year_back = glob(os.path.join(daymet_data_dir, f'*{year-2}_{month}.tif'))[0]
+                    data_one_year_back = glob(os.path.join(daymet_data_dir, f'*{year-1}_{month}.tif'))[0]
+
+                    arr_two, file = read_raster_arr_object(data_two_year_back)
+                    arr_one = read_raster_arr_object(data_one_year_back, get_file=False)
+
+                    # averaging last two years' data to interpolate missing data
+                    stacked_arr = np.stack([arr_two, arr_one], axis=0)
+                    new_arr = np.nanmean(stacked_arr, axis=0)
+
+                    # saving
+                    output_path = os.path.join(daymet_data_dir, f'DAYMET_sun_hr_{year}_{month}.tif')
+                    write_array_to_raster(new_arr, file, file.transform, output_path)
+
+
 def run_all_preprocessing(skip_process_GrowSeason_data=False,
                           skip_merging_irrigated_frac=False,
                           skip_merging_irrigated_cropET=False,
@@ -1015,6 +1045,7 @@ def run_all_preprocessing(skip_process_GrowSeason_data=False,
                           skip_prism_processing=False,
                           skip_processing_slope_data=False,
                           skip_process_AWC_data=False,
+                          skip_interpolate_daymet = False,
                           skip_accum_to_water_year_datasets=False,
                           skip_summing_irrigated_cropET_water_yr=False,
                           skip_estimate_precip_intensity=False,
@@ -1036,6 +1067,7 @@ def run_all_preprocessing(skip_process_GrowSeason_data=False,
     :param skip_summing_irrigated_cropET_gs: Set to True if want to skip summing irrigated cropET data summing for year/grow season.
     :param skip_processing_slope_data: Set to True if want to skip DEM to slope conversion.
     :param skip_process_AWC_data: Set to True ti skip processing AWC data.
+    :param skip_interpolate_daymet: Sett to true to skip interpoalte Daymet Sun Hr data.
     :param skip_accum_to_water_year_datasets: Set to True to skip accumulating monthly dataset to water year.
     :param skip_summing_irrigated_cropET_water_yr: Set to True if want to skip summing irrigated cropET for water year.
     :param skip_estimate_precip_intensity: Set to True to skip processing water year precipitation intensity data.
@@ -1052,7 +1084,7 @@ def run_all_preprocessing(skip_process_GrowSeason_data=False,
                                        skip_processing=skip_process_GrowSeason_data)
 
     # merge irrigated fraction dataset
-    merge_GEE_data_patches_IrrMapper_extents(year_list=list(range(1985, 2024)),
+    merge_GEE_data_patches_IrrMapper_extents(year_list=list(range(1985, 2025)),
                                              input_dir_irrmapper='../../Data_main/AZ_files/rasters/Irrigation_Frac_IrrMapper',
                                              merged_output_dir='../../Data_main/AZ_files/rasters/Irrigated_cropland/Irrigated_Frac',
                                              merge_keyword='Irrigated_Frac', monthly_data=False,
@@ -1060,7 +1092,7 @@ def run_all_preprocessing(skip_process_GrowSeason_data=False,
                                              skip_processing=skip_merging_irrigated_frac)
 
     # merge irrigated cropET dataset
-    merge_GEE_data_patches_IrrMapper_extents(year_list=list(range(1985, 2024)),
+    merge_GEE_data_patches_IrrMapper_extents(year_list=list(range(1985, 2025)),
                                              input_dir_irrmapper='../../Data_main/AZ_files/rasters/Irrig_crop_OpenET_IrrMapper',
                                              merged_output_dir='../../Data_main/AZ_files/rasters/Irrigated_cropET/WestUS_monthly_raw',
                                              merge_keyword='Irrigated_cropET', monthly_data=True,
@@ -1081,7 +1113,7 @@ def run_all_preprocessing(skip_process_GrowSeason_data=False,
         skip_processing=skip_filtering_irrigated_cropET)
 
     # sum monthly irrigated cropET for dynamic growing season
-    dynamic_gs_sum_ET(year_list=list(range(1985, 2023)),   # 2023 month 12 data not available
+    dynamic_gs_sum_ET(year_list=list(range(1985, 2025)),
                       growing_season_dir='../../Data_main/AZ_files/rasters/Growing_season',
                       monthly_input_dir='../../Data_main/AZ_files/rasters/Irrigated_cropET/WestUS_monthly',
                       gs_output_dir='../../Data_main/AZ_files/rasters/Irrigated_cropET/WestUS_grow_season',
@@ -1089,7 +1121,7 @@ def run_all_preprocessing(skip_process_GrowSeason_data=False,
                       skip_processing=skip_summing_irrigated_cropET_gs)
 
     # prism maximum temperature data processing
-    process_prism_data(year_list=tuple(range(1984, 2024)),
+    process_prism_data(year_list=tuple(range(1984, 2025)),
                        prism_bil_dir='../../Data_main/AZ_files/rasters/PRISM_Tmax/bil_format',
                        prism_tif_dir='../../Data_main/AZ_files/rasters/PRISM_Tmax/tif_format',
                        output_dir_prism_monthly='../../Data_main/AZ_files/rasters/PRISM_Tmax/WestUS_monthly',
@@ -1099,14 +1131,14 @@ def run_all_preprocessing(skip_process_GrowSeason_data=False,
 
     # gridmet precip yearly data processing
     sum_GridMET_precip_yearly_data(
-        year_list=list(range(1984, 2024)),
+        year_list=list(range(1984, 2025)),
         input_gridmet_monthly_dir='../../Data_main/AZ_files/rasters/GRIDMET_Precip/WestUS_monthly',
         output_dir_yearly='../../Data_main/AZ_files/rasters/GRIDMET_Precip/WestUS_yearly',
         skip_processing=skip_gridmet_precip_processing)
 
 
     # GridMET yearly data processing
-    sum_GridMET_RET_yearly_data(year_list=list(range(1984, 2024)),
+    sum_GridMET_RET_yearly_data(year_list=list(range(1984, 2025)),
                                 input_RET_monthly_dir='../../Data_main/AZ_files/rasters/GRIDMET_RET/WestUS_monthly',
                                 output_dir_RET_yearly='../../Data_main/AZ_files/rasters/GRIDMET_RET/WestUS_yearly',
                                 output_dir_RET_growing_season='../../Data_main/AZ_files/rasters/GRIDMET_RET/WestUS_grow_season',
@@ -1124,13 +1156,18 @@ def run_all_preprocessing(skip_process_GrowSeason_data=False,
                      ref_raster=ref_raster, resolution=model_res,
                      skip_processing=skip_process_AWC_data)
 
+    # interpolating Daymet un hr data
+    interpolate_missing_Daymet_sunHr_data(years_to_interpolate=[2023, 2024],
+                                          daymet_data_dir='../../Data_main/AZ_files/rasters/DAYMET_sun_hr/WestUS_monthly',
+                                          skip_processing=skip_interpolate_daymet)
+
     # # # # # # # # # # # # # # # # # # # # # # for water year model # # # # # # # # # # # # # # # # # # # # # # # # # #
 
     # accumulating monthly dataset to water year
     accumulate_monthly_datasets_to_water_year(skip_processing=skip_accum_to_water_year_datasets)
 
     # sum monthly irrigated cropET for water year
-    sum_cropET_water_yr(years_list=list(range(1986, 2024)),
+    sum_cropET_water_yr(years_list=list(range(1986, 2025)),
                         input_cropET_monthly_dir='../../Data_main/AZ_files/rasters/Irrigated_cropET/WestUS_monthly',
                         output_dir_water_yr='../../Data_main/AZ_files/rasters/Irrigated_cropET/WestUS_water_year',
                         save_keyword='Irrigated_cropET',
@@ -1138,14 +1175,14 @@ def run_all_preprocessing(skip_process_GrowSeason_data=False,
 
 
     # estimate water year precipitation intensity (precipitation / rainy days)
-    estimate_precip_intensity_water_yr(years_list=list(range(1985, 2024)),
+    estimate_precip_intensity_water_yr(years_list=list(range(1985, 2025)),
                                        input_dir_precip='../../Data_main/AZ_files/rasters/GRIDMET_Precip/WestUS_water_year/mean',
                                        input_dir_rainy_day='../../Data_main/AZ_files/rasters/Rainy_days/WestUS_water_year',
                                        output_dir='../../Data_main/AZ_files/rasters/Precipitation_intensity',
                                        skip_processing=skip_estimate_precip_intensity)
 
     # estimate PET/P (dryness index) for water year
-    estimate_PET_by_P_water_yr(years_list=list(range(1985, 2024)),
+    estimate_PET_by_P_water_yr(years_list=list(range(1985, 2025)),
                                input_dir_PET='../../Data_main/AZ_files/rasters/GRIDMET_RET/WestUS_water_year',
                                input_dir_precip='../../Data_main/AZ_files/rasters/GRIDMET_Precip/WestUS_water_year/sum',
                                output_dir='../../Data_main/AZ_files/rasters/Dryness_index',

@@ -1,0 +1,16 @@
+cff-version: 1.1.0
+message: If you use this software, please cite it as below.
+title: mdfahimhasan/WestUS_Peff: Effective precipitation dataset: Western United States
+version: Peff_v1
+date-released: 2025-04-04
+authors:
+  - family-names: Hasan
+    given-names: Md Fahim
+  - family-names: Smith
+    given-names: Ryan
+  - family-names: Majumdar
+    given-names: Sayantan
+  - family-names: Huntington
+    given-names: Justin
+  - family-names: Neto
+    given-names: A. A. M.

@@ -579,7 +579,7 @@ def sum_cropET_water_yr(years_list, input_cropET_monthly_dir, output_dir_water_y
             et_data_prev_years = glob(os.path.join(input_cropET_monthly_dir, f'*{yr - 1}_1[0-2].*tif'))
             et_data_current_years = glob(os.path.join(input_cropET_monthly_dir, f'*{yr}_[1-9].*tif'))
             et_water_yr_list = et_data_prev_years + et_data_current_years
-            print(et_water_yr_list)
+
             sum_rasters(raster_list=et_water_yr_list, raster_dir=None,
                         output_raster=os.path.join(output_dir_water_yr, f'{save_keyword}_{yr}.tif'),
                         ref_raster=et_water_yr_list[0])

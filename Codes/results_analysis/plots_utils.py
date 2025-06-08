@@ -130,7 +130,7 @@ def make_line_plot_v2(y1, y2, y3, year, fontsize, xlabel, ylabel, line_label_1, 
     sns.despine(offset=10, trim=True)  # turning of bounding box around the plots
 
     # xticks
-    ax.set_xticklabels(labels=year, rotation=45, fontsize=fontsize)
+    ax.set_xticklabels(labels=year, rotation=90, fontsize=fontsize)
     if no_xticks:
         ax.set_xticklabels(labels=[])
 
@@ -193,8 +193,8 @@ def make_BOI_netGW_vs_pumping_vs_USGS_scatter_plot(df, x1, y1, x2, y2, error_xmi
         handles, labels = ax[0].get_legend_handles_labels()
 
         # Create legend with square markers, adjust marker size as needed
-        new_handles = [plt.Line2D([], [], marker='s', color=handle.get_facecolor()[0], linestyle='None') for handle in
-                       handles[0:]]  # Skip the first handle as it's the legend title
+        new_handles = [plt.Line2D([], [], marker='s', color=handle.get_markerfacecolor(), linestyle='None') for handle
+                       in handles]    # Skip the first handle as it's the legend title
 
         ax[0].legend(handles=new_handles, labels=list(basin_labels), title='Basin',
                      loc='lower right', fontsize=(fontsize-4))

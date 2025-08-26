@@ -633,6 +633,7 @@ def download_gee_data_yearly(data_name, download_dir, year_list, month_range, me
     :param month_range: Tuple of month ranges to download data for, e.g., for months 4-12 use (4, 12).
     :param merge_keyword: Keyword to use for merging downloaded data. Suggested 'WestUS'/'Conus'.
     :param grid_shape: File path of grid shape for which data will be downloaded and mosaiced.
+    :param scale: Resolution in meter. Default set to 2200 m (~0.02 deg).
     :param refraster_westUS: Reference raster to clip/save data for WestUS extent.
     :param refraster_gee_merge: Reference raster to use for merging downloaded datasets from GEE. The merged
                                 datasets have to be clipped for Western US ROI.

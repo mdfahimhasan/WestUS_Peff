@@ -149,7 +149,7 @@ def make_BOI_netGW_vs_pumping_vs_USGS_scatter_plot(df, x1, y1, x2, y2, error_xmi
                                                    scientific_ticks=True, scilimits=(4, 4),
                                                    basin_labels=('GMD4, KS', 'GMD3, KS', 'Republican Basin, CO',
                                                                  'Harquahala INA, AZ', 'Douglas AMA, AZ', 'Diamond Valley, NV'),
-                                                   figsize=(12, 8), savepath=None, legend='on'):
+                                                   figsize=(12, 8), savepath=None, text_dict=None, legend='on'):
 
     basin_colors = {'GMD4, KS': '#4c72b0',
                     'GMD3, KS': '#dd8452',
@@ -187,6 +187,14 @@ def make_BOI_netGW_vs_pumping_vs_USGS_scatter_plot(df, x1, y1, x2, y2, error_xmi
         ax[1].tick_params(axis='both', labelsize=fontsize)
 
     sns.despine(offset=10, trim=True)  # turning of bounding box around the plots
+
+    if text_dict is not None:
+        if isinstance(text_dict, dict):
+            for i, s in text_dict.items():
+                ax[int(i)].text(0.02, 0.98, s, transform=ax[int(i)].transAxes,
+                           ha='left', va='top', fontsize=fontsize - 2)
+        else:
+            raise ValueError('text must be a dictionary')
 
     if legend == 'on':
         # Create a custom legend

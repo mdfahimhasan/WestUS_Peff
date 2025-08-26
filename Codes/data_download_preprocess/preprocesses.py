@@ -515,7 +515,7 @@ def sum_GridMET_RET_yearly_data(input_RET_monthly_dir, output_dir_RET_yearly, ou
                                            2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020),
                                 skip_processing=False):
     """
-    Process (sum for Western US extent) GridMET RET datasets for for a year and the year's growing season
+    Process (sum for Western US extent) GridMET RET datasets for a year and the year's growing season
     (April to october).
 
     :param input_RET_monthly_dir: Directory file path of downloaded GridMET RET monthly datasets.

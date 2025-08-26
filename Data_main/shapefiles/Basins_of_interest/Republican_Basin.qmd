@@ -1,0 +1,50 @@
+<!DOCTYPE qgis PUBLIC 'http://mrcc.com/qgis.dtd' 'SYSTEM'>
+<qgis version="3.22.7-Bia?owie?a">
+  <identifier>huc3_250</identifier>
+  <parentidentifier></parentidentifier>
+  <language>EN</language>
+  <type>dataset</type>
+  <title>huc3_250</title>
+  <abstract>The Geographic Information Retrieval and Analysis System (GIRAS) was developed in the mid 70s to put into digital form a number of data layers which were of interest to the USGS. One of these data layers was the Hydrologic Units. The map is based on the Hydrologic Unit Maps published by the U.S. Geological Survey Office of Water Data Coordination, together with the list descriptions and name of region, subregion, accounting units, and cataloging unit. The hydrologic units are encoded with an eight- digit number that indicates the hydrologic region (first two digits), hydrologic subregion (second two digits), accounting unit (third two digits), and cataloging unit (fourth two digits). The data produced by GIRAS was originally collected at a scale of 1:250K. Some areas, notably major cities in the west, were recompiled at a scale of 1:100K. In order to join the data together and use the data in a geographic information system (GIS) the data were processed in the ARC/INFO GUS software package. Within the GIS, the data were edgematched and the neatline boundaries between maps were removed to create a single data set for the conterminous United States. HUC, GIRAS, Hydrologic Units, 1:250,000
+
+This data set was compiled originally to provide the National Water Quality Assessment (NAWQA) study units with an intermediate- scale river basin boundary for extracting other GIS data layers. The data can also be used for illustration purposes at intermediate or small scales (1:250,000 to 1:2 million).</abstract>
+  <keywords vocabulary="gmd:topicCategory">
+    <keyword>HUC</keyword>
+  </keywords>
+  <contact>
+    <contactAddress>
+      <type>mailing and physical address</type>
+      <address></address>
+      <city></city>
+      <administrativearea></administrativearea>
+      <postalcode></postalcode>
+      <country></country>
+    </contactAddress>
+    <name></name>
+    <organization></organization>
+    <position></position>
+    <voice></voice>
+    <fax></fax>
+    <email></email>
+    <role>Point of contact</role>
+  </contact>
+  <links>
+    <link description="" mimeType="" type="Local Area Network" format="" size="" url="file://\\CWCBDENGIS2PC\C$\GIS\Base_Layers\huc3_250Copy" name="Shapefile"/>
+  </links>
+  <fees></fees>
+  <encoding></encoding>
+  <crs>
+    <spatialrefsys>
+      <wkt></wkt>
+      <proj4></proj4>
+      <srsid>0</srsid>
+      <srid>0</srid>
+      <authid></authid>
+      <description></description>
+      <projectionacronym></projectionacronym>
+      <ellipsoidacronym></ellipsoidacronym>
+      <geographicflag>false</geographicflag>
+    </spatialrefsys>
+  </crs>
+  <extent/>
+</qgis>

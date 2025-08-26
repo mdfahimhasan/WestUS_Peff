@@ -1,0 +1,1 @@
+detail - https://gee-community-catalog.org/projects/hydrolakes/#attribute-table-of-hydrolakes-polygon-and-point-layers

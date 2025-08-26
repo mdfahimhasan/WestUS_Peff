@@ -1,0 +1,688 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" href="fgdc_classic.xsl"?>
+<metadata xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://water.usgs.gov/GIS/metadata/usgswrd/fgdc-std-001-1998.xsd">
+<idinfo>
+<citation>
+<citeinfo>
+<origin>U.S. Geological Survey</origin>
+<pubdate>2009</pubdate>
+<title>Digital map of aquifer boundary for the High Plains aquifer in parts of Colorado, Kansas, Nebraska, New Mexico, Oklahoma, South Dakota, Texas, and Wyoming</title>
+<geoform>vector digital data</geoform>
+<serinfo>
+<sername>U.S. Geological Survey Data Series</sername>
+<issue>USGS DS543</issue>
+</serinfo>
+<pubinfo>
+<pubplace>Vancouver, WA</pubplace>
+<publish>U.S. Geological Survey</publish>
+</pubinfo>
+<onlink>http://water.usgs.gov/lookup/getspatial?ds543</onlink>
+</citeinfo>
+</citation>
+<descript>
+<abstract>This digital data set represents the extent of the High Plains aquifer in the central United States. The extent of the High Plains aquifer covers 174,000 square miles in eight states; Colorado, Kansas, Nebraska, New Mexico, Oklahoma, South Dakota, Texas, and Wyoming. This data set represents a compilation of information from digital and paper sources and personal communication. This boundary is an update to the boundary published in U.S. Geological Survey Professional Paper 1400-B and Open-File Report 99-267.</abstract>
+<purpose>The purpose of this data set is to refine and update the extent of the High Plains aquifer based on currently available information.</purpose>
+<supplinf>This data set represents a compilation of arcs from a variety of sources and scales that represent the 174,000 square-mile extent of the High Plains aquifer within eight states: Colorado, Kansas, Nebraska, New Mexico, Oklahoma, South Dakota, Texas, and Wyoming. Where updated information was not available, the original boundary extent defined by OFR 99-267 was retained. The citations for the sources in each state are listed below. The boundary also contains internal polygons, or "islands", that represent the areas within the aquifer boundary where the aquifer is not present due to erosion or non-deposition.
+
+Colorado:
+The arcs used to define the boundary were modified from
+Green, G.N., 1992, The digital geologic map of Colorado in ARC/INFO format: U.S. Geological Survey Open-File Report 92-507-D-O. Available at URL
+http://pubs.er.usgs.gov/publication/ofr92507DO
+
+Scott, G.R., 1978, Map showing geology, structure, and oil and gas fields in the Sterling 1 x 2 Quadrangle, Colorado, Nebraska, and Kansas: U.S. Geological Survey Miscellaneous Investigations Map IMAP-1092. Available at URL
+http://pubs.er.usgs.gov/publication/i1092
+
+Weist, W. G., 1965, Reconnaissance of the ground-water resources in parts of Larimer, Logan, Morgan, Sedgwick, and Weld Counties, Colorado: U.S. Geological Survey Water Supply Paper 1809-L. Available at URL
+http://pubs.er.usgs.gov/publication/wsp1809L
+
+Kansas:
+U.S. Geological Survey, 1995, High Plains aquifer. Available at URL
+http://www.kansasgis.org/catalog/catalog.cfm
+
+Nebraska:
+Cederstrand, J.R., Becker, M.F., 1999, Digital map of aquifer boundary for the High Plains Aquifer in parts of Colorado, Kansas, Nebraska, New Mexico, Oklahoma, South Dakota, Texas, and Wyoming: U.S. Geological Survey Open-File Report 99-267. Available at URL
+http://pubs.er.usgs.gov/publication/ofr99267
+
+New Mexico:
+Eifler, G.K., Jr., Reeves, C.C., Jr. and Barnes, V.E., 1974, Geologic atlas of Texas, Brownfield Sheet: University of Texas-Austin, Bureau of Economic  Geology, 1 sheet, scale 1:250,000.
+
+Eifler, G.K., Jr., Reeves, C.C., Jr. and Barnes, V.E., 1976, Geologic atlas of Texas, Hobbs Sheet: University of Texas-Austin, Bureau of Economic Geology, 1 sheet, scale 1:250,000.
+
+Eifler, G.K., Jr., Reeves, C.C., Jr. and Barnes, V.E., 1977, Geologic atlas of Texas, Clovis Sheet: University of Texas-Austin, Bureau of Economic Geology, 1 sheet, scale 1:250,000.
+
+To purchase the above map sheets:
+Bureau of Economic Geology publications available at URL: 
+http://www.beg.utexas.edu/mainweb/publications/pubs-CrossSecAtlas.htm
+
+Green, G.N., Jones, G.E., 1997, The digital geologic map of New Mexico in ARC/INFO format: U.S. Geological Survey Open-File Report 97-52.  Available at URL
+http://pubs.er.usgs.gov/publication/ofr9752
+
+Hart, D.L., McAda, D.P., 1985, Geohydrology of the High Plains Aquifer in  southeastern New Mexico: U.S. Geological Survey Hydrologic Atlas 679. Available at URL
+http://pubs.er.usgs.gov/publication/ha679
+
+Cederstrand, J.R., Becker, M.F., 1999, Digital map of aquifer boundary for the High Plains Aquifer in parts of Colorado, Kansas, Nebraska, New Mexico, Oklahoma, South Dakota, Texas, and Wyoming: U.S. Geological Survey Open-File Report 99-267. Available at URL
+http://pubs.er.usgs.gov/publication/ofr99267
+
+Oklahoma:
+Becker, C.J., Runkle, D.L., Rea, A.H., 1997, Digital data sets that describe aquifer characteristics of the High Plains Aquifer in western Oklahoma: U.S. Geological Survey Open-File Report 96-451. Available at URL
+http://pubs.er.usgs.gov/publication/ofr96451
+
+South Dakota:
+Cederstrand, J.R., Becker, M.F., 1999, Digital map of aquifer boundary for the High Plains Aquifer in parts of Colorado, Kansas, Nebraska, New Mexico, Oklahoma, South Dakota, Texas, and Wyoming: U.S. Geological Survey Open-File Report 99-267. Available at URL
+http://pubs.er.usgs.gov/publication/ofr99267
+
+Texas:
+Texas Water Development Board, 2006, Major aquifer of Texas; NMAquifers.mdb (geodatabase); Major_aquifers (shapefile). Available at URL
+http://www.twdb.state.tx.us/mapping/gisdata.asp
+
+Wyoming:
+Cederstrand, J.R., Becker, M.F., 1999, Digital map of aquifer boundary for the High Plains Aquifer in parts of Colorado, Kansas, Nebraska, New Mexico, Oklahoma, South Dakota, Texas, and Wyoming: U.S. Geological Survey Open-File Report 99-267. Available at URL
+http://pubs.er.usgs.gov/publication/ofr99267</supplinf>
+</descript>
+<timeperd>
+<timeinfo>
+<sngdate>
+<caldate>2009</caldate>
+</sngdate>
+</timeinfo>
+<current>publication date</current>
+</timeperd>
+<status>
+<progress>Complete</progress>
+<update>None planned</update>
+</status>
+<spdom>
+<bounding>
+<westbc>
+-106.016204</westbc>
+<eastbc>
+-96.228406</eastbc>
+<northbc>
+43.806318</northbc>
+<southbc>
+31.598356</southbc>
+</bounding>
+</spdom>
+<keywords>
+<theme>
+<themekt>None</themekt>
+<themekey>High Plains aquifer</themekey>
+<themekey>groundwater</themekey>
+<themekey>Ogallala aquifer</themekey>
+<themekey>Ogallala Formation</themekey>
+<themekey>ground water</themekey>
+<themekey>inlandWaters</themekey>
+<themekey>aquifer boundary</themekey>
+</theme>
+<place>
+<placekt>None</placekt>
+<placekey>High Plains</placekey>
+<placekey>Great Plains region</placekey>
+<placekey>central U.S.</placekey>
+<placekey>Colorado</placekey>
+<placekey>Kansas</placekey>
+<placekey>Nebraska</placekey>
+<placekey>New Mexico</placekey>
+<placekey>Oklahoma</placekey>
+<placekey>South Dakota</placekey>
+<placekey>Texas</placekey>
+<placekey>Wyoming</placekey>
+</place>
+</keywords>
+<accconst>None</accconst>
+<useconst>Not to be used at scales greater than the resolution of this data set (varies by state).</useconst>
+<ptcontac>
+<cntinfo>
+<cntperp>
+<cntper>Sharon L. Qi</cntper>
+<cntorg>U.S. Geological Survey</cntorg>
+</cntperp>
+<cntpos>Hydrologist</cntpos>
+<cntaddr>
+<addrtype>mailing address</addrtype>
+<address>1300 SE Cardinal Ct., Bldg 10, Suite 100</address>
+<city>Vancouver</city>
+<state>WA</state>
+<postal>98683</postal>
+<country>USA</country>
+</cntaddr>
+<cntvoice>360-993-8977</cntvoice>
+<cntfax>360-993-8981</cntfax>
+<cntemail>http://answers.usgs.gov/cgi-bin/gsanswers?pemail=h2oteam&amp;subject=GIS+Dataset+ds543</cntemail>
+</cntinfo>
+</ptcontac>
+<browse>
+<browsen>http://water.usgs.gov/GIS/browse/ds543.gif</browsen>
+<browsed>Extent of the High Plains aquifer boundary, central U.S.</browsed>
+<browset>GIF</browset>
+</browse>
+<secinfo>
+<secsys>Public</secsys>
+<secclass>Unclassified</secclass>
+<sechandl>None</sechandl>
+</secinfo>
+<native>Microsoft Windows XP Version 5.1 (Build 2600) Service Pack 3; ESRI ArcCatalog 9.3.1.1850</native>
+</idinfo>
+<dataqual>
+<attracc>
+<attraccr>See Entity Attribute information</attraccr>
+<qattracc>
+<attraccv>100</attraccv>
+<attracce>Attributes for the polygons are accurate as of publication date.</attracce>
+</qattracc>
+</attracc>
+<logic>Chain-node topology present.</logic>
+<complete>The arcs for this data set were compiled directly from the sources stated. Because the geology is mapped on a state by state basis, there were slight modifications to arcs where they approached state boundaries to smooth out differences in the location of geologic contacts between states.</complete>
+<posacc>
+<horizpa>
+<horizpar>Varies by state. See metadata for the source data sets.</horizpar>
+</horizpa>
+<vertacc>
+<vertaccr>None</vertaccr>
+</vertacc>
+</posacc>
+<lineage>
+<srcinfo>
+<srccite>
+<citeinfo>
+<origin>Cederstrand, J.R., and Becker, M.F.</origin>
+<pubdate>1999</pubdate>
+<title>Digital map of aquifer boundary for the High Plains aquifer in parts of Colorado, Kansas, Nebraska, New Mexico, Oklahoma, South Dakota, Texas, and Wyoming</title>
+<geoform>vector digital data</geoform>
+<serinfo>
+<sername>Open File Report</sername>
+<issue>99-267</issue>
+</serinfo>
+<pubinfo>
+<pubplace>Oklahoma City, OK</pubplace>
+<publish>U.S. Geological Survey</publish>
+</pubinfo>
+<onlink>http://pubs.er.usgs.gov/publication/ofr99267</onlink>
+</citeinfo>
+</srccite>
+<srcscale>1000000</srcscale>
+<typesrc>online</typesrc>
+<srctime>
+<timeinfo>
+<sngdate>
+<caldate>1999</caldate>
+</sngdate>
+</timeinfo>
+<srccurr>publication date</srccurr>
+</srctime>
+<srccitea>OFR 99-267</srccitea>
+<srccontr>The arcs representing the extent of the High Plains aquifer are from this data set except where more updated information was available (noted in the following source citations).</srccontr>
+</srcinfo>
+<srcinfo>
+<srccite>
+<citeinfo>
+<origin>U.S. Geological Survey</origin>
+<pubdate>1995</pubdate>
+<title>High Plains Aquifer</title>
+<geoform>vector digital data</geoform>
+<pubinfo>
+<pubplace>Kansas</pubplace>
+<publish>Kansas Data Access and Support Center (DASC)</publish>
+</pubinfo>
+<onlink>http://www.kansasgis.org/catalog/catalog.cfm</onlink>
+</citeinfo>
+</srccite>
+<srcscale>500000</srcscale>
+<typesrc>online</typesrc>
+<srctime>
+<timeinfo>
+<sngdate>
+<caldate>1995</caldate>
+</sngdate>
+</timeinfo>
+<srccurr>publication date</srccurr>
+</srctime>
+<srccitea>None</srccitea>
+<srccontr>The arcs representing the extent of the High Plains aquifer within the state of Kansas we compiled from this data set.</srccontr>
+</srcinfo>
+<srcinfo>
+<srccite>
+<citeinfo>
+<origin>U.S. Geological Survey</origin>
+<pubdate>1997</pubdate>
+<title>Digital data sets that describe aquifer characteristics of the High Plains aquifer in western Oklahoma</title>
+<edition>1.0</edition>
+<geoform>vector digital data</geoform>
+<serinfo>
+<sername>Open-File report</sername>
+<issue>96-451</issue>
+</serinfo>
+<pubinfo>
+<pubplace>Oklahoma City, OK</pubplace>
+<publish>U.S. Geological Survey</publish>
+</pubinfo>
+<onlink>http://pubs.er.usgs.gov/publication/ofr96451</onlink>
+</citeinfo>
+</srccite>
+<srcscale>250000</srcscale>
+<typesrc>online</typesrc>
+<srctime>
+<timeinfo>
+<sngdate>
+<caldate>1996</caldate>
+</sngdate>
+</timeinfo>
+<srccurr>publication date</srccurr>
+</srctime>
+<srccitea>OFR 96-451</srccitea>
+<srccontr>The arcs representing the extent of the High Plains aquifer within the state of Oklahoma are compiled from this data set</srccontr>
+</srcinfo>
+<srcinfo>
+<srccite>
+<citeinfo>
+<origin>Texas Water Development Board</origin>
+<pubdate>1997 and updated in 2006</pubdate>
+<title>NMAquifers.mdb (geodatabase) or MAJOR_aquifers (shapefile)</title>
+<edition>Version 1</edition>
+<geoform>vector digital data</geoform>
+<pubinfo>
+<pubplace>Texas</pubplace>
+<publish>Texas Water Development Board</publish>
+</pubinfo>
+<onlink>http://www.twdb.state.tx.us/mapping/gisdata.asp</onlink>
+</citeinfo>
+</srccite>
+<srcscale>250000</srcscale>
+<typesrc>online</typesrc>
+<srctime>
+<timeinfo>
+<sngdate>
+<caldate>1997 and updated in 2006</caldate>
+</sngdate>
+</timeinfo>
+<srccurr>publication date</srccurr>
+</srctime>
+<srccitea>NA</srccitea>
+<srccontr>All of the arcs representing the High Plains aquifer in Texas are from this data set. The High Plains aquifer in Texas is considered to be the Ogallala Formation.</srccontr>
+</srcinfo>
+<srcinfo>
+<srccite>
+<citeinfo>
+<origin>Bureau of Economic Geology</origin>
+<pubdate>1974-1977</pubdate>
+<title>Geologic Atlas of Texas</title>
+<geoform>maps</geoform>
+<serinfo>
+<sername>NA</sername>
+<issue>NA</issue>
+</serinfo>
+<pubinfo>
+<pubplace>Texas</pubplace>
+<publish>Bureau of Economic Geology</publish>
+</pubinfo>
+<othercit>The map sheets are not available digitally but can be purchased at URL: http://www.beg.utexas.edu/mainweb/publications/pubs-CrossSecAtlas.htm</othercit>
+</citeinfo>
+</srccite>
+<srcscale>250000</srcscale>
+<typesrc>paper</typesrc>
+<srctime>
+<timeinfo>
+<rngdates>
+<begdate>2002</begdate>
+<enddate>2004</enddate>
+</rngdates>
+</timeinfo>
+<srccurr>publication date</srccurr>
+</srctime>
+<srccitea>NA</srccitea>
+<srccontr>Selected arcs representing the High Plains aquifer in New Mexico are from this data set. The source 250K quad sheets used for the arcs were the Clovis, Brownfield, and Hobbs sheets.</srccontr>
+</srcinfo>
+<srcinfo>
+<srccite>
+<citeinfo>
+<origin>U.S. Geological Survey</origin>
+<pubdate>1997</pubdate>
+<title>The Digital Geologic Map of New Mexico in ARC/INFO Format</title>
+<geoform>vector digital data</geoform>
+<serinfo>
+<sername>Open-File Report</sername>
+<issue>97-0052</issue>
+</serinfo>
+<pubinfo>
+<pubplace>New Mexico</pubplace>
+<publish>U.S. Geological Survey</publish>
+</pubinfo>
+<onlink>http://pubs.er.usgs.gov/publication/ofr9752</onlink>
+</citeinfo>
+</srccite>
+<srcscale>500000</srcscale>
+<typesrc>online</typesrc>
+<srctime>
+<timeinfo>
+<sngdate>
+<caldate>1997</caldate>
+</sngdate>
+</timeinfo>
+<srccurr>publication date</srccurr>
+</srctime>
+<srccitea>OFR 97-0052</srccitea>
+<srccontr>Selected arcs representing the High Plains aquifer in New Mexico are from this data set. This data set was used for areas further west not covered by the 250K quad sheets used in the Geologic Atlas of Texas.</srccontr>
+</srcinfo>
+<srcinfo>
+<srccite>
+<citeinfo>
+<origin>U.S. Geological Survey</origin>
+<pubdate>1985</pubdate>
+<title>Geohydrology of the High Plains Aquifer in southeastern New Mexico</title>
+<geoform>map</geoform>
+<serinfo>
+<sername>Hydrologic Atlas</sername>
+<issue>679</issue>
+</serinfo>
+<pubinfo>
+<pubplace>Reston, VA</pubplace>
+<publish>U.S. Geological Survey</publish>
+</pubinfo>
+<onlink>http://pubs.er.usgs.gov/publication/ha679</onlink>
+</citeinfo>
+</srccite>
+<srcscale>500000</srcscale>
+<typesrc>paper</typesrc>
+<srctime>
+<timeinfo>
+<sngdate>
+<caldate>1985</caldate>
+</sngdate>
+</timeinfo>
+<srccurr>publication date</srccurr>
+</srctime>
+<srccitea>HA 679</srccitea>
+<srccontr>Selected arcs representing the High Plains aquifer in New Mexico are from this report. The arcs were digitized from paper map sheets by Natalie Houston (USGS, TX) to close polygons in DeBeca, Quay, and Guadalupe Counties. The aquifer boundary in Lea County was defined by Don Hart and Doug McAda to represent the extent of the saturated zone for the Quaternary sediments in the High Plains aquifer.</srccontr>
+</srcinfo>
+<srcinfo>
+<srccite>
+<citeinfo>
+<origin>U.S. Geological Survey</origin>
+<pubdate>1992</pubdate>
+<title>The digital geologic map of Colorado in ARC/INFO format</title>
+<geoform>vector digital data</geoform>
+<serinfo>
+<sername>Open-File Report</sername>
+<issue>92-507</issue>
+</serinfo>
+<pubinfo>
+<pubplace>Denver, CO</pubplace>
+<publish>U.S. Geological Survey</publish>
+</pubinfo>
+<onlink>http://pubs.er.usgs.gov/publication/ofr92507DO</onlink>
+</citeinfo>
+</srccite>
+<srcscale>500000</srcscale>
+<typesrc>online</typesrc>
+<srctime>
+<timeinfo>
+<sngdate>
+<caldate>1992</caldate>
+</sngdate>
+</timeinfo>
+<srccurr>publication date</srccurr>
+</srctime>
+<srccitea>OFR 92-0507</srccitea>
+<srccontr>The arcs representing the High Plains boundary in Colorado were taken and modified from this data set by Virginia McGuire, Jennifer Stanton, and Richard Luckey (USGS).</srccontr>
+</srcinfo>
+<srcinfo>
+<srccite>
+<citeinfo>
+<origin>Nebraska Department of Natural Resources</origin>
+<pubdate>2005</pubdate>
+<title>Platte River Cooperative Hydrology Study Boundary</title>
+<edition>Version 2.0</edition>
+<geoform>vector digital data</geoform>
+<pubinfo>
+<pubplace>Lincoln, NE</pubplace>
+<publish>Nebraska Department of Natural Resources</publish>
+</pubinfo>
+<onlink>http://cohyst.dnr.state.ne.us/</onlink>
+</citeinfo>
+</srccite>
+<typesrc>online</typesrc>
+<srctime>
+<timeinfo>
+<sngdate>
+<caldate>2005</caldate>
+</sngdate>
+</timeinfo>
+<srccurr>publication date</srccurr>
+</srctime>
+<srccitea>NA</srccitea>
+<srccontr>Selected arcs representing the High Plains aquifer extent in northern Colorado and a small area in southern Wyoming (near the Colorado border) are taken from this data set.</srccontr>
+</srcinfo>
+<procstep>
+<procdesc>Began with the boundary extent defined by OFR 99-267. As more recent digital vector data sets were located for each state, the arcs of the original boundary were deleted and replaced by the new arcs from the state data source. The first data set to be inserted in the new boundary extent was for Kansas. The data were retrieved from the Data Access and Support Center (DASC) and consisted of arcs defining the High Plains boundary within the state of Kansas. See Supplemental Information section for source citation.</procdesc>
+<srcused>USGS, High Plains aquifer extent in Kansas at URL http://www.kansasgis.org/catalog/catalog.cfm</srcused>
+<procdate>2009</procdate>
+</procstep>
+<procstep>
+<procdesc>The next data set compiled for this data set was the arcs obtained from a digital vector data set of the boundary of the High Plains in the state of Oklahoma. The arcs were copied into this data set and replaced the old boundary in Oklahoma.</procdesc>
+<srcused>USGS OFR 96-451</srcused>
+<procdate>2009</procdate>
+</procstep>
+<procstep>
+<procdesc>The arcs representing the High Plains in New Mexico were obtained next from the digital data set received from OFR-9752 and digitized by Natalie Houston (USGS, Austin, TX) from paper BEG, Geologic Atlas of Texas maps and HA-679. In Texas, the vectors digital data were obtained from the Texas Water Development Board.</procdesc>
+<srcused>BEG, Geologic Atlas of Texas</srcused>
+<srcused>USGS OFR 97-52</srcused>
+<srcused>USGS HA 679</srcused>
+<srcused>TWDB, 1997, updated 2006</srcused>
+<procdate>2009</procdate>
+</procstep>
+<procstep>
+<procdesc>The arcs representing the High Plains boundary in Colorado were modified from the digital state geologic map of Colorado by Virginia McGuire (USGS, Lincoln, NE), Jennifer Stanton (USGS, Providence, RI), and Richard Luckey (USGS, retired) and incorporated into this data set.</procdesc>
+<srcused>USGS OFR 92-507</srcused>
+<srcused>USGS I-1092</srcused>
+<srcused>USGS WSP-1809L</srcused>
+<procdate>2009</procdate>
+</procstep>
+<procstep>
+<procdesc>After all of the updated information was compiled for this data set, the arcs representing the boundary of the aquifer near state borders needed to be slightly modified. Connecting arcs were added right along state borders to "smooth" areas where the location of geologic boundaries did not match across the border. This was required along the boders of Colorado and Wyoming, Oklahoma and Texas, Oklahoma and Kansas, Oklahoma and Colorado, and New Mexico and Texas.</procdesc>
+<procdate>2009</procdate>
+</procstep>
+<procstep>
+<procdesc>Metadata imported.</procdesc>
+<srcused>C:\DOCUME~1\slqi\LOCALS~1\Temp\xml326C.tmp</srcused>
+<procdate>20091023</procdate>
+<proctime>13010700</proctime>
+</procstep>
+<procstep>
+<procdesc>Dataset copied.</procdesc>
+<srcused>G:\HPGWAvailability\FinalHPBoundary\hpbnd09_2</srcused>
+<procdate>20100510</procdate>
+<proctime>13515300</proctime>
+</procstep>
+<procstep>
+<procdesc>Metadata imported.</procdesc>
+<srcused>C:\DOCUME~1\slqi\LOCALS~1\Temp\xml3439.tmp</srcused>
+<procdate>20100510</procdate>
+<proctime>13564300</proctime>
+</procstep>
+</lineage>
+</dataqual>
+<spdoinfo>
+<direct>Vector</direct>
+<ptvctinf>
+<sdtsterm>
+<sdtstype>G-polygon</sdtstype>
+<ptvctcnt>199</ptvctcnt>
+</sdtsterm>
+<sdtsterm>
+<sdtstype>Label point</sdtstype>
+<ptvctcnt>199</ptvctcnt>
+</sdtsterm>
+<sdtsterm>
+<sdtstype>GT-polygon composed of chains</sdtstype>
+<ptvctcnt>199</ptvctcnt>
+</sdtsterm>
+<sdtsterm>
+<sdtstype>Point</sdtstype>
+<ptvctcnt>225</ptvctcnt>
+</sdtsterm>
+</ptvctinf>
+</spdoinfo>
+<spref>
+<horizsys>
+<planar>
+<mapproj>
+<mapprojn>Albers Conical Equal Area</mapprojn>
+<albers>
+<stdparll>29.500000</stdparll>
+<stdparll>45.500000</stdparll>
+<longcm>-96.000000</longcm>
+<latprjo>23.000000</latprjo>
+<feast>0.000000</feast>
+<fnorth>0.000000</fnorth>
+</albers>
+</mapproj>
+<planci>
+<plance>coordinate pair</plance>
+<coordrep>
+<absres>0.000001</absres>
+<ordres>0.000001</ordres>
+</coordrep>
+<plandu>meters</plandu>
+</planci>
+</planar>
+<geodetic>
+<horizdn>North American Datum of 1983</horizdn>
+<ellips>Geodetic Reference System 80</ellips>
+<semiaxis>6378137.000000</semiaxis>
+<denflat>298.257222</denflat>
+</geodetic>
+</horizsys>
+</spref>
+<eainfo>
+<detailed>
+<enttyp>
+<enttypl>
+hp_bound2010</enttypl>
+<enttypd>Shapefile Attribute Table</enttypd>
+<enttypds>ESRI</enttypds>
+</enttyp>
+<attr>
+<attrlabl>FID</attrlabl>
+<attrdef>Internal feature number.</attrdef>
+<attrdefs>ESRI</attrdefs>
+<attrdomv>
+<udom>Sequential unique whole numbers that are automatically generated.</udom>
+</attrdomv>
+<attrvai>
+<attrva>100</attrva>
+<attrvae>NA</attrvae>
+</attrvai>
+</attr>
+<attr>
+<attrlabl>Shape</attrlabl>
+<attrdef>Feature geometry.</attrdef>
+<attrdefs>ESRI</attrdefs>
+<attrdomv>
+<udom>Coordinates defining the features.</udom>
+</attrdomv>
+<attrvai>
+<attrva>100</attrva>
+<attrvae>NA</attrvae>
+</attrvai>
+</attr>
+<attr>
+<attrlabl>AQUIFER</attrlabl>
+<attrdef>Indicator representing the presence or absence of the aquifer</attrdef>
+<attrdefs>Source authors</attrdefs>
+<attrdomv>
+<codesetd>
+<codesetn>High Plains aquifer</codesetn>
+<codesets>Author</codesets>
+</codesetd>
+</attrdomv>
+<attrdomv>
+<codesetd>
+<codesetn>aquifer not present</codesetn>
+<codesets>Author</codesets>
+</codesetd>
+</attrdomv>
+<attrvai>
+<attrva>100</attrva>
+<attrvae>Values are accurate as of publication</attrvae>
+</attrvai>
+<attrmfrq>None planned</attrmfrq>
+</attr>
+</detailed>
+<overview>
+<eaover>Each polygon is labeled as "High Plains aquifer" or "aquifer not present"</eaover>
+<eadetcit>None</eadetcit>
+</overview>
+</eainfo>
+<distinfo>
+<distrib>
+<cntinfo>
+<cntorgp>
+<cntorg>U.S. Geological Survey</cntorg>
+</cntorgp>
+<cntpos>Ask USGS -- Water Webserver Team</cntpos>
+<cntaddr>
+<addrtype>mailing address</addrtype>
+<address>445 National Center</address>
+<city>Reston</city>
+<state>VA</state>
+<postal>20192</postal>
+<country>USA</country>
+</cntaddr>
+<cntvoice>1-888-275-8747 (1-888-ASK-USGS)</cntvoice>
+<cntemail>http://water.usgs.gov/user_feedback_form.html</cntemail>
+</cntinfo>
+</distrib>
+<resdesc>Downloadable Data</resdesc>
+<distliab>Although these data have been used by the U.S. Geological Survey, U.S. Department of the Interior, no warranty expressed or implied is made by the U.S. Geological Survey as to the accuracy of the data.  The act of distribution shall not constitute any such warranty, and no responsibility is assumed by the U.S. Geological Survey in the use of these data, software, or related materials.
+
+The use of firm, trade, or brand names in this report is for identification purposes only and does not constitute endorsement by the U.S. Geological Survey.  The names mentioned in this document may be trademarks or registered trademarks of their respective trademark owners.</distliab>
+<stdorder>
+<digform>
+<digtinfo>
+<formname>Shapefile</formname>
+<formverd>2009</formverd>
+<formcont>Spatial and attribute information</formcont>
+<filedec>Zip</filedec>
+<transize>2.409</transize>
+</digtinfo>
+<digtopt>
+<onlinopt>
+<computer>
+<networka>
+<networkr>http://water.usgs.gov/GIS/dsdl/ds543.zip</networkr>
+</networka>
+</computer>
+</onlinopt>
+</digtopt>
+</digform>
+<fees>None: This data set is provided by USGS as a public service.</fees>
+</stdorder>
+</distinfo>
+<metainfo>
+<metd>20101108</metd>
+<metrd>2009</metrd>
+<metfrd>2009</metfrd>
+<metc>
+<cntinfo>
+<cntorgp>
+<cntorg>U.S. Geological Survey</cntorg>
+<cntper>REQUIRED: The person responsible for the metadata information.</cntper>
+</cntorgp>
+<cntpos>Ask USGS -- Water Webserver Team</cntpos>
+<cntaddr>
+<addrtype>mailing address</addrtype>
+<address>445 National Center</address>
+<city>Reston</city>
+<state>VA</state>
+<postal>20192</postal>
+<country>USA</country>
+</cntaddr>
+<cntvoice>1-888-275-8747 (1-888-ASK-USGS)</cntvoice>
+<cntemail>http://answers.usgs.gov/cgi-bin/gsanswers?pemail=h2oteam&amp;subject=GIS+Dataset+ds543</cntemail>
+</cntinfo>
+</metc>
+<metstdn>FGDC Content Standards for Digital Geospatial Metadata</metstdn>
+<metstdv>FGDC-STD-001-1998</metstdv>
+
+</metainfo>
+</metadata>

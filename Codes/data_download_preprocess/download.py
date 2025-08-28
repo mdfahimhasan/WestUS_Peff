@@ -1124,6 +1124,8 @@ def download_eff_precip_data_from_DK_asset(data_name, download_dir, year_list, m
 
 def download_all_gee_data(data_list, download_dir, year_list, month_range,
                           grid_shape_large, scale=2200, use_cpu_while_multidownloading=15,
+                          ref_raster_GEE_merge=GEE_merging_refraster_large_grids,
+                          ref_raster_westus=WestUS_raster,
                           skip_download=False):
     """
     Used to download all gee data together.
@@ -1145,6 +1147,8 @@ def download_all_gee_data(data_list, download_dir, year_list, month_range,
     :param scale: Resolution in meter. Default set to 2200 m (~0.02 deg).
     :param use_cpu_while_multidownloading: Number (Int) of CPU cores to use for multi-download by
                                            multi-processing/multi-threading. Default set to 15.
+    :param ref_raster_GEE_merge: GEE_merging reference raster. Default set to GEE_merging_refraster_large_grids.
+    :param ref_raster_westus: Reference raster. Default set to Western US reference raster.
     :param skip_download: Set to True to skip download.
 
     :return: None
@@ -1162,34 +1166,34 @@ def download_all_gee_data(data_list, download_dir, year_list, month_range,
                 # for datasets that needed to be downloaded on monthly scale
                 download_gee_data_monthly(data_name=data_name, download_dir=download_dir, year_list=year_list,
                                           month_range=month_range, merge_keyword='WestUS_monthly',
-                                          refraster_westUS=WestUS_raster,
-                                          refraster_gee_merge=GEE_merging_refraster_large_grids,
+                                          refraster_westUS=ref_raster_westus,
+                                          refraster_gee_merge=ref_raster_GEE_merge,
                                           grid_shape=grid_shape_large,
                                           use_cpu_while_multidownloading=use_cpu_while_multidownloading)
 
             elif data_name == 'USDA_CDL':
                 download_gee_data_yearly(data_name=data_name, download_dir=download_dir, year_list=year_list,
                                          month_range=month_range, merge_keyword='WestUS_yearly',
-                                         grid_shape=grid_shape_large, refraster_westUS=WestUS_raster,
-                                         refraster_gee_merge=GEE_merging_refraster_large_grids, scale=scale)
+                                         grid_shape=grid_shape_large, refraster_westUS=ref_raster_westus,
+                                         refraster_gee_merge=ref_raster_GEE_merge, scale=scale)
 
             elif data_name in ['Field_capacity', 'Bulk_density', 'Organic_carbon_content', 'Sand_content',
                                'Clay_content']:
                 download_soil_datasets(data_name=data_name, download_dir=download_dir, merge_keyword='WestUS',
-                                       grid_shape=grid_shape_large, refraster_westUS=WestUS_raster)
+                                       grid_shape=grid_shape_large, refraster_westUS=ref_raster_westus)
 
             elif data_name == 'DEM':
                 download_DEM_Slope_data(data_name=data_name, download_dir=download_dir,
                                         merge_keyword='WestUS', grid_shape=grid_shape_large,
-                                        refraster_westUS=WestUS_raster,
-                                        refraster_gee_merge=GEE_merging_refraster_large_grids,
+                                        refraster_westUS=ref_raster_westus,
+                                        refraster_gee_merge=ref_raster_GEE_merge,
                                         terrain_slope=False)
 
             elif data_name == 'Tree_cover':
                 download_tree_cover_data(data_name='Tree_cover', download_dir=download_dir,
                                          merge_keyword='WestUS', grid_shape=grid_shape_large,
-                                         refraster_westUS=WestUS_raster,
-                                         refraster_gee_merge=GEE_merging_refraster_large_grids,
+                                         refraster_westUS=ref_raster_westus,
+                                         refraster_gee_merge=ref_raster_GEE_merge,
                                          westUS_shape=WestUS_shape)
 
             elif data_name == 'Effect_precip_DK':
@@ -1197,7 +1201,7 @@ def download_all_gee_data(data_list, download_dir, year_list, month_range,
                                                        year_list=year_list, month_range=(4, 10),
                                                        grid_shape=grid_shape_large, merge_keyword='WestUS_monthly',
                                                        use_cpu_while_multidownloading=use_cpu_while_multidownloading,
-                                                       refraster=WestUS_raster)
+                                                       refraster=ref_raster_westus)
 
     else:
         pass
@@ -1245,6 +1249,8 @@ def download_ssebop_et(years_list, month_range_list, download_dir='../../Data_ma
 
 def download_all_datasets(year_list, month_range, grid_shape_large,
                           gee_data_list, data_download_dir, scale=2200,
+                          ref_raster_GEE_merge=GEE_merging_refraster_large_grids,
+                          ref_raster_westus=WestUS_raster,
                           skip_download_gee_data=True,
                           use_cpu_while_multidownloading=15):
     """
@@ -1263,6 +1269,8 @@ def download_all_datasets(year_list, month_range, grid_shape_large,
                             'Organic_carbon_content', 'Sand_content', 'Clay_content', 'DEM', 'Effect_precip_DK']
     :param data_download_dir: Directory path to download and save data.
     :param scale: Resolution in meter. Default set to 2200 m (~0.02 deg).
+    :param ref_raster_GEE_merge: GEE_merging reference raster. Default set to GEE_merging_refraster_large_grids.
+    :param ref_raster_westus: Reference raster. Default set to Western US reference raster.
     :param skip_download_gee_data: Set to False if want to download listed data. Default set to True.
     :param use_cpu_while_multidownloading: Number (Int) of CPU cores to use for multi-download by
                                            multi-processing/multi-threading. Default set to 15.
@@ -1272,5 +1280,8 @@ def download_all_datasets(year_list, month_range, grid_shape_large,
     # Data download from GEE
     download_all_gee_data(gee_data_list, download_dir=data_download_dir,
                           year_list=year_list, month_range=month_range, scale=scale,
-                          grid_shape_large=grid_shape_large, skip_download=skip_download_gee_data,
+                          grid_shape_large=grid_shape_large,
+                          ref_raster_GEE_merge=ref_raster_GEE_merge,
+                          ref_raster_westus=ref_raster_westus,
+                          skip_download=skip_download_gee_data,
                           use_cpu_while_multidownloading=use_cpu_while_multidownloading)

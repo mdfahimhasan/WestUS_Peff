@@ -615,7 +615,7 @@ def download_DEM_Slope_data(data_name, download_dir, merge_keyword, grid_shape, 
 # # The download_gee_data_yearly() function isn't fully optimized. Might need to change things at the
 # #  get_gee_dict() function. ALso, All it might need modification to download all datasets available in
 # the get_gee_dict() function. Not using this function for the current project
-def download_gee_data_yearly(data_name, download_dir, year_list, month_range, merge_keyword, grid_shape,
+def download_gee_data_yearly(data_name, download_dir, year_list, month_range, merge_keyword, grid_shape, scale=2200,
                              refraster_westUS=WestUS_raster, refraster_gee_merge=GEE_merging_refraster_large_grids,
                              westUS_shape=WestUS_shape):
     """
@@ -726,7 +726,7 @@ def download_gee_data_yearly(data_name, download_dir, year_list, month_range, me
 
                 data_url = download_data.getDownloadURL({'name': data_name,
                                                          'crs': 'EPSG:4269',  # NAD83
-                                                         'scale': 2200,  # in meter. equal to ~0.02 deg
+                                                         'scale': scale,  # in meter
                                                          'region': gee_extent,
                                                          'format': 'GEO_TIFF'})
                 key_word = data_name
@@ -1123,7 +1123,7 @@ def download_eff_precip_data_from_DK_asset(data_name, download_dir, year_list, m
 
 
 def download_all_gee_data(data_list, download_dir, year_list, month_range,
-                          grid_shape_large, use_cpu_while_multidownloading=15,
+                          grid_shape_large, scale=2200, use_cpu_while_multidownloading=15,
                           skip_download=False):
     """
     Used to download all gee data together.
@@ -1142,6 +1142,7 @@ def download_all_gee_data(data_list, download_dir, year_list, month_range,
     :param month_range: Tuple of month ranges to download data for, e.g., for months 1-12 use (1, 12).
     :param grid_shape_large: File path of larger grids (used in most GEE data download) for which data
                              will be downloaded and mosaiced.
+    :param scale: Resolution in meter. Default set to 2200 m (~0.02 deg).
     :param use_cpu_while_multidownloading: Number (Int) of CPU cores to use for multi-download by
                                            multi-processing/multi-threading. Default set to 15.
     :param skip_download: Set to True to skip download.
@@ -1170,7 +1171,7 @@ def download_all_gee_data(data_list, download_dir, year_list, month_range,
                 download_gee_data_yearly(data_name=data_name, download_dir=download_dir, year_list=year_list,
                                          month_range=month_range, merge_keyword='WestUS_yearly',
                                          grid_shape=grid_shape_large, refraster_westUS=WestUS_raster,
-                                         refraster_gee_merge=GEE_merging_refraster_large_grids)
+                                         refraster_gee_merge=GEE_merging_refraster_large_grids, scale=scale)
 
             elif data_name in ['Field_capacity', 'Bulk_density', 'Organic_carbon_content', 'Sand_content',
                                'Clay_content']:
@@ -1243,7 +1244,7 @@ def download_ssebop_et(years_list, month_range_list, download_dir='../../Data_ma
 
 
 def download_all_datasets(year_list, month_range, grid_shape_large,
-                          gee_data_list, data_download_dir,
+                          gee_data_list, data_download_dir, scale=2200,
                           skip_download_gee_data=True,
                           use_cpu_while_multidownloading=15):
     """
@@ -1261,6 +1262,7 @@ def download_all_datasets(year_list, month_range, grid_shape_large,
                             'DAYMET_sun_hr', 'OpenET_ensemble', 'USDA_CDL', 'Field_capacity', 'Bulk_density',
                             'Organic_carbon_content', 'Sand_content', 'Clay_content', 'DEM', 'Effect_precip_DK']
     :param data_download_dir: Directory path to download and save data.
+    :param scale: Resolution in meter. Default set to 2200 m (~0.02 deg).
     :param skip_download_gee_data: Set to False if want to download listed data. Default set to True.
     :param use_cpu_while_multidownloading: Number (Int) of CPU cores to use for multi-download by
                                            multi-processing/multi-threading. Default set to 15.
@@ -1269,6 +1271,6 @@ def download_all_datasets(year_list, month_range, grid_shape_large,
     """
     # Data download from GEE
     download_all_gee_data(gee_data_list, download_dir=data_download_dir,
-                          year_list=year_list, month_range=month_range,
+                          year_list=year_list, month_range=month_range, scale=scale,
                           grid_shape_large=grid_shape_large, skip_download=skip_download_gee_data,
                           use_cpu_while_multidownloading=use_cpu_while_multidownloading)

@@ -369,7 +369,7 @@ def download_openet_indiv_models_grow_season(download_dir, year_list, merge_keyw
 
 
 def download_openet_ensemble(download_dir, year_list, month_range, merge_keyword, grid_shape,
-                             use_cpu_while_multidownloading=15, refraster_westUS=WestUS_raster,
+                             use_cpu_while_multidownloading=15, refraster_westUS=WestUS_raster, scale=2200,
                              refraster_gee_merge=GEE_merging_refraster_large_grids, westUS_shape=WestUS_shape):
     """
     Download openET ensemble data (at monthly scale) from GEE.
@@ -382,6 +382,7 @@ def download_openet_ensemble(download_dir, year_list, month_range, merge_keyword
     :param use_cpu_while_multidownloading: Number (Int) of CPU cores to use for multi-download by
                                            multi-processing/multi-threading. Default set to 15.
     :param refraster_westUS: Reference raster to clip/save data for WestUS extent.
+    :param scale: Resolution in meter. Default set to 2200 m (~0.02 deg).
     :param refraster_gee_merge: Reference raster to use for merging downloaded datasets from GEE. The merged
                                 datasets have to be clipped for Western US ROI.
     :param westUS_shape: Filepath of West US shapefile.
@@ -458,7 +459,7 @@ def download_openet_ensemble(download_dir, year_list, month_range, merge_keyword
                         try:
                             data_url = download_data.getDownloadURL({'name': 'OpenET_ensemble',
                                                                           'crs': 'EPSG:4269',  # NAD83
-                                                                          'scale': 2200,  # in meter. equal to ~0.02 deg
+                                                                          'scale': scale,  # in meter
                                                                           'region': gee_extent,
                                                                           'format': 'GEO_TIFF'})
                             break  # if successful, exit the loop
@@ -1973,7 +1974,7 @@ def download_Rainfed_CropET_from_OpenET_LANID_monthly(data_name, download_dir, y
 def download_openET_data(data_list, download_dir, year_list, month_range,
                          grid_shape_for_2km_ensemble, grid_shape_for30m_irrmapper, grid_shape_for30m_lanid,
                          GEE_merging_refraster=GEE_merging_refraster_large_grids,
-                         westUS_refraster=WestUS_raster, westUS_shape=WestUS_shape,
+                         westUS_refraster=WestUS_raster, westUS_shape=WestUS_shape, scale_ensemble=2200,
                          use_cpu_while_multidownloading=15, skip_download=False):
     """
     Used to download openET datasets from GEE.
@@ -2000,6 +2001,8 @@ def download_openET_data(data_list, download_dir, year_list, month_range,
     :param GEE_merging_refraster: Reference raster to mosaic openET ensemble 2km dataset.
     :param westUS_refraster: Western US reference raster.
     :param westUS_shape: Western US shapefile.
+    :param scale_ensemble: Resolution in meter from OpenET ensemble data download. Works only in download_openet_ensemble() function.
+                           Default set to 2200 m (~0.02 deg).
     :param use_cpu_while_multidownloading: Number (Int) of CPU cores to use for multi-download by
                                            multi-processing/multi-threading. Default set to 15.
     :param skip_download: Set to True to skip download.
@@ -2013,7 +2016,7 @@ def download_openET_data(data_list, download_dir, year_list, month_range,
                                          month_range=month_range, merge_keyword='WestUS_monthly',
                                          grid_shape=grid_shape_for_2km_ensemble,
                                          use_cpu_while_multidownloading=15, refraster_westUS=westUS_refraster,
-                                         refraster_gee_merge=GEE_merging_refraster,
+                                         refraster_gee_merge=GEE_merging_refraster, scale=scale_ensemble,
                                          westUS_shape=westUS_shape)
 
             elif data_name == 'OpenET_indiv_models_grow_season':
@@ -2079,6 +2082,7 @@ def download_all_openET_datasets(year_list, month_range,
                                  openET_data_list, data_download_dir,
                                  GEE_merging_refraster=GEE_merging_refraster_large_grids,
                                  westUS_refraster=WestUS_raster, westUS_shape=WestUS_shape,
+                                 scale_ensemble=2200,
                                  skip_download_OpenET_data=True,
                                  use_cpu_while_multidownloading=15):
     """
@@ -2104,6 +2108,8 @@ def download_all_openET_datasets(year_list, month_range,
     :param GEE_merging_refraster: Reference raster to mosaic openET ensemble 2km dataset.
     :param westUS_refraster: Western US reference raster.
     :param westUS_shape: Western US shapefile.
+    :param scale_ensemble: Resolution in meter from OpenET ensemble data download. Works only in download_openet_ensemble() function.
+                           Default set to 2200 m (~0.02 deg).
     :param skip_download_OpenET_data: Set to False if want to download listed data. Default set to True.
     :param use_cpu_while_multidownloading: Number (Int) of CPU cores to use for multi-download by
                                            multi-processing/multi-threading. Default set to 15.
@@ -2118,5 +2124,6 @@ def download_all_openET_datasets(year_list, month_range,
                          grid_shape_for30m_lanid=grid_shape_for30m_lanid,
                          GEE_merging_refraster=GEE_merging_refraster,
                          westUS_refraster=westUS_refraster, westUS_shape=westUS_shape,
+                         scale_ensemble=scale_ensemble,
                          skip_download=skip_download_OpenET_data,
                          use_cpu_while_multidownloading=use_cpu_while_multidownloading)

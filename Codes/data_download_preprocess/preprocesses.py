@@ -1283,7 +1283,7 @@ def estimate_PET_by_P_water_yr(years_list, input_dir_PET, input_dir_precip, outp
     Estimate PET/P (dryness index) for water year.
 
     :param years_list: List of years to process data for.
-    :param input_dir_PET: ilepath of water year summed PET data directory.
+    :param input_dir_PET: Filepath of water year summed PET data directory.
     :param input_dir_precip: Filepath of water year summed precipitation data directory.
     :param output_dir: Filepath of output directory.
     :param nodata: No data value. Default set to -9999.

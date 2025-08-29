@@ -617,7 +617,7 @@ def download_DEM_Slope_data(data_name, download_dir, merge_keyword, grid_shape, 
 # the get_gee_dict() function. Not using this function for the current project
 def download_gee_data_yearly(data_name, download_dir, year_list, month_range, merge_keyword, grid_shape, scale=2200,
                              refraster_westUS=WestUS_raster, refraster_gee_merge=GEE_merging_refraster_large_grids,
-                             westUS_shape=WestUS_shape):
+                             clip_shape=WestUS_shape, clip_resolution=model_res):
     """
     Download data (at yearly scale) from GEE.
 
@@ -637,7 +637,9 @@ def download_gee_data_yearly(data_name, download_dir, year_list, month_range, me
     :param refraster_westUS: Reference raster to clip/save data for WestUS extent.
     :param refraster_gee_merge: Reference raster to use for merging downloaded datasets from GEE. The merged
                                 datasets have to be clipped for Western US ROI.
-    :param westUS_shape: Filepath of West US shapefile.
+    :param clip_shape: Filepath of shapefile to clip merged raster (merged from GEE f=downloads).
+                       Default set to WestUS shape.
+    :param clip_resolution : Resolution (in deg) to use during clipping. Default set to model resolution.
 
     :return: None.
     """
@@ -756,9 +758,9 @@ def download_gee_data_yearly(data_name, download_dir, year_list, month_range, me
                                                                       ref_raster=refraster_gee_merge,
                                                                       search_by=f'*{year}*.tif', nodata=no_data_value)
 
-            clip_resample_reproject_raster(input_raster=merged_raster, input_shape=westUS_shape,
+            clip_resample_reproject_raster(input_raster=merged_raster, input_shape=clip_shape,
                                            output_raster_dir=clip_dir, clip_and_resample=True,
-                                           use_ref_width_height=False, resolution=model_res,
+                                           use_ref_width_height=False, resolution=clip_resolution,
                                            ref_raster=refraster_westUS)
 
             print(f'{data_name} yearly data downloaded and merged')
@@ -1126,6 +1128,7 @@ def download_all_gee_data(data_list, download_dir, year_list, month_range,
                           grid_shape_large, scale=2200, use_cpu_while_multidownloading=15,
                           ref_raster_GEE_merge=GEE_merging_refraster_large_grids,
                           ref_raster_westus=WestUS_raster,
+                          clip_shape=WestUS_shape, clip_resolution=model_res,
                           skip_download=False):
     """
     Used to download all gee data together.
@@ -1149,6 +1152,9 @@ def download_all_gee_data(data_list, download_dir, year_list, month_range,
                                            multi-processing/multi-threading. Default set to 15.
     :param ref_raster_GEE_merge: GEE_merging reference raster. Default set to GEE_merging_refraster_large_grids.
     :param ref_raster_westus: Reference raster. Default set to Western US reference raster.
+    :param clip_shape: Filepath of shapefile to clip merged raster (merged from GEE f=downloads).
+                       Default set to WestUS shape.
+    :param clip_resolution : Resolution (in deg) to use during clipping. Default set to model resolution.
     :param skip_download: Set to True to skip download.
 
     :return: None
@@ -1175,6 +1181,7 @@ def download_all_gee_data(data_list, download_dir, year_list, month_range,
                 download_gee_data_yearly(data_name=data_name, download_dir=download_dir, year_list=year_list,
                                          month_range=month_range, merge_keyword='WestUS_yearly',
                                          grid_shape=grid_shape_large, refraster_westUS=ref_raster_westus,
+                                         clip_shape=clip_shape, clip_resolution=clip_resolution,
                                          refraster_gee_merge=ref_raster_GEE_merge, scale=scale)
 
             elif data_name in ['Field_capacity', 'Bulk_density', 'Organic_carbon_content', 'Sand_content',
@@ -1251,6 +1258,7 @@ def download_all_datasets(year_list, month_range, grid_shape_large,
                           gee_data_list, data_download_dir, scale=2200,
                           ref_raster_GEE_merge=GEE_merging_refraster_large_grids,
                           ref_raster_westus=WestUS_raster,
+                          clip_shape=WestUS_shape, clip_resolution = model_res,
                           skip_download_gee_data=True,
                           use_cpu_while_multidownloading=15):
     """
@@ -1271,6 +1279,9 @@ def download_all_datasets(year_list, month_range, grid_shape_large,
     :param scale: Resolution in meter. Default set to 2200 m (~0.02 deg).
     :param ref_raster_GEE_merge: GEE_merging reference raster. Default set to GEE_merging_refraster_large_grids.
     :param ref_raster_westus: Reference raster. Default set to Western US reference raster.
+    :param clip_shape: Filepath of shapefile to clip merged raster (merged from GEE f=downloads).
+                       Default set to WestUS shape.
+    :param clip_resolution : Resolution (in deg) to use during clipping. Default set to model resolution.
     :param skip_download_gee_data: Set to False if want to download listed data. Default set to True.
     :param use_cpu_while_multidownloading: Number (Int) of CPU cores to use for multi-download by
                                            multi-processing/multi-threading. Default set to 15.
@@ -1283,5 +1294,6 @@ def download_all_datasets(year_list, month_range, grid_shape_large,
                           grid_shape_large=grid_shape_large,
                           ref_raster_GEE_merge=ref_raster_GEE_merge,
                           ref_raster_westus=ref_raster_westus,
+                          clip_shape=clip_shape, clip_resolution=clip_resolution,
                           skip_download=skip_download_gee_data,
                           use_cpu_while_multidownloading=use_cpu_while_multidownloading)

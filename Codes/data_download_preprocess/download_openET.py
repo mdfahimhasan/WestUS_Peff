@@ -3,6 +3,7 @@ import ee
 import sys
 import time
 import requests
+from glob import glob
 import geopandas as gpd
 from datetime import datetime
 from multiprocessing import cpu_count
@@ -369,8 +370,9 @@ def download_openet_indiv_models_grow_season(download_dir, year_list, merge_keyw
 
 
 def download_openet_ensemble(download_dir, year_list, month_range, merge_keyword, grid_shape,
-                             use_cpu_while_multidownloading=15, refraster_westUS=WestUS_raster, scale=2200,
-                             refraster_gee_merge=GEE_merging_refraster_large_grids, westUS_shape=WestUS_shape):
+                             use_cpu_while_multidownloading=15, scale=2200, refraster_westUS=WestUS_raster,
+                             refraster_gee_merge=GEE_merging_refraster_large_grids, westUS_shape=WestUS_shape,
+                             clip_resolution=model_res):
     """
     Download openET ensemble data (at monthly scale) from GEE.
 
@@ -385,7 +387,8 @@ def download_openet_ensemble(download_dir, year_list, month_range, merge_keyword
     :param scale: Resolution in meter. Default set to 2200 m (~0.02 deg).
     :param refraster_gee_merge: Reference raster to use for merging downloaded datasets from GEE. The merged
                                 datasets have to be clipped for Western US ROI.
-    :param westUS_shape: Filepath of West US shapefile.
+    :param westUS_shape: Filepath of West US shapefile. Used for clipping the data merged from GEE download.
+    :param clip_resolution : Resolution (in deg) to use during clipping. Default set to model resolution in deg.
 
     :return: None.
     """
@@ -502,16 +505,18 @@ def download_openet_ensemble(download_dir, year_list, month_range, merge_keyword
 
                 makedirs([clip_dir, mosaic_dir])
                 search_by = f'*{year}_{month}*.tif'
-                merged_arr, merged_raster = mosaic_rasters_from_directory(input_dir=download_dir,
-                                                                          output_dir=mosaic_dir,
-                                                                          raster_name=mosaic_name,
-                                                                          ref_raster=refraster_gee_merge,
-                                                                          search_by=search_by,
-                                                                          nodata=no_data_value)
+                merged_arr, _ = mosaic_rasters_from_directory(input_dir=download_dir,
+                                                              output_dir=mosaic_dir,
+                                                              raster_name=mosaic_name,
+                                                              ref_raster=refraster_gee_merge,
+                                                              search_by=search_by,
+                                                              nodata=no_data_value)
 
-                clip_resample_reproject_raster(input_raster=merged_raster, input_shape=westUS_shape,
+                raster_to_clip = glob(os.path.join(mosaic_dir, mosaic_name))[0]
+                print(raster_to_clip)
+                clip_resample_reproject_raster(input_raster=raster_to_clip, input_shape=westUS_shape,
                                                output_raster_dir=clip_dir, clip_and_resample=True,
-                                               use_ref_width_height=False, resolution=model_res,
+                                               use_ref_width_height=True, resolution=None,
                                                ref_raster=refraster_westUS)
 
                 print('OpenET_ensemble monthly data downloaded and merged')
@@ -1974,7 +1979,8 @@ def download_Rainfed_CropET_from_OpenET_LANID_monthly(data_name, download_dir, y
 def download_openET_data(data_list, download_dir, year_list, month_range,
                          grid_shape_for_2km_ensemble, grid_shape_for30m_irrmapper, grid_shape_for30m_lanid,
                          GEE_merging_refraster=GEE_merging_refraster_large_grids,
-                         westUS_refraster=WestUS_raster, westUS_shape=WestUS_shape, scale_ensemble=2200,
+                         westUS_refraster=WestUS_raster, westUS_shape=WestUS_shape,
+                         scale_ensemble=2200, clip_resolution=model_res,
                          use_cpu_while_multidownloading=15, skip_download=False):
     """
     Used to download openET datasets from GEE.
@@ -2003,6 +2009,7 @@ def download_openET_data(data_list, download_dir, year_list, month_range,
     :param westUS_shape: Western US shapefile.
     :param scale_ensemble: Resolution in meter from OpenET ensemble data download. Works only in download_openet_ensemble() function.
                            Default set to 2200 m (~0.02 deg).
+    :param clip_resolution : Resolution (in deg) to use during clipping. Default set to model resolution.
     :param use_cpu_while_multidownloading: Number (Int) of CPU cores to use for multi-download by
                                            multi-processing/multi-threading. Default set to 15.
     :param skip_download: Set to True to skip download.
@@ -2017,6 +2024,7 @@ def download_openET_data(data_list, download_dir, year_list, month_range,
                                          grid_shape=grid_shape_for_2km_ensemble,
                                          use_cpu_while_multidownloading=15, refraster_westUS=westUS_refraster,
                                          refraster_gee_merge=GEE_merging_refraster, scale=scale_ensemble,
+                                         clip_resolution=clip_resolution,
                                          westUS_shape=westUS_shape)
 
             elif data_name == 'OpenET_indiv_models_grow_season':
@@ -2082,7 +2090,7 @@ def download_all_openET_datasets(year_list, month_range,
                                  openET_data_list, data_download_dir,
                                  GEE_merging_refraster=GEE_merging_refraster_large_grids,
                                  westUS_refraster=WestUS_raster, westUS_shape=WestUS_shape,
-                                 scale_ensemble=2200,
+                                 scale_ensemble=2200, clip_resolution=model_res,
                                  skip_download_OpenET_data=True,
                                  use_cpu_while_multidownloading=15):
     """
@@ -2110,6 +2118,7 @@ def download_all_openET_datasets(year_list, month_range,
     :param westUS_shape: Western US shapefile.
     :param scale_ensemble: Resolution in meter from OpenET ensemble data download. Works only in download_openet_ensemble() function.
                            Default set to 2200 m (~0.02 deg).
+    :param clip_resolution : Resolution (in deg) to use during clipping. Default set to model resolution.
     :param skip_download_OpenET_data: Set to False if want to download listed data. Default set to True.
     :param use_cpu_while_multidownloading: Number (Int) of CPU cores to use for multi-download by
                                            multi-processing/multi-threading. Default set to 15.
@@ -2125,5 +2134,6 @@ def download_all_openET_datasets(year_list, month_range,
                          GEE_merging_refraster=GEE_merging_refraster,
                          westUS_refraster=westUS_refraster, westUS_shape=westUS_shape,
                          scale_ensemble=scale_ensemble,
+                         clip_resolution=clip_resolution,
                          skip_download=skip_download_OpenET_data,
                          use_cpu_while_multidownloading=use_cpu_while_multidownloading)

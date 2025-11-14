@@ -7,6 +7,7 @@ from osgeo import gdal
 import geopandas as gpd
 from rasterio.mask import mask
 from rasterio.merge import merge
+from rasterio.warp import reproject
 from rasterio.enums import Resampling
 from shapely.geometry import box, mapping
 
@@ -563,6 +564,36 @@ def make_lat_lon_array_from_raster(input_raster, nodata=-9999):
     lat_arr[raster_arr == nodata] = nodata
 
     return lon_arr, lat_arr
+
+
+def paste_and_reproject(src_raster_path, ref_raster_path, nodata):
+    """
+    Reproject a source raster (small extent, possibly different CRS/resolution)
+    into the reference raster grid.
+    Returns a full-size array aligned to reference raster.
+    """
+
+    # opening the reference raster file and creating an empty array using its shape
+    ref_profile = rio.open(ref_raster_path)
+    out_arr = np.full((ref_profile.height, ref_profile.width), nodata, dtype=np.float32)
+
+    # read the smaller array (src_raster_path)
+    src_profile = rio.open(src_raster_path)
+    src_arr = src_profile.read(1)
+
+    # reproject the src array to the crs and pixel size of the reference raster
+    reproject(
+        source=src_arr,
+        destination=out_arr,
+        src_transform=src_profile.transform,
+        src_crs=src_profile.crs,
+        dst_transform=ref_profile.transform,
+        dst_crs=ref_profile.crs,
+        resampling=Resampling.nearest,
+        dst_nodata=nodata
+    )
+
+    return out_arr, ref_profile
 
 
 def create_ref_raster(input_raster, output_ref_raster):

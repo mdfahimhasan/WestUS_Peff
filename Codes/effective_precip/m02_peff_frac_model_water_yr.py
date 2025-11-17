@@ -24,15 +24,12 @@ WestUS_raster = '../../Data_main/reference_rasters/Western_US_refraster_2km.tif'
 # predictor data paths
 yearly_data_path_dict = {
     'Peff_frac': '../../Data_main/Raster_data/Rainfed_cropET_filtered_training/rainfed_cropET_water_year_fraction',
-    'PRISM_Precip': '../../Data_main/Raster_data/PRISM_Precip/WestUS_water_year',
     'PRISM_Tmax': '../../Data_main/Raster_data/PRISM_Tmax/WestUS_water_year',
     'GRIDMET_Precip': '../../Data_main/Raster_data/GRIDMET_Precip/WestUS_water_year/sum',
     'GRIDMET_RET': '../../Data_main/Raster_data/GRIDMET_RET/WestUS_water_year',
     'GRIDMET_max_RH': '../../Data_main/Raster_data/GRIDMET_max_RH/WestUS_water_year',
     'GRIDMET_short_rad': '../../Data_main/Raster_data/GRIDMET_short_rad/WestUS_water_year',
     'DAYMET_sun_hr': '../../Data_main/Raster_data/DAYMET_sun_hr/WestUS_water_year',
-    'TERRACLIMATE_SR': '../../Data_main/Raster_data/TERRACLIMATE_SR/WestUS_water_year/mean',
-    'Runoff_precip_fraction': '../../Data_main/Raster_data/Runoff_precip_fraction',
     'Precipitation_intensity': '../../Data_main/Raster_data/Precipitation_intensity',
     'Dryness_index': '../../Data_main/Raster_data/Dryness_index',
     'Relative_infiltration_capacity': '../../Data_main/Raster_data/Relative_infiltration_capacity',
@@ -55,7 +52,6 @@ static_data_path_dict = {
 datasets_to_include = ['Peff_frac',
                        'PRISM_Tmax', 'GRIDMET_Precip', 'GRIDMET_RET',
                        'GRIDMET_max_RH', 'GRIDMET_short_rad', 'DAYMET_sun_hr',
-                       'TERRACLIMATE_SR', 'Runoff_precip_fraction',
                        'Precipitation_intensity', 'Dryness_index',
                        'Relative_infiltration_capacity', 'PET_P_corr',
                        'Bulk_density', 'Clay_content', 'Field_capacity',
@@ -64,19 +60,10 @@ datasets_to_include = ['Peff_frac',
 
 # exclude columns during training
 exclude_columns_in_training = [
-    # 'PRISM_Tmax',
-    # 'GRIDMET_Precip',
     'GRIDMET_RET',
     'GRIDMET_max_RH',
-    # 'GRIDMET_short_rad',
     'DAYMET_sun_hr',
-    'TERRACLIMATE_SR',
-    # 'Slope',
-    'Runoff_precip_fraction',
-    #'Precipitation_intensity',
-    # 'Dryness_index',
     'Relative_infiltration_capacity',
-    # 'PET_P_corr',
     'Bulk_density',
     'Clay_content',
     'Field_capacity',
@@ -105,23 +92,24 @@ exclude_columns_in_prediction = exclude_columns_in_training
 
 # prediction time periods
 prediction_years = [2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010,
-                    2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020]
+                    2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021,
+                    2022, 2023, 2024]
 
 if __name__ == '__main__':
     model_version = 'v20'                                      ######
 
-    skip_train_test_df_creation = True                         ######
-    skip_train_test_split = True                               ######
+    skip_train_test_df_creation = False                         ######
+    skip_train_test_split = False                               ######
     skip_tune_hyperparams = True                               ######
     load_model = True                                          ######
     save_model = False                                          ######
     skip_plot_perm_imp = True                                  ######
     skip_plot_ale = True                                       ######  Always set to True when running in Linux
     skip_plot_pdp = True                                       ######
-    skip_processing_annual_predictor_dataframe = True          ######
-    skip_processing_nan_pos_irrig_cropET = True                ######
-    skip_estimate_water_year_peff_frac_WestUS = True           ######
-    skip_storing_peff_frac_pred_annual_csv = True              ######
+    skip_processing_annual_predictor_dataframe = False          ######
+    skip_processing_nan_pos_irrig_cropET = False                ######
+    skip_estimate_water_year_peff_frac_WestUS = False           ######
+    skip_storing_peff_frac_pred_annual_csv = False              ######
 
     # ******************************* Dataframe creation and train-test split (westUS) *********************************
     # # create dataframe

@@ -24,15 +24,11 @@ WestUS_raster = '../../Data_main/reference_rasters/Western_US_refraster_2km.tif'
 # predictor data paths
 monthly_data_path_dict = {
     'Effective_precip_train': '../../Data_main/Raster_data/Rainfed_cropET_filtered_training/final_filtered_cropET_for_training',
-    'PRISM_Precip': '../../Data_main/Raster_data/PRISM_Precip/WestUS_monthly',
     'PRISM_Tmax': '../../Data_main/Raster_data/PRISM_Tmax/WestUS_monthly',
-    'PRISM_Tmin': '../../Data_main/Raster_data/PRISM_Tmin/WestUS_monthly',
     'GRIDMET_Precip': '../../Data_main/Raster_data/GRIDMET_Precip/WestUS_monthly',
     'GRIDMET_RET': '../../Data_main/Raster_data/GRIDMET_RET/WestUS_monthly',
     'GRIDMET_vap_pres_def': '../../Data_main/Raster_data/GRIDMET_vap_pres_def/WestUS_monthly',
     'GRIDMET_max_RH': '../../Data_main/Raster_data/GRIDMET_max_RH/WestUS_monthly',
-    'GRIDMET_min_RH': '../../Data_main/Raster_data/GRIDMET_min_RH/WestUS_monthly',
-    'GRIDMET_wind_vel': '../../Data_main/Raster_data/GRIDMET_wind_vel/WestUS_monthly',
     'GRIDMET_short_rad': '../../Data_main/Raster_data/GRIDMET_short_rad/WestUS_monthly',
     'DAYMET_sun_hr': '../../Data_main/Raster_data/DAYMET_sun_hr/WestUS_monthly'}
 
@@ -51,55 +47,56 @@ static_data_path_dict = {
 
 # datasets to include in the dataframe (not all will go into the final model)
 datasets_to_include = ['Effective_precip_train',
-                       'PRISM_Precip', 'PRISM_Tmax', 'PRISM_Tmin',
-                       'GRIDMET_Precip', 'GRIDMET_RET', 'GRIDMET_vap_pres_def', 'GRIDMET_max_RH',
-                       'GRIDMET_min_RH', 'GRIDMET_wind_vel', 'GRIDMET_short_rad', 'DAYMET_sun_hr',
+                       'PRISM_Tmax', 'GRIDMET_Precip', 'GRIDMET_RET',
+                       'GRIDMET_vap_pres_def', 'GRIDMET_max_RH',
+                       'GRIDMET_short_rad', 'DAYMET_sun_hr',
                        'Bulk_density', 'Clay_content', 'Field_capacity', 'Sand_content',
                        'AWC', 'DEM', 'Slope', 'Latitude', 'Longitude']
 
 # exclude columns during training
 exclude_columns_in_training = ['year', 'Latitude', 'Longitude',
                                'Bulk_density', 'Clay_content', 'Slope',
-                               'PRISM_Tmax', 'PRISM_Tmin', 'PRISM_Precip',
-                               'GRIDMET_wind_vel', 'GRIDMET_min_RH',
-                               'GRIDMET_vap_pres_def', 'DEM']
+                               'PRISM_Tmax', 'GRIDMET_vap_pres_def', 'DEM']
 # training time periods
-train_test_years_list = [2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020]  # training data starting from 2008 as rainfed cropET dataset starts from 2008
+train_test_years_list = [2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016,
+                         2017, 2018, 2019, 2020]  # training data starting from 2008 as rainfed cropET dataset starts from 2008
 months = (1, 12)  # the model will itself discard the month is places where growing season is less than 12 months
                   # (using the nan value set up)
 
 # datasets to include in monthly dataframe for Peff prediction
-datasets_to_include_month_predictors = ['PRISM_Precip', 'PRISM_Tmax', 'PRISM_Tmin',
-                                        'GRIDMET_Precip', 'GRIDMET_RET', 'GRIDMET_vap_pres_def', 'GRIDMET_max_RH',
-                                        'GRIDMET_min_RH', 'GRIDMET_wind_vel', 'GRIDMET_short_rad', 'DAYMET_sun_hr',
-                                        'Bulk_density', 'Clay_content', 'Field_capacity', 'Sand_content',
+datasets_to_include_month_predictors = ['PRISM_Precip', 'PRISM_Tmax',
+                                        'GRIDMET_Precip', 'GRIDMET_RET',
+                                        'GRIDMET_vap_pres_def', 'GRIDMET_max_RH',
+                                        'GRIDMET_short_rad', 'DAYMET_sun_hr',
+                                        'Bulk_density', 'Clay_content',
+                                        'Field_capacity', 'Sand_content',
                                         'AWC', 'Slope', 'Latitude', 'Longitude']
 
 # exclude columns during prediction (the prediction dataframes don't have 'year' column)
 exclude_columns_in_prediction = ['Latitude', 'Longitude', 'Bulk_density', 'Clay_content',
-                                 'Slope', 'PRISM_Tmax', 'PRISM_Tmin', 'PRISM_Precip',
-                                 'GRIDMET_wind_vel', 'GRIDMET_min_RH', 'GRIDMET_vap_pres_def']
+                                 'Slope', 'PRISM_Tmax', 'GRIDMET_vap_pres_def']
 # prediction time periods
 prediction_years = [1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010,
-                    2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020]
+                    2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022,
+                    2023, 2024]
 
 if __name__ == '__main__':
     model_version = 'v19'                                   ######
 
-    skip_train_test_df_creation = True                      ######
-    skip_train_test_split = True                            ######
-    skip_tune_hyperparams = True                            ######
+    skip_train_test_df_creation = False                      ######
+    skip_train_test_split = False                            ######
+    skip_tune_hyperparams = False                            ######
     load_model = True                                       ######
     save_model = False                                       ######
-    skip_plot_perm_imp = True                               ######
+    skip_plot_perm_imp = False                               ######
     skip_plot_ale = True                                    ######  Always set to True when running in Linux
-    skip_plot_pdp = True                                    ######
-    skip_processing_monthly_predictor_dataframe = True      ######
-    skip_processing_nan_pos_irrig_cropET = True             ######
-    skip_estimate_monthly_eff_precip_WestUS = True          ######
-    skip_storing_peff_pred_monthly_csv = True               ######
-    skip_sum_peff_water_year = True                         ######
-    skip_unscaled_peff_frac_estimate_water_yr = True        ######
+    skip_plot_pdp = False                                    ######
+    skip_processing_monthly_predictor_dataframe = False      ######
+    skip_processing_nan_pos_irrig_cropET = False             ######
+    skip_estimate_monthly_eff_precip_WestUS = False          ######
+    skip_storing_peff_pred_monthly_csv = False               ######
+    skip_sum_peff_water_year = False                         ######
+    skip_unscaled_peff_frac_estimate_water_yr = False        ######
 
     # ********************************* Dataframe creation and train-test split (westUS) ***********************************
     # # create dataframe
@@ -290,7 +287,7 @@ if __name__ == '__main__':
     water_yr_peff_dir = f'../../Data_main/Raster_data/Effective_precip_prediction_WestUS/{model_version}_water_year'
 
     sum_peff_water_year(years_list=[2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010,
-                                    2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020],
+                                    2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024],
                         monthly_peff_dir=effective_precip_monthly_output_dir,
                         output_peff_dir=water_yr_peff_dir, skip_processing=skip_sum_peff_water_year)
 

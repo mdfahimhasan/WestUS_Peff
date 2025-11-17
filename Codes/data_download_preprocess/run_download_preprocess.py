@@ -12,18 +12,20 @@ GEE_merging_refraster_large_grids = '../../Data_main/reference_rasters/GEE_mergi
 
 # # # #  data download args # # # #
 gee_data_list = ['Field_capacity', 'Bulk_density', 'Sand_content', 'Clay_content',
-                 'GRIDMET_RET', 'GRIDMET_vap_pres_def','GRIDMET_max_RH','GRIDMET_Precip',
+                 'GRIDMET_RET', 'GRIDMET_vap_pres_def', 'GRIDMET_max_RH', 'GRIDMET_Precip',
                  'GRIDMET_min_RH', 'GRIDMET_wind_vel', 'GRIDMET_short_rad', 'DAYMET_sun_hr',
                  'TERRACLIMATE_SR', 'USDA_CDL', 'Tree_cover', 'DEM', 'Rainy_days']
 
-openET_data_list = ['Irrig_crop_OpenET_IrrMapper', 'Irrig_crop_OpenET_LANID',
-                    'Irrigation_Frac_IrrMapper', 'Irrigation_Frac_LANID'
+openET_data_list = ['Irrig_crop_OpenET_IrrMapper',  'Irrigation_Frac_IrrMapper',
+                    'Irrig_crop_OpenET_LANID', 'Irrigation_Frac_LANID'
                     'Rainfed_crop_OpenET_IrrMapper', 'Rainfed_crop_OpenET_LANID',
                     'Rainfed_Frac_IrrMapper', 'Rainfed_Frac_LANID',
-                    'OpenET_ensemble', 'OpenET_indiv_models_grow_season']
+                    'OpenET_ensemble', 'OpenET_indiv_models_grow_season'
+                    ]
 
 years = [1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010,
-         2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020]
+         2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020,
+         2021, 2022, 2023, 2024]
 months = (1, 12)
 
 gee_grid_shape_large = '../../Data_main/shapefiles/Western_US_ref_shapes/WestUS_gee_grid.shp'
@@ -36,10 +38,6 @@ skip_download_gee_data = True                           ######
 skip_download_OpenET_data = True                       ######
 
 # # # #  data preprocess args # # # #
-skip_process_GrowSeason_data = True                     ######
-skip_prism_processing = True                            ######
-skip_gridmet_precip_processing = True                   ######
-skip_gridmet_RET_precessing = True                      ######
 skip_merging_rainfed_frac = True                        ######
 skip_merging_rainfed_cropET = True                      ######
 skip_merging_irrigated_frac = True                      ######
@@ -53,15 +51,18 @@ skip_openET_sum = True                                  ######
 skip_excess_ET_filter_processing = True                 ######
 skip_processing_slope_data = True                       ######
 skip_process_AWC_data = True                            ######
-skip_peff_training_data_filtering = True                ######
+skip_peff_training_data_filtering = True                ###### plan for updating the training data during the next operational update
+skip_prism_tmax_processing = True                       ######
 skip_accum_to_water_year_datasets = True                ######
 skip_summing_irrigated_cropET_water_yr = True           ######
-skip_estimate_runoff_precip_frac = True                 ######
+skip_process_GrowSeason_data = True                     ######
+skip_gridmet_precip_processing = True                   ######
+skip_gridmet_RET_precessing = True                      ######
 skip_estimate_precip_intensity = True                   ######
 skip_estimate_dryness_index = True                      ######
 skip_process_ksat_data = True                           ######
 skip_process_rel_infil_cap_data = True                  ######
-skip_create_P_PET_corr_dataset = True                   ######
+skip_create_P_PET_corr_dataset = True                   ######  plan for updating it during the next operational update
 skip_estimate_peff_water_yr_frac = True                 ######
 skip_lake_raster_creation = True                        ######
 
@@ -86,7 +87,7 @@ if __name__ == '__main__':
                                  use_cpu_while_multidownloading=use_cpu_while_multidownloading)
 
     run_all_preprocessing(skip_process_GrowSeason_data=skip_process_GrowSeason_data,
-                          skip_prism_processing=skip_prism_processing,
+                          skip_prism_tmax_processing=skip_prism_tmax_processing,
                           skip_gridmet_precip_processing=skip_gridmet_precip_processing,
                           skip_gridmet_RET_precessing=skip_gridmet_RET_precessing,
                           skip_merging_rainfed_frac=skip_merging_rainfed_frac,
@@ -106,7 +107,6 @@ if __name__ == '__main__':
                           skip_accum_to_water_year_datasets=skip_accum_to_water_year_datasets,
                           skip_summing_irrigated_cropET_water_yr=skip_summing_irrigated_cropET_water_yr,
                           skip_estimate_peff_water_yr_frac=skip_estimate_peff_water_yr_frac,
-                          skip_estimate_runoff_precip_frac=skip_estimate_runoff_precip_frac,
                           skip_estimate_precip_intensity=skip_estimate_precip_intensity,
                           skip_estimate_dryness_index=skip_estimate_dryness_index,
                           skip_process_ksat_data=skip_process_ksat_data,

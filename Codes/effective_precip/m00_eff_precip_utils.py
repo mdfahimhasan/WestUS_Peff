@@ -478,38 +478,6 @@ def estimate_peff_precip_water_year_fraction(years_list, peff_dir_water_yr, prec
         pass
 
 
-def process_monthly_peff_rasters_to_multiband_forGEE(years, peff_monthly_dir, output_dir, nodata=no_data_value):
-    """
-    Compiles monthly effective precipitation estimates into multi-band rasters for each year.
-
-    :param years: List of years_list.
-    :param peff_monthly_dir: Filepath of monthly effective precipitation rasters.
-    :param output_dir: Filepath of output directory to save the multi-band raster.
-    :param nodata: Default set to -9999.
-
-    :return: None,
-    """
-    makedirs([output_dir])
-    for year in years:
-        peff_data_list = []
-
-        # collecting the monthly Peff estimates serially for a year
-        for month in list(range(1, 13)):
-            monthly_peff = glob(os.path.join(peff_monthly_dir, f'*{year}_{month}*.tif'))
-
-            if len(monthly_peff) == 0:  # in case of 2020, Peff data is available up to month 9. This blocks controls data ingestion for year 2020
-                pass
-            else:
-                peff_data_list.append(monthly_peff[0])
-
-        # creating the multi-band image for monthly datasets within an year
-        output_raster = os.path.join(output_dir, f'effective_precip_{year}_monthly.tif')
-
-        create_multiband_raster(input_files_list=peff_data_list,
-                                output_file=output_raster, nodata=nodata)
-        print(f'created effective precipitation monthly multi-band raster for {year}...')
-
-
 def estimate_water_yr_peff_using_peff_frac(years_list, water_year_precip_dir, water_year_peff_frac_dir, output_dir,
                                            skip_processing=False):
     """
@@ -579,7 +547,7 @@ def scale_monthy_peff_with_wateryr_peff_model(years_list, unscaled_peff_monthly_
                 if (yr == 1999) and (mn <= 9):
                     continue
 
-                elif (yr == 2020) and (mn >= 10):
+                elif (yr == 2024) and (mn >= 10):
                     continue
 
                 else:
@@ -613,3 +581,68 @@ def scale_monthy_peff_with_wateryr_peff_model(years_list, unscaled_peff_monthly_
 
                     output_raster = os.path.join(output_dir, f'effective_precip_{yr}_{mn}.tif')
                     write_array_to_raster(scaled_peff_monthly_arr, raster_file, raster_file.transform, output_raster)
+
+
+def process_monthly_peff_rasters_to_multiband_forGEE(years, peff_monthly_dir, output_dir, nodata=no_data_value):
+    """
+    Compiles monthly effective precipitation estimates into multi-band rasters for each year.
+
+    :param years: List of years_list.
+    :param peff_monthly_dir: Filepath of monthly effective precipitation rasters.
+    :param output_dir: Filepath of output directory to save the multi-band raster.
+    :param nodata: Default set to -9999.
+
+    :return: None,
+    """
+    makedirs([output_dir])
+    for year in years:
+        peff_data_list = []
+
+        # collecting the monthly Peff estimates serially for a year
+        for month in list(range(1, 13)):
+            monthly_peff = glob(os.path.join(peff_monthly_dir, f'*{year}_{month}*.tif'))
+
+            if len(monthly_peff) == 0:  # in case of 2020, Peff data is available up to month 9. This blocks controls data ingestion for year 2020
+                pass
+            else:
+                peff_data_list.append(monthly_peff[0])
+
+        # creating the multi-band image for monthly datasets within an year
+        output_raster = os.path.join(output_dir, f'effective_precip_{year}_monthly.tif')
+
+        create_multiband_raster(input_files_list=peff_data_list,
+                                output_file=output_raster, nodata=nodata)
+        print(f'created effective precipitation monthly multi-band raster for {year}...')
+
+
+def process_monthly_peff_rasters_to_multiband_forGEE(years, peff_monthly_dir, output_dir, nodata=no_data_value):
+    """
+    Compiles monthly effective precipitation estimates into multi-band rasters for each year.
+
+    :param years: List of years_list.
+    :param peff_monthly_dir: Filepath of monthly effective precipitation rasters.
+    :param output_dir: Filepath of output directory to save the multi-band raster.
+    :param nodata: Default set to -9999.
+
+    :return: None,
+    """
+    makedirs([output_dir])
+    for year in years:
+        peff_data_list = []
+
+        # collecting the monthly Peff estimates serially for a year
+        for month in list(range(1, 13)):
+            monthly_peff = glob(os.path.join(peff_monthly_dir, f'*{year}_{month}*.tif'))
+
+            if len(monthly_peff) == 0:
+                pass
+            else:
+                peff_data_list.append(monthly_peff[0])
+
+        # creating the multi-band image for monthly datasets within an year
+        output_raster = os.path.join(output_dir, f'effective_precip_{year}_monthly.tif')
+
+        create_multiband_raster(input_files_list=peff_data_list,
+                                output_file=output_raster, nodata=nodata)
+        print(f'created effective precipitation monthly multi-band raster for {year}...')
+

@@ -90,18 +90,8 @@ def get_gee_dict(data_name):
     ee.Initialize(project='ee-fahim', opt_url='https://earthengine-highvolume.googleapis.com')
 
     gee_data_dict = {
-        'SMAP_SM': 'NASA_USDA/HSL/SMAP10KM_soil_moisture',
-        'LANDSAT_NDWI': 'LANDSAT/LC08/C01/T1_8DAY_NDWI',  # check for cloudcover
-        'LANDSAT_NDVI': 'LANDSAT/LC08/C01/T1_8DAY_NDVI',  # check for cloudcover
         'GRIDMET_Precip': 'IDAHO_EPSCOR/GRIDMET',
         'Rainy_days': 'IDAHO_EPSCOR/GRIDMET',
-        'MODIS_Day_LST': 'MODIS/006/MOD11A2',  # check for cloudcover
-        'MODIS_Terra_NDVI': 'MODIS/006/MOD13Q1',  # cloudcover mask added later
-        'MODIS_Terra_EVI': 'MODIS/006/MOD13Q1',  # cloudcover mask added later
-        'MODIS_NDWI': 'MODIS/006/MOD09A1',  # cloudcover mask added later
-        'MODIS_NDVI': 'MODIS/006/MOD09A1',  # cloudcover mask added later
-        'MODIS_LAI': 'MODIS/061/MOD15A2H',
-        'MODIS_ET': 'MODIS/006/MOD16A2',  # unit in kg/m2
         'TERRACLIMATE_SR': 'IDAHO_EPSCOR/TERRACLIMATE',
         'GRIDMET_RET': 'IDAHO_EPSCOR/GRIDMET',
         'GRIDMET_max_RH': 'IDAHO_EPSCOR/GRIDMET',
@@ -121,18 +111,8 @@ def get_gee_dict(data_name):
     }
 
     gee_band_dict = {
-        'SMAP_SM': 'ssm',
-        'LANDSAT_NDWI': 'NDWI',
-        'LANDSAT_NDVI': 'NDVI',
         'GRIDMET_Precip': 'pr',
         'Rainy_days': 'pr',
-        'MODIS_Day_LST': 'LST_Day_1km',
-        'MODIS_Terra_NDVI': 'NDVI',
-        'MODIS_Terra_EVI': 'EVI',
-        'MODIS_NDWI': ['sur_refl_b02', 'sur_refl_b06'],  # bands for NIR and SWIR, respectively
-        'MODIS_NDVI': ['sur_refl_b02', 'sur_refl_b01'],  # bands for NIR and SWIR, respectively
-        'MODIS_LAI': 'Lai_500m',
-        'MODIS_ET': 'ET',
         'TERRACLIMATE_SR': 'ro',  # unit in mm
         'GRIDMET_RET': 'eto',
         'GRIDMET_max_RH': 'rmax',
@@ -152,18 +132,8 @@ def get_gee_dict(data_name):
     }
 
     gee_scale_dict = {
-        'SMAP_SM': 1,
-        'LANDSAT_NDWI': 1,
-        'LANDSAT_NDVI': 1,
         'GRIDMET_Precip': 1,
         'Rainy_days': 1,
-        'MODIS_Day_LST': 0.02,
-        'MODIS_Terra_NDVI': 0.0001,
-        'MODIS_Terra_EVI': 0.0001,
-        'MODIS_NDWI': 0.0001,
-        'MODIS_NDVI': 0.0001,
-        'MODIS_LAI': 0.1,
-        'MODIS_ET': 0.1,
         'TERRACLIMATE_SR': 1,
         'GRIDMET_RET': 1,
         'GRIDMET_max_RH': 1,
@@ -183,18 +153,8 @@ def get_gee_dict(data_name):
     }
 
     aggregation_dict = {
-        'SMAP_SM': ee.Reducer.sum(),
-        'LANDSAT_NDWI': ee.Reducer.mean(),
-        'LANDSAT_NDVI': ee.Reducer.mean(),
         'GRIDMET_Precip': ee.Reducer.sum(),
         'Rainy_days': None,
-        'MODIS_Day_LST': ee.Reducer.mean(),
-        'MODIS_Terra_NDVI': ee.Reducer.mean(),
-        'MODIS_Terra_EVI': ee.Reducer.mean(),
-        'MODIS_NDWI': ee.Reducer.mean(),
-        'MODIS_NDVI': ee.Reducer.mean(),
-        'MODIS_LAI': ee.Reducer.mean(),
-        'MODIS_ET': ee.Reducer.sum(),
         'TERRACLIMATE_SR': ee.Reducer.sum(),
         'GRIDMET_RET': ee.Reducer.sum(),
         'GRIDMET_max_RH': ee.Reducer.mean(),
@@ -219,18 +179,8 @@ def get_gee_dict(data_name):
     # In most cases the end date is shifted a month later to cover the end month's data
 
     month_start_date_dict = {
-        'SMAP_SM': datetime(2015, 4, 1),
-        'LANDSAT_NDWI': datetime(2013, 4, 1),
-        'LANDSAT_NDVI': datetime(2013, 4, 1),
         'GRIDMET_Precip': datetime(1979, 1, 1),
         'Rainy_days': datetime(1979, 1, 1),
-        'MODIS_Day_LST': datetime(2000, 2, 1),
-        'MODIS_Terra_NDVI': datetime(2000, 2, 1),
-        'MODIS_Terra_EVI': datetime(2000, 2, 1),
-        'MODIS_NDWI': datetime(2000, 2, 1),
-        'MODIS_NDVI': datetime(2000, 2, 1),
-        'MODIS_LAI': datetime(2000, 2, 1),
-        'MODIS_ET': datetime(2001, 1, 1),
         'TERRACLIMATE_SR': datetime(1958, 1, 1),
         'GRIDMET_RET': datetime(1979, 1, 1),
         'GRIDMET_max_RH': datetime(1979, 1, 1),
@@ -250,27 +200,17 @@ def get_gee_dict(data_name):
     }
 
     month_end_date_dict = {
-        'SMAP_SM': datetime(2022, 8, 2),
-        'LANDSAT_NDWI': datetime(2022, 1, 1),
-        'LANDSAT_NDVI': datetime(2022, 1, 1),
-        'GRIDMET_Precip': datetime(2023, 9, 15),
-        'Rainy_days': datetime(2023, 9, 15),
-        'MODIS_Day_LST': datetime(2023, 8, 29),
-        'MODIS_Terra_NDVI': datetime(2023, 8, 13),
-        'MODIS_Terra_EVI': datetime(2023, 8, 13),
-        'MODIS_NDWI': datetime(2023, 8, 29),
-        'MODIS_NDVI': datetime(2023, 8, 29),
-        'MODIS_LAI': datetime(2023, 11, 9),
-        'MODIS_ET': datetime(2023, 8, 29),
-        'TERRACLIMATE_SR': datetime(2022, 12, 1),
-        'GRIDMET_RET': datetime(2022, 12, 1),
-        'GRIDMET_max_RH': datetime(2022, 12, 1),
-        'GRIDMET_min_RH': datetime(2022, 12, 1),
-        'GRIDMET_wind_vel': datetime(2022, 12, 1),
-        'GRIDMET_short_rad': datetime(2022, 12, 1),
-        'GRIDMET_vap_pres_def': datetime(2022, 12, 1),
-        'DAYMET_sun_hr': datetime(2022, 12, 31),
-        'USDA_CDL': datetime(2022, 1, 1),
+        'GRIDMET_Precip': datetime(2025, 9, 1),
+        'Rainy_days': datetime(2025, 9, 1),
+        'TERRACLIMATE_SR': datetime(2025, 1, 1),
+        'GRIDMET_RET': datetime(2025, 9, 1),
+        'GRIDMET_max_RH': datetime(2025, 9, 1),
+        'GRIDMET_min_RH': datetime(2025, 9, 1),
+        'GRIDMET_wind_vel': datetime(2025, 9, 1),
+        'GRIDMET_short_rad': datetime(2025, 9, 1),
+        'GRIDMET_vap_pres_def': datetime(2025, 9, 1),
+        'DAYMET_sun_hr': datetime(2023, 12, 31),
+        'USDA_CDL': datetime(2024, 1, 1),
         'Field_capacity': None,
         'Bulk_density': None,
         'Organic_carbon_content': None,
@@ -281,18 +221,8 @@ def get_gee_dict(data_name):
     }
 
     year_start_date_dict = {
-        'SMAP_SM': datetime(2015, 1, 1),
-        'LANDSAT_NDWI': datetime(2013, 1, 1),
-        'LANDSAT_NDVI': datetime(2013, 1, 1),
         'GRIDMET_Precip': datetime(1979, 1, 1),
         'Rainy_days': datetime(1979, 1, 1),
-        'MODIS_Day_LST': datetime(2000, 1, 1),
-        'MODIS_Terra_NDVI': datetime(2000, 1, 1),
-        'MODIS_Terra_EVI': datetime(2000, 1, 1),
-        'MODIS_NDWI': datetime(2000, 1, 1),
-        'MODIS_NDVI': datetime(2000, 1, 1),
-        'MODIS_LAI': datetime(2000, 1, 1),
-        'MODIS_ET': datetime(2001, 1, 1),
         'TERRACLIMATE_SR': datetime(1958, 1, 1),
         'GRIDMET_RET': datetime(1979, 1, 1),
         'GRIDMET_max_RH': datetime(1979, 1, 1),
@@ -312,27 +242,17 @@ def get_gee_dict(data_name):
     }
 
     year_end_date_dict = {
-        'SMAP_SM': datetime(2023, 1, 1),
-        'LANDSAT_NDWI': datetime(2022, 1, 1),
-        'LANDSAT_NDVI': datetime(2022, 1, 1),
-        'GRIDMET_Precip': datetime(2024, 1, 1),
-        'Rainy_days': datetime(2024, 1, 1),
-        'MODIS_Day_LST': datetime(2024, 1, 1),
-        'MODIS_Terra_NDVI': datetime(2024, 1, 1),
-        'MODIS_Terra_EVI': datetime(2024, 1, 1),
-        'MODIS_NDWI': datetime(2024, 1, 1),
-        'MODIS_NDVI': datetime(2024, 1, 1),
-        'MODIS_LAI': datetime(2024, 1, 1),
-        'MODIS_ET': datetime(2024, 1, 1),
-        'TERRACLIMATE_SR': datetime(2023, 1, 1),
-        'GRIDMET_RET': datetime(2024, 12, 1),
-        'GRIDMET_max_RH': datetime(2024, 1, 1),
-        'GRIDMET_min_RH': datetime(2024, 1, 1),
-        'GRIDMET_wind_vel': datetime(2024, 1, 1),
-        'GRIDMET_short_rad': datetime(2024, 1, 1),
-        'GRIDMET_vap_pres_def': datetime(2024, 12, 1),
-        'DAYMET_sun_hr': datetime(2023, 1, 1),
-        'USDA_CDL': datetime(2022, 1, 1),
+        'GRIDMET_Precip': datetime(2025, 1, 1),
+        'Rainy_days': datetime(2025, 1, 1),
+        'TERRACLIMATE_SR': datetime(2025, 1, 1),
+        'GRIDMET_RET': datetime(2025, 1, 1),
+        'GRIDMET_max_RH': datetime(2025, 1, 1),
+        'GRIDMET_min_RH': datetime(2025, 1, 1),
+        'GRIDMET_wind_vel': datetime(2025, 1, 1),
+        'GRIDMET_short_rad': datetime(2025, 1, 1),
+        'GRIDMET_vap_pres_def': datetime(2025, 1, 1),
+        'DAYMET_sun_hr': datetime(2024, 1, 1),
+        'USDA_CDL': datetime(2024, 1, 1),
         'Field_capacity': None,
         'Bulk_density': None,
         'Organic_carbon_content': None,

@@ -129,18 +129,18 @@ def get_openet_gee_dict(data_name):
     }
 
     month_end_date_dict = {
-        'OpenET_ensemble': datetime(2022, 12, 1),
-        'Irrig_crop_OpenET_IrrMapper': datetime(2023, 1, 1),
-        'Irrig_crop_OpenET_LANID': datetime(2023, 1, 1),
-        'Rainfed_crop_OpenET_IrrMapper': datetime(2023, 1, 1),
-        'Rainfed_crop_OpenET_LANID': datetime(2023, 1, 1),
+        'OpenET_ensemble': datetime(2024, 12, 1),
+        'Irrig_crop_OpenET_IrrMapper': datetime(2025, 1, 1),
+        'Irrig_crop_OpenET_LANID': datetime(2025, 1, 1),
+        'Rainfed_crop_OpenET_IrrMapper': datetime(2025, 1, 1),
+        'Rainfed_crop_OpenET_LANID': datetime(2025, 1, 1),
         'USDA_CDL': datetime(2023, 1, 1),
-        'IrrMapper': datetime(2024, 1, 1),
+        'IrrMapper': datetime(2025, 1, 1),
         'LANID': None,
         'AIM-HPA': None,
-        'Irrigation_Frac_IrrMapper': datetime(2024, 1, 1),
+        'Irrigation_Frac_IrrMapper': datetime(2025, 1, 1),
         'Irrigation_Frac_LANID': None,
-        'Rainfed_Frac_IrrMapper': datetime(2024, 1, 1),
+        'Rainfed_Frac_IrrMapper': datetime(2025, 1, 1),
         'Rainfed_Frac_LANID': None
     }
 
@@ -161,18 +161,18 @@ def get_openet_gee_dict(data_name):
     }
 
     year_end_date_dict = {
-        'OpenET_ensemble': datetime(2023, 1, 1),
-        'Irrig_crop_OpenET_IrrMapper': datetime(2023, 1, 1),
-        'Irrig_crop_OpenET_LANID': datetime(2023, 1, 1),
-        'Rainfed_crop_OpenET_IrrMapper': datetime(2023, 1, 1),
-        'Rainfed_crop_OpenET_LANID': datetime(2023, 1, 1),
+        'OpenET_ensemble': datetime(2025, 1, 1),
+        'Irrig_crop_OpenET_IrrMapper': datetime(2025, 1, 1),
+        'Irrig_crop_OpenET_LANID': datetime(2025, 1, 1),
+        'Rainfed_crop_OpenET_IrrMapper': datetime(2025, 1, 1),
+        'Rainfed_crop_OpenET_LANID': datetime(2025, 1, 1),
         'USDA_CDL': datetime(2023, 1, 1),
-        'IrrMapper': datetime(2024, 1, 1),
+        'IrrMapper': datetime(2025, 1, 1),
         'LANID': None,
         'AIM-HPA': None,
-        'Irrigation_Frac_IrrMapper': datetime(2024, 1, 1),
+        'Irrigation_Frac_IrrMapper': datetime(2025, 1, 1),
         'Irrigation_Frac_LANID': None,
-        'Rainfed_Frac_IrrMapper': datetime(2024, 1, 1),
+        'Rainfed_Frac_IrrMapper': datetime(2025, 1, 1),
         'Rainfed_Frac_LANID': None
     }
 

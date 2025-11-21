@@ -43,7 +43,7 @@ The authors recommend exercising discretion when setting up the environment and 
 
 __conda environment:__ A _conda environment_, set up using [Anaconda](https://www.anaconda.com/products/individual) with python 3.9, has been used to implement this repositories. Required libraries needed to be installed to run this repository are - dask, dask-geopandas, earthengine-api, fastparquet, rasterio, gdal, shapely, geopandas, numpy, pandas, scikit-learn, lightgbm, scikit-explain, matplotlib, seaborn. 
 
-Note that running the `.ipynb` scripts will require installaion of jupyter lab within the conda environment.
+Note that running the `.ipynb` scripts will require installation of jupyter lab within the conda environment.
 
 ### Google Earth Engine authentication
 This project relies on the Google Earth Engine (GEE) Python API for downloading (and reducing) some of the predictor datasets from the GEE

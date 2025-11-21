@@ -83,14 +83,14 @@ prediction_years = [1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 
 if __name__ == '__main__':
     model_version = 'v19'                                   ######
 
-    skip_train_test_df_creation = False                      ######
-    skip_train_test_split = False                            ######
+    skip_train_test_df_creation = True                      ######
+    skip_train_test_split = True                            ######
     skip_tune_hyperparams = False                            ######
     load_model = True                                       ######
     save_model = False                                       ######
-    skip_plot_perm_imp = False                               ######
+    skip_plot_perm_imp = True                               ######
     skip_plot_ale = True                                    ######  Always set to True when running in Linux
-    skip_plot_pdp = False                                    ######
+    skip_plot_pdp = True                                    ######
     skip_processing_monthly_predictor_dataframe = False      ######
     skip_processing_nan_pos_irrig_cropET = False             ######
     skip_estimate_monthly_eff_precip_WestUS = False          ######

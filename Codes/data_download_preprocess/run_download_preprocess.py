@@ -17,7 +17,7 @@ gee_data_list = ['Field_capacity', 'Bulk_density', 'Sand_content', 'Clay_content
                  'TERRACLIMATE_SR', 'USDA_CDL', 'Tree_cover', 'DEM', 'Rainy_days']
 
 openET_data_list = ['Irrig_crop_OpenET_IrrMapper',  'Irrigation_Frac_IrrMapper',
-                    'Irrig_crop_OpenET_LANID', 'Irrigation_Frac_LANID'
+                    'Irrig_crop_OpenET_LANID', 'Irrigation_Frac_LANID',
                     'Rainfed_crop_OpenET_IrrMapper', 'Rainfed_crop_OpenET_LANID',
                     'Rainfed_Frac_IrrMapper', 'Rainfed_Frac_LANID',
                     'OpenET_ensemble', 'OpenET_indiv_models_grow_season'

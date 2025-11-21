@@ -98,8 +98,8 @@ prediction_years = [2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 
 if __name__ == '__main__':
     model_version = 'v20'                                      ######
 
-    skip_train_test_df_creation = False                         ######
-    skip_train_test_split = False                               ######
+    skip_train_test_df_creation = True                         ######
+    skip_train_test_split = True                               ######
     skip_tune_hyperparams = True                               ######
     load_model = True                                          ######
     save_model = False                                          ######
